@@ -1,2 +1,2 @@
-# valrus
+# walrus
 Erlang advanced project manager 

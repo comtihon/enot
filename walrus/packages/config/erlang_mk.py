@@ -17,10 +17,10 @@ def get_dep(line):
 
 
 class ErlangMkConfig(ConfigFile):
-    def __init__(self, name, path, vsn):
-        self.name = name
+    def __init__(self, path):
+        super().__init__(path)
         self.path = path
-        self.vsn = vsn
+        self.read_config()
 
     def read_config(self):
         content = read_file_lines(join(self.path, 'Makefile'))

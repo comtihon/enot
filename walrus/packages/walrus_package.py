@@ -17,8 +17,7 @@ class WalrusPackage:
     def __init__(self, walrus_dep: Dep, config: WalrusGlobalProperties):
         self.name = walrus_dep.name
         self.erlang_version = config.erlang_version
-        (_, v) = walrus_dep.vsn  # TODO if type is not tag - search latest commit and append it
-        self.package_version = v
+        self.package_version = walrus_dep.vsn
         self.url = walrus_dep.url
         self.namespace = walrus_dep.url.split('/')[-2]
 

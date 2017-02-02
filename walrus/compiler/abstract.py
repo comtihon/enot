@@ -10,6 +10,7 @@ class Compiler(Enum):
 
 
 class AbstractCompiler(ABC):
+    project_name = ""
     compiler = "erlc"
     src_path = ""
     include_path = ""

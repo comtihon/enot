@@ -8,9 +8,10 @@ from walrus.compiler.abstract import Compiler
 
 
 class WalrusConfig(ConfigFile):
-    def __init__(self, path, vsn):
+    def __init__(self, path):
+        super().__init__(path)
         self.path = path
-        self.vsn = vsn
+        self.read_config()
 
     def read_config(self):
         content = read_file(join(self.path, 'walrusfile.json'))

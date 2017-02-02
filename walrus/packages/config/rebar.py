@@ -10,10 +10,10 @@ from walrus.compiler.abstract import Compiler
 
 
 class RebarConfig(ConfigFile):
-    def __init__(self, name, path, vsn):
-        self.name = name
+    def __init__(self, path):
+        super().__init__(path)
         self.path = path
-        self.vsn = vsn
+        self.read_config()
 
     def read_config(self):
         rebarconfig = decode(read_file(join(self.path, 'rebar.config')))
@@ -22,11 +22,11 @@ class RebarConfig(ConfigFile):
                 self.parse_deps(value)
         self.drop_unknown_deps()
 
-    # TODO handle non git deps, handle deps without (branch/tag, _)
     def parse_deps(self, deps):
         for (name, _, addr) in deps:
             (_, url, vsn) = addr
-            self.deps.append(Dep(name, url, vsn))
+            (_, vsn_value) = vsn
+            self.deps.append(Dep(name, url, vsn_value))
 
     def get_compiler(self):
         return Compiler.REBAR

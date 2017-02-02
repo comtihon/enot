@@ -1,7 +1,7 @@
 class Dep:
     name = ""
     url = ""
-    vsn = ()
+    vsn = ""
 
     def __init__(self, name, url, vsn):
         self.name = name

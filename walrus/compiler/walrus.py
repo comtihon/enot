@@ -2,9 +2,9 @@ from os import listdir
 from os.path import isfile, join, isdir
 from subprocess import Popen, PIPE
 
-from walrus.packages.config.config import ConfigFile
-from walrus.utils.file_utils import ensure_dir
 from walrus.compiler import AbstractCompiler
+from walrus.packages.config.config import ConfigFile
+from walrus.utils.file_utils import ensure_dir, read_file_lines, write_file_lines
 
 
 def is_erlang_source(file):
@@ -14,14 +14,16 @@ def is_erlang_source(file):
 class WalrusCompiler(AbstractCompiler):
     deps = []
     deps_path = ""
+    compose_app_file = True
 
     def __init__(self, package_config: ConfigFile):
         super().__init__()
         self.src_path = join(package_config.path, 'src')
         self.include_path = join(package_config.path, 'include')
         self.output_path = join(package_config.path, 'ebin')
+        self.compose_app_file = package_config.compose_app_file
         self.deps_path = join(package_config.path, 'deps')
-        print(self.deps_path)
+        self.project_name = package_config.name
         self.deps = [dep.name for dep in package_config.deps]
 
     def compile(self):
@@ -51,6 +53,24 @@ class WalrusCompiler(AbstractCompiler):
         else:
             return True
 
+    # TODO change reading file by lines on decoding file on erlang terms, changing and encoding back
+    def write_app_file(self, all_files):
+        if self.compose_app_file:
+            [app_src] = read_file_lines(join(self.src_path, self.project_name + '.app.src'))
+            changed_file = []
+            found = False
+            (_, _, opts) = app_src
+            for line in opts:
+                if not found and line.strip().startswith('{modules'):
+                    modified = append_modules_with_files(line, all_files)
+                    found = True
+                    changed_file.append(modified)
+                else:
+                    changed_file.append(line)
+            if not found:
+                create_modules_with_files(changed_file, all_files)
+            write_file_lines(changed_file, join(self.output_path, self.project_name + '.app'))
+
     def get_all_files(self, path, files):
         all_files = listdir(path)
         for file in all_files:
@@ -63,3 +83,23 @@ class WalrusCompiler(AbstractCompiler):
 
     def get_all_deps(self):
         return [join(self.deps_path, dep) for dep in self.deps]
+
+
+def create_modules_with_files(lines, all_files):
+    module_line = '{modules,' + str(all_files) + '},'
+    lines.insert(len(lines) - 1, module_line)
+
+
+def append_modules_with_files(line, all_files):
+    [prefix, modules] = line.split('[')
+    [modules, suffix] = modules.split(']')
+    modules = modules.replace(']}', '')  # TODO if braces will be divided with space or endline this will not work
+    modules_to_add = []
+    modules_str = modules.split(',')
+    for file in all_files:
+        if file not in modules_str:
+            modules_to_add.append(file)
+    if not modules_to_add:
+        return line
+    else:
+        return prefix + str(modules_str + modules_to_add) + suffix

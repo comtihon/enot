@@ -1,1 +1,1 @@
-from walrus.packages.dep import Dep
+from walrus.packages.package import Package

@@ -1,8 +1,8 @@
 from os.path import join
-from walrus.packages.config import ConfigFile
-from walrus.packages.dep import Dep
-from walrus.utils.file_utils import read_file_lines
+
 from walrus.compiler.abstract import Compiler
+from walrus.packages.config import ConfigFile
+from walrus.utils.file_utils import read_file_lines
 
 
 def get_deps_list(line):
@@ -22,21 +22,25 @@ class ErlangMkConfig(ConfigFile):
         self.path = path
         self.read_config()
 
-    def read_config(self):
+    def read_config(self) -> dict:
         content = read_file_lines(join(self.path, 'Makefile'))
         lines = [x.strip('\n') for x in content]
+        return self.parse_deps(lines)
 
+    def get_compiler(self):
+        return Compiler.ERLANG_MK
+
+    def parse_deps(self, lines):
         deps = []
+        return_deps = {}
         for line in lines:
             if line.startswith('DEPS'):
                 deps = get_deps_list(line)
             if line.startswith('dep_'):
                 name, url, tag = get_dep(line)
-                if name in deps:
-                    self.deps.append(Dep(name, url, tag))
+                print('try to add dep ' + name + ' for ' + self.name)
+                if name in deps and name in self.app_deps:
+                    return_deps[name] = (url, tag)
                 else:
-                    print('Skip unknown dep ' + name)
-        self.drop_unknown_deps()
-
-    def get_compiler(self):
-        return Compiler.ERLANG_MK
+                    print('Drop unused dep ' + name)
+        return return_deps

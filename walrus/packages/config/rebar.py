@@ -1,12 +1,10 @@
 from os.path import join
 
-
 from erl_terms.erl_terms_core import decode
 
-from walrus.packages.config import ConfigFile
-from walrus.packages.dep import Dep
-from walrus.utils.file_utils import read_file
 from walrus.compiler.abstract import Compiler
+from walrus.packages.config import ConfigFile
+from walrus.utils.file_utils import read_file
 
 
 class RebarConfig(ConfigFile):
@@ -19,14 +17,18 @@ class RebarConfig(ConfigFile):
         rebarconfig = decode(read_file(join(self.path, 'rebar.config')))
         for (key, value) in rebarconfig:
             if key == 'deps':
-                self.parse_deps(value)
-        self.drop_unknown_deps()
+                return self.parse_deps(value)
 
     def parse_deps(self, deps):
+        return_deps = {}
         for (name, _, addr) in deps:
-            (_, url, vsn) = addr
-            (_, vsn_value) = vsn
-            self.deps.append(Dep(name, url, vsn_value))
+            if name in self.app_deps:
+                (_, url, vsn) = addr
+                (_, vsn_value) = vsn
+                return_deps[name] = (url, vsn_value)
+            else:
+                print('Drop unused dep ' + name)
+        return return_deps
 
     def get_compiler(self):
         return Compiler.REBAR

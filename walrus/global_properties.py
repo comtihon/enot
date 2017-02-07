@@ -1,19 +1,17 @@
 import json
 import os
-import shlex
-import subprocess
 from os.path import join
 
-from walrus.utils.file_utils import write_file, read_file
 from walrus.compiler import Compiler
+from walrus.pac_cache import cache_factory
+from walrus.utils.file_utils import write_file, read_file
 
 
 class WalrusGlobalProperties:
     cache_url = ""
     temp_dir = ""
     compiler = ""  # walrus | rebar | erlang.mk | rebar3 | package-local
-
-    erlang_version = ""
+    cache = None
 
     def __init__(self, path='/home/tihon/.walrus'):  # TODO hardcoded config    #TODO make os independent
         if not os.path.exists(path):
@@ -28,7 +26,7 @@ class WalrusGlobalProperties:
         self.cache_url = conf['cache_url']
         self.temp_dir = conf['temp_dir']
         self.set_compiler(conf)
-        self.erlang_version = WalrusGlobalProperties.get_erlang_version()
+        self.cache = cache_factory.get_cache(self.temp_dir, self.cache_url)
 
     @staticmethod
     def get_default_conf():
@@ -38,18 +36,6 @@ class WalrusGlobalProperties:
                 'temp_dir': '/tmp/walrus',
                 'compiler': 'walrus'
             }
-
-    @staticmethod
-    def get_erlang_version():
-        proc = subprocess.run(
-            shlex.split("erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell"),
-            stdout=subprocess.PIPE)
-        if proc.returncode == 0:
-            version = proc.stdout.decode('utf-8').strip()
-            return version.translate({ord(c): None for c in '"'})
-        else:
-            print("Can't get erlang version")  # TODO handle error
-            return None
 
     def set_compiler(self, conf):
         if conf['compiler'] == 'walrus':

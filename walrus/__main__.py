@@ -2,15 +2,14 @@ import os
 import sys
 
 from walrus.packages import package_builder
-from walrus.global_properties import WalrusGlobalProperties
-from walrus.packages.package_builder import build_package, Builder
+from walrus.packages.package_builder import Builder
 
 
 def main(args=None):
     if args is None:
         args = sys.argv[1:]
     if 'build' in args:
-        return build()
+        return build(os.getcwd())
     elif 'walrusify' in args:
         return walrusify(os.getcwd())  # TODO path
     elif 'release' in args:
@@ -23,9 +22,10 @@ def main(args=None):
         # TODO additional args
 
 
-def build():
-    system_config = WalrusGlobalProperties()
-    if not build_package(os.getcwd(), system_config):
+def build(path):
+    builder = Builder(path)
+    package = builder.populate()
+    if not builder.build_tree(package):
         sys.exit(1)
     else:
         sys.exit(0)
@@ -37,10 +37,11 @@ def release():
 
 def deps(path):
     builder = Builder(path)
-    if builder.populate():
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    package = builder.populate()    # TODO link deps to package
+    for dep in package.list_deps():
+        if not builder.build_tree(dep):
+            sys.exit(1)
+    sys.exit(0)
 
 
 def walrusify(path):

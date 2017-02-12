@@ -20,7 +20,6 @@ class ErlangMkConfig(ConfigFile):
     def __init__(self, path):
         super().__init__(path)
         self.path = path
-        self.read_config()
 
     def read_config(self) -> dict:
         content = read_file_lines(join(self.path, 'Makefile'))
@@ -38,7 +37,6 @@ class ErlangMkConfig(ConfigFile):
                 deps = get_deps_list(line)
             if line.startswith('dep_'):
                 name, url, tag = get_dep(line)
-                print('try to add dep ' + name + ' for ' + self.name)
                 if name in deps and name in self.app_deps:
                     return_deps[name] = (url, tag)
                 else:

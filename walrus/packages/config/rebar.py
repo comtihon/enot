@@ -11,13 +11,13 @@ class RebarConfig(ConfigFile):
     def __init__(self, path):
         super().__init__(path)
         self.path = path
-        self.read_config()
 
     def read_config(self):
         rebarconfig = decode(read_file(join(self.path, 'rebar.config')))
         for (key, value) in rebarconfig:
             if key == 'deps':
                 return self.parse_deps(value)
+        return {}
 
     def parse_deps(self, deps):
         return_deps = {}

@@ -5,7 +5,6 @@ from os.path import join
 from git import Repo
 
 from walrus.pac_cache import Cache
-from walrus.packages.config import ConfigFile
 from walrus.packages.package import Package
 from walrus.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed
 from walrus.utils.file_utils import remove_dir
@@ -22,14 +21,14 @@ class LocalCache(Cache):
         self.path = path
         self.temp_dir = temp_dir
 
-    def exists(self, package: Package) -> bool:  # TODO error here. If package non existent - no config of package
+    def exists(self, package: Package) -> bool:
         return if_dir_exists(self.path, self.__get_package_path(package))
 
     # clone git repo to tmp, make package to scan and update it's config
-    def fetch_package(self, package: Package):  # TODO error here. If package non existent - no config of package
+    def fetch_package(self, package: Package):
         temp_path = join(self.temp_dir, package.get_name())
         print('fetch ' + temp_path)
-        remove_dir(self.temp_dir)
+        remove_dir(temp_path)
         repo = Repo.clone_from(package.url, temp_path)
         assert not repo.bare
         tag = repo.create_head(package.vsn)
@@ -38,35 +37,45 @@ class LocalCache(Cache):
         LocalCache.fill_package_from_temp(package, temp_path)
 
     # make package to scan and update it's config
-    def get_package(self, package: Package):  # TODO error here. If package non existent - no config of package
+    def get_package(self, package: Package):
         LocalCache.fill_package_from_temp(package, join(self.temp_dir, package.get_name()))
 
     # add built package to local cache
-    def add_package(self, package: Package, path, package_config: ConfigFile):
+    def add_package(self, package: Package, rewrite=False):
         full_dir = join(self.path, self.__get_package_path(package))
         ensure_dir(full_dir)
-        print('copy ' + full_dir)
-        shutil.copytree(join(path, 'ebin'), join(full_dir, 'ebin'))
-        package_include = join(path, 'include')
+        print('add ' + package.get_name())
+        path = package.config.path
+        cache_ebin = join(full_dir, 'ebin')
+        if rewrite or not os.path.exists(cache_ebin):
+            package_ebin = join(path, 'ebin')
+            print('copy ' + package_ebin + ' to' + cache_ebin)
+            shutil.copytree(package_ebin, cache_ebin)
         cache_include = join(full_dir, 'include')
-        package_src = join(path, 'src')
+        if rewrite or not os.path.exists(cache_include):
+            package_include = join(path, 'include')
+            if os.path.exists(package_include):
+                print('copy ' + package_include + ' to' + cache_include)
+                shutil.copytree(package_include, cache_include)
         cache_src = join(full_dir, 'src')
-        if os.path.exists(package_include):
-            shutil.copytree(package_include, cache_include)
-        if package_config.with_source:
-            shutil.copytree(package_src, cache_src)
+        if rewrite or not os.path.exists(cache_src):
+            if package.config.with_source:
+                package_src = join(path, 'src')
+                print('copy ' + package_src + ' to' + cache_src)
+                shutil.copytree(package_src, cache_src)
 
     # link package from local cache to project
-    def link_package(self, package: Package):
-        current_dir = os.getcwd()
+    def link_package(self, package: Package, path: str):
+        if not path:
+            path = os.getcwd()
         package_path = join(self.path, self.__get_package_path(package))
         package_name = package.get_name()
-        dep_dir = join(current_dir, 'deps', package_name)
+        dep_dir = join(path, 'deps', package_name)
         ensure_dir(dep_dir)
-        print('link :' + package_name)
-        LocalCache.link(package_path, current_dir, package_name, 'include')
-        LocalCache.link(package_path, current_dir, package_name, 'src')
-        LocalCache.link(package_path, current_dir, package_name, 'ebin')
+        print('link ' + package_name)
+        LocalCache.link(package_path, path, package_name, 'include')
+        LocalCache.link(package_path, path, package_name, 'src')
+        LocalCache.link(package_path, path, package_name, 'ebin')
 
     @staticmethod
     def fill_package_from_temp(package: Package, path: str):

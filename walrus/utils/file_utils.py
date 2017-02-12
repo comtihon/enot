@@ -36,6 +36,7 @@ def if_dir_exists(path: str, dir_to_check: str) -> str or None:
 
 
 def link_if_needed(include_src, include_dst):
+    print('link ' + include_src + ' -> ' + include_dst)
     if os.path.exists(include_src) and not os.path.exists(include_dst):
         os.symlink(include_src, include_dst)
 

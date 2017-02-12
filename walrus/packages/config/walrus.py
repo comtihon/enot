@@ -10,7 +10,6 @@ class WalrusConfig(ConfigFile):
     def __init__(self, path):
         super().__init__(path)
         self.path = path
-        self.read_config()
 
     def read_config(self) -> dict:
         content = read_file(join(self.path, 'walrusfile.json'))

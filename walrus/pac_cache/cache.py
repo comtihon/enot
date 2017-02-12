@@ -1,10 +1,8 @@
 import shlex
+import subprocess
 from abc import ABC, abstractmethod
 
-import subprocess
-
 from walrus.packages import Package
-from walrus.packages.config import ConfigFile
 
 
 class Cache(ABC):
@@ -27,10 +25,10 @@ class Cache(ABC):
         pass
 
     @abstractmethod
-    def add_package(self, package: Package, path: str, package_config: ConfigFile):
+    def add_package(self, package: Package, rewrite: bool):
         pass
 
-    def link_package(self, package: Package):
+    def link_package(self, package: Package, path: str):
         pass
 
     @staticmethod
@@ -44,4 +42,3 @@ class Cache(ABC):
         else:
             print("Can't get erlang version")  # TODO handle error
             return None
-

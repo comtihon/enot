@@ -17,5 +17,5 @@ class AbstractCompiler(ABC):
     output_path = ""
 
     @abstractmethod
-    def compile(self):
+    def compile(self) -> bool:
         pass

@@ -1,24 +1,23 @@
 import json
 
 from walrus.packages.config import config_factory
+from walrus.packages.config.stub_config import StubConfig
 
 
 class Package:
     url = None  # git url
     vsn = None  # git tag / git commit hash
     config = None  # ConfigFile
-    deps = {}  # list of deps.
+    deps = None  # list of deps.
 
     def __init__(self, config=None, url=None, vsn=None):
         self.url = url
         self.vsn = vsn
         self.config = config
-        if config is not None:
-            self.__fill_deps()
+        self.__fill_deps()
 
     def fill_from_path(self, path):
-        config = config_factory.read_project(path)
-        self.config = config
+        self.config = config_factory.upgrade_conf(path, self.config)
         self.__fill_deps()
 
     @classmethod
@@ -27,15 +26,16 @@ class Package:
         return cls(config=config)
 
     @classmethod
-    def fromdeps(cls, dep):  # TODO should somehow form config here to know name of a dep at least
+    def fromdeps(cls, name, dep):
         (url, vsn) = dep
-        return cls(url=url, vsn=vsn)
+        config = StubConfig(name)
+        return cls(url=url, vsn=vsn, config=config)
 
     def export(self):
         return {'name': self.config.name,
                 'url': self.url,
                 'vsn': self.vsn,
-                'deps': [dep.export() for dep in self.deps]}
+                'deps': [dep.export() for _, dep in self.deps.items()]}
 
     def get_valrus_package(self):
         export = self.export()
@@ -46,7 +46,12 @@ class Package:
     def get_name(self):
         return self.config.name
 
+    def list_deps(self) -> list:
+        return self.deps.values()
+
     def __fill_deps(self):
         deps = self.config.read_config()
         for name, dep in deps.items():
-            self.deps[name] = Package.fromdeps(dep)
+            print(name + ' ' + str(dep))
+            deps[name] = Package.fromdeps(name, dep)
+        self.deps = deps

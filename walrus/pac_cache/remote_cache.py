@@ -1,6 +1,5 @@
 from walrus.pac_cache import Cache
 from walrus.packages import Package
-from walrus.packages.config import ConfigFile
 
 
 class RemoteCache(Cache):
@@ -14,7 +13,7 @@ class RemoteCache(Cache):
     def fetch_package(self, package: Package):
         pass
 
-    def link_package(self, name):
+    def link_package(self, name, path: str):
         # TODO download package to local cache
         pass
 
@@ -22,6 +21,6 @@ class RemoteCache(Cache):
         # TODO build package, load to repo
         pass
 
-    def add_package(self, package: Package, path, package_config: ConfigFile):
+    def add_package(self, package: Package, rewrite=False):
         # TODO unneeded
         pass

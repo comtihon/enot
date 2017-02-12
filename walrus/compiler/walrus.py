@@ -1,9 +1,9 @@
+import os
 from os import listdir
 from os.path import isfile, join, isdir
 from subprocess import Popen, PIPE
 
 from walrus.compiler import AbstractCompiler
-from walrus.packages.config.config import ConfigFile
 from walrus.utils.file_utils import ensure_dir, read_file_lines, write_file_lines
 
 
@@ -12,39 +12,31 @@ def is_erlang_source(file):
 
 
 class WalrusCompiler(AbstractCompiler):
-    deps = []
     deps_path = ""
     compose_app_file = True
 
-    def __init__(self, package_config: ConfigFile):
+    def __init__(self, path: str, compose_app_file: bool, name: str):
         super().__init__()
-        self.src_path = join(package_config.path, 'src')
-        self.include_path = join(package_config.path, 'include')
-        self.output_path = join(package_config.path, 'ebin')
-        self.compose_app_file = package_config.compose_app_file
-        self.deps_path = join(package_config.path, 'deps')
-        self.project_name = package_config.name
-        self.deps = [dep.name for dep in package_config.deps]
+        self.src_path = join(path, 'src')
+        self.include_path = join(path, 'include')
+        self.output_path = join(path, 'ebin')
+        self.compose_app_file = compose_app_file
+        self.deps_path = join(path, 'deps')
+        self.project_name = name
 
-    def compile(self):
+    def compile(self) -> bool:
+        print('build ' + self.project_name)
         all_files = self.get_all_files(self.src_path, [])
-        all_deps = self.get_all_deps()
-        print(all_deps)
         ensure_dir(self.output_path)
-        return self.do_compile(all_files, all_deps)
+        return self.do_compile(all_files)
 
-    # TODO use ERL_LIBS=deps instead? (think about parse-transform)
-    # TODO add dep names to app.src modules and copy app.src to disk
-    def do_compile(self, files, deps):
+    def do_compile(self, files):
+        env_vars = dict(os.environ)
         cmd = [self.compiler, "-I", self.include_path, "-o", self.output_path]
-        if deps:
-            for dep in deps:
-                cmd.append("-pa")
-                cmd.append(dep)
+        env_vars['ERL_LIBS'] = self.deps_path
         for file in files:
             cmd.append(file)
-        print('args ' + str(cmd))
-        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE, env=env_vars)
         if p.wait() != 0:
             print("Compilation failed: ")
             err = p.stdout.read()
@@ -80,9 +72,6 @@ class WalrusCompiler(AbstractCompiler):
             elif is_erlang_source(abs_file):
                 files.append(abs_file)
         return files
-
-    def get_all_deps(self):
-        return [join(self.deps_path, dep) for dep in self.deps]
 
 
 def create_modules_with_files(lines, all_files):

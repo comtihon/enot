@@ -19,6 +19,7 @@ class ConfigFile(ABC):
     app_deps = []  # deps from app.src or app file
 
     def __init__(self, path: str):
+        print('read erlang file ' + path)   # TODO multiple times package is read
         res = read_erlang_file(join(path, 'src'), '.app.src')
         if not res:
             self.compose_app_file = False
@@ -48,7 +49,7 @@ class ConfigFile(ABC):
     def set_app_primary_params(self, file):
         [decoded] = file
         (_, name, opts) = decoded
-        self.name = name
+        self.name = name.replace("'", '')
         for (k, v) in opts:
             if k == 'vsn':
                 self.app_vsn = v

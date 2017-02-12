@@ -6,7 +6,8 @@ setup(name='walrus',
       author='Valerii Tikhonov',
       author_email='valerii.tikhonov@gmail.com',
       url='https://github.com/comtihon/walrus',
-      packages=find_packages(), requires=['erl_terms', 'gitpython'],
+      packages=find_packages(),
+      install_requires=['erl_terms', 'gitpython'],
       entry_points={
           'console_scripts': [
               'walrus=walrus.__main__:main'

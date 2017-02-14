@@ -35,12 +35,11 @@ def release():
     return True
 
 
+#  TODO add an ability to link full deps tree to project
 def deps(path):
     builder = Builder(path)
-    package = builder.populate()    # TODO link deps to package
-    for dep in package.list_deps():
-        if not builder.build_tree(dep):
-            sys.exit(1)
+    package = builder.populate()
+    builder.build_deps(package, check_exist=False)
     sys.exit(0)
 
 

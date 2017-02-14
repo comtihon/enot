@@ -27,29 +27,30 @@ class Builder:
         self.__populate_deps(first_level.deps)
         return first_level
 
-    def __populate_deps(self, deps):  # TODO add an ability to operate with deps in parallel
-        for name, dep in deps.items():
-            if name not in self.packages:
-                print('new dep: ' + name)
-            if self.system_config.cache.exists(dep):
-                self.system_config.cache.get_package(dep)
-            else:
-                self.system_config.cache.fetch_package(dep)
-            self.__populate_deps(dep.deps)
-
-    # Build package, copy to cache, link with project
-    def build_tree(self, package: Package):
-        # TODO check if package.config.path exists
-        if self.system_config.cache.exists(package):
+    # Build all deps, add to cache and link to project
+    def build_deps(self, package: Package, check_exist=True):
+        # TODO check if package.config.path exists (if deps were populated before calling build_deps/build_tree)
+        if check_exist and self.system_config.cache.exists(package):
             return True
         for dep in package.list_deps():
-            print(self.system_config.cache.exists(dep))
             if not self.system_config.cache.exists(dep):  # if package not in cache - build and add to cache
                 if not self.build_tree(dep):
                     raise RuntimeError('Can\'t built dep ' + dep.get_name())
             self.system_config.cache.link_package(dep, package.config.path)
+
+    # Build package and it's deps
+    def build_tree(self, package: Package):
+        self.build_deps(package)
         compiler = get_compiler(self.system_config, package.config)
         res = compiler.compile()
         if res:
             self.system_config.cache.add_package(package)
         return res
+
+    def __populate_deps(self, deps):  # TODO add an ability to operate with deps in parallel
+        for name, dep in deps.items():
+            if name not in self.packages:
+                print('new dep: ' + name)
+            if not self.system_config.cache.exists(dep):
+                self.system_config.cache.fetch_package(dep)
+            self.__populate_deps(dep.deps)

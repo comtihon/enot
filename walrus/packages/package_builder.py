@@ -28,9 +28,10 @@ class Builder:
         return first_level
 
     # Build all deps, add to cache and link to project
-    def build_deps(self, package: Package, check_exist=True):
+    def build_deps(self, package: Package, is_subpackage=True):
         # TODO check if package.config.path exists (if deps were populated before calling build_deps/build_tree)
-        if check_exist and self.system_config.cache.exists(package):
+        print('check ' + package.get_name())
+        if is_subpackage and self.system_config.cache.exists(package):
             return True
         for dep in package.list_deps():
             if not self.system_config.cache.exists(dep):  # if package not in cache - build and add to cache
@@ -39,11 +40,11 @@ class Builder:
             self.system_config.cache.link_package(dep, package.config.path)
 
     # Build package and it's deps
-    def build_tree(self, package: Package):
-        self.build_deps(package)
+    def build_tree(self, package: Package, is_subpackage=True):
+        self.build_deps(package, is_subpackage)  # TODO add an ability to compile deps in parallel
         compiler = get_compiler(self.system_config, package.config)
         res = compiler.compile()
-        if res:
+        if is_subpackage and res:
             self.system_config.cache.add_package(package)
         return res
 

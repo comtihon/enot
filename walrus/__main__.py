@@ -25,7 +25,7 @@ def main(args=None):
 def build(path):
     builder = Builder(path)
     package = builder.populate()
-    if not builder.build_tree(package):
+    if not builder.build_tree(package, is_subpackage=False):
         sys.exit(1)
     else:
         sys.exit(0)
@@ -39,7 +39,7 @@ def release():
 def deps(path):
     builder = Builder(path)
     package = builder.populate()
-    builder.build_deps(package, check_exist=False)
+    builder.build_deps(package, is_subpackage=False)
     sys.exit(0)
 
 

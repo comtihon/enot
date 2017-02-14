@@ -4,7 +4,7 @@ from os.path import isfile, join, isdir
 from subprocess import Popen, PIPE
 
 from walrus.compiler import AbstractCompiler
-from walrus.utils.file_utils import ensure_dir, read_file_lines, write_file_lines
+from walrus.utils.file_utils import ensure_dir, read_file, write_file_lines
 
 
 def is_erlang_source(file):
@@ -26,11 +26,11 @@ class WalrusCompiler(AbstractCompiler):
 
     def compile(self) -> bool:
         print('build ' + self.project_name)
-        all_files = self.get_all_files(self.src_path, [])
+        filenames, all_files = self.get_all_files(self.src_path)
         ensure_dir(self.output_path)
-        return self.do_compile(all_files)
+        return self.do_compile(filenames, all_files)
 
-    def do_compile(self, files):
+    def do_compile(self, filenames, files):
         env_vars = dict(os.environ)
         cmd = [self.compiler, "-I", self.include_path, "-o", self.output_path]
         env_vars['ERL_LIBS'] = self.deps_path
@@ -43,52 +43,50 @@ class WalrusCompiler(AbstractCompiler):
             print(err.decode('utf8'))
             return False
         else:
+            self.write_app_file(filenames)
             return True
 
     # TODO change reading file by lines on decoding file on erlang terms, changing and encoding back
     def write_app_file(self, all_files):
         if self.compose_app_file:
-            [app_src] = read_file_lines(join(self.src_path, self.project_name + '.app.src'))
-            changed_file = []
-            found = False
-            (_, _, opts) = app_src
-            for line in opts:
-                if not found and line.strip().startswith('{modules'):
-                    modified = append_modules_with_files(line, all_files)
-                    found = True
-                    changed_file.append(modified)
-                else:
-                    changed_file.append(line)
-            if not found:
-                create_modules_with_files(changed_file, all_files)
+            app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
+            if '{modules' in app_src:
+                changed_file = append_modules_with_files(app_src, all_files)
+            else:
+                changed_file = create_modules_with_files(app_src, all_files)
             write_file_lines(changed_file, join(self.output_path, self.project_name + '.app'))
 
-    def get_all_files(self, path, files):
+    def get_all_files(self, path):
+        abs_files = []
+        modules = []
         all_files = listdir(path)
         for file in all_files:
             abs_file = join(path, file)
             if isdir(abs_file):
-                self.get_all_files(abs_file, files)
+                dir_file_names, dir_abs_files = self.get_all_files(abs_file)
+                abs_files += dir_abs_files
+                modules += dir_file_names
             elif is_erlang_source(abs_file):
-                files.append(abs_file)
-        return files
+                abs_files.append(abs_file)
+                modules.append(file[:-4])  # remove .erl
+        return modules, abs_files
 
 
-def create_modules_with_files(lines, all_files):
+def create_modules_with_files(app_src, all_files):
+    [before, after] = str.split(app_src, '{applications,')
     module_line = '{modules,' + str(all_files) + '},'
-    lines.insert(len(lines) - 1, module_line)
+    return before + module_line + '{applications,' + after
 
 
-def append_modules_with_files(line, all_files):
-    [prefix, modules] = line.split('[')
-    [modules, suffix] = modules.split(']')
-    modules = modules.replace(']}', '')  # TODO if braces will be divided with space or endline this will not work
+def append_modules_with_files(app_src, all_files):
+    [before, after] = str.split(app_src, '{modules,[')
+    [modules, after_modules] = str.split(after, ']')
+    existing_modules = str.split(modules, ',')
     modules_to_add = []
-    modules_str = modules.split(',')
     for file in all_files:
-        if file not in modules_str:
+        if file not in existing_modules:
             modules_to_add.append(file)
     if not modules_to_add:
-        return line
-    else:
-        return prefix + str(modules_str + modules_to_add) + suffix
+        return app_src
+    else:   # TODO improve this and write test
+        return before + '{modules,[' + modules + str(modules_to_add) + ']' + after_modules

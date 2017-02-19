@@ -12,6 +12,7 @@ class WalrusConfig(ConfigFile):
         self.path = path
 
     def read_config(self) -> dict:
+        super().read_app_primary_params()
         content = read_file(join(self.path, 'walrusfile.json'))
         parsed = json.loads(content)
         self.name = parsed['name']

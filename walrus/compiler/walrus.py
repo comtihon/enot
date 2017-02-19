@@ -82,7 +82,6 @@ def append_modules_with_files(app_src, all_files):
     [before, after] = str.split(app_src, '{modules,', 1)
     [modules, after_modules] = str.split(after, ']', 1)
     to_write = __get_modules_to_add(modules, all_files)
-    print(to_write)
     if not to_write:
         return app_src
     else:

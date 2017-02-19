@@ -22,6 +22,7 @@ class ErlangMkConfig(ConfigFile):
         self.path = path
 
     def read_config(self) -> dict:
+        super().read_app_primary_params()
         content = read_file_lines(join(self.path, 'Makefile'))
         lines = [x.strip('\n') for x in content]
         return self.parse_deps(lines)

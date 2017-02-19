@@ -19,14 +19,7 @@ class ConfigFile(ABC):
     app_deps = []  # deps from app.src or app file
 
     def __init__(self, path: str):
-        print('read erlang file ' + path)   # TODO multiple times package is read
-        res = read_erlang_file(join(path, 'src'), '.app.src')
-        if not res:
-            self.compose_app_file = False
-            res = read_erlang_file(join(path, 'ebin'), '.app')
-        if not res:
-            raise ValueError('No app or app.src file in app!')
-        self.set_app_primary_params(res)
+        self.path = path
 
     # read config, return deps
     @abstractmethod
@@ -46,7 +39,16 @@ class ConfigFile(ABC):
                 'drop_unknown_deps': self.drop_unknown
                 }
 
-    def set_app_primary_params(self, file):
+    def read_app_primary_params(self):
+        res = read_erlang_file(join(self.path, 'src'), '.app.src')
+        if not res:
+            self.compose_app_file = False
+            res = read_erlang_file(join(self.path, 'ebin'), '.app')
+        if not res:
+            raise ValueError('No app or app.src file in app!')
+        self.__set_app_primary_params(res)
+
+    def __set_app_primary_params(self, file):
         [decoded] = file
         (_, name, opts) = decoded
         self.name = name.replace("'", '')

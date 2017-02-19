@@ -13,6 +13,7 @@ class RebarConfig(ConfigFile):
         self.path = path
 
     def read_config(self):
+        super().read_app_primary_params()
         rebarconfig = decode(read_file(join(self.path, 'rebar.config')))
         for (key, value) in rebarconfig:
             if key == 'deps':

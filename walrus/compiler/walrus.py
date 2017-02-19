@@ -73,20 +73,38 @@ class WalrusCompiler(AbstractCompiler):
 
 
 def create_modules_with_files(app_src, all_files):
-    [before, after] = str.split(app_src, '{applications,')
+    [before, after] = str.split(app_src, '{applications,', 1)
     module_line = '{modules,' + str(all_files) + '},'
     return before + module_line + '{applications,' + after
 
 
 def append_modules_with_files(app_src, all_files):
-    [before, after] = str.split(app_src, '{modules,[')
-    [modules, after_modules] = str.split(after, ']')
-    existing_modules = str.split(modules, ',')
+    [before, after] = str.split(app_src, '{modules,', 1)
+    [modules, after_modules] = str.split(after, ']', 1)
+    to_write = __get_modules_to_add(modules, all_files)
+    print(to_write)
+    if not to_write:
+        return app_src
+    else:
+        return before + '{modules,' + str(to_write) + after_modules
+
+
+def __get_all_existing_modules(all_modules_str):
+    splitted = str.split(all_modules_str, ',')
+    existing = [x.strip("\n[ ") for x in splitted]
+    if existing == ['']:
+        return []
+    else:
+        return existing
+
+
+def __get_modules_to_add(all_modules, all_files):
+    existing_modules = __get_all_existing_modules(all_modules)
     modules_to_add = []
     for file in all_files:
         if file not in existing_modules:
             modules_to_add.append(file)
     if not modules_to_add:
-        return app_src
-    else:   # TODO improve this and write test
-        return before + '{modules,[' + modules + str(modules_to_add) + ']' + after_modules
+        return []
+    else:
+        return modules_to_add + existing_modules

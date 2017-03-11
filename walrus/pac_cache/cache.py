@@ -1,8 +1,14 @@
 import shlex
 import subprocess
 from abc import ABC, abstractmethod
+from enum import Enum
 
 from walrus.packages import Package
+
+
+class CacheType(Enum):
+    LOCAL = 'local'
+    ARTIFACTORY = 'artifactory'
 
 
 class Cache(ABC):

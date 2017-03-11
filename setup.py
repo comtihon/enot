@@ -7,7 +7,7 @@ setup(name='walrus',
       author_email='valerii.tikhonov@gmail.com',
       url='https://github.com/comtihon/walrus',
       packages=find_packages(),
-      install_requires=['erl_terms', 'gitpython'],
+      install_requires=['erl_terms', 'gitpython', 'artifactory'],
       entry_points={
           'console_scripts': [
               'walrus=walrus.__main__:main'

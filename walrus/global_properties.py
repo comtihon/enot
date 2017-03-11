@@ -3,7 +3,8 @@ import os
 from os.path import join
 
 from walrus.compiler import Compiler
-from walrus.pac_cache import cache_factory
+from walrus.pac_cache import CacheType
+from walrus.pac_cache.cache_man import CacheMan
 from walrus.utils.file_utils import write_file, read_file
 
 
@@ -11,7 +12,7 @@ class WalrusGlobalProperties:
     cache_url = ""
     temp_dir = ""
     compiler = ""  # walrus | rebar | erlang.mk | rebar3 | package-local
-    cache = None
+    cache: CacheMan = None
 
     def __init__(self, path='/home/tihon/.walrus'):  # TODO hardcoded config    #TODO make os independent
         if not os.path.exists(path):
@@ -25,19 +26,32 @@ class WalrusGlobalProperties:
             conf = json.loads(content)
         self.cache_url = conf['cache_url']
         self.temp_dir = conf['temp_dir']
-        self.set_compiler(conf)
-        self.cache = cache_factory.get_cache(self.temp_dir, self.cache_url)
+        self.__set_compiler(conf)
+        self.__set_up_cache(conf)
 
     @staticmethod
-    def get_default_conf():
+    def get_default_conf():  # TODO remove me to resource
         return \
             {
-                'cache_url': 'file:///home/tihon/.walrus/cache',
-                'temp_dir': '/tmp/walrus',
-                'compiler': 'walrus'
+                'compiler': 'walrus',
+                'cache':
+                    [
+                        {
+                            'type': CacheType.LOCAL,
+                            'url': 'file:///home/tihon/.walrus/cache',
+                            'temp_dir': '/tmp/walrus',
+                        },
+                        {  # TODO remove this test entry
+                            'type': CacheType.ARTIFACTORY,
+                            'url': 'http://127.0.0.1:8081/artifactory/generic-local'
+                        }
+                    ]
             }
 
-    def set_compiler(self, conf):
+    def __set_up_cache(self, conf: dict):
+        self.cache = CacheMan(conf)
+
+    def __set_compiler(self, conf):
         if conf['compiler'] == 'walrus':
             self.compiler = Compiler.WALRUS
         elif conf['compiler'] == 'rebar':

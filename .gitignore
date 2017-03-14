@@ -90,5 +90,5 @@ ENV/
 # Rope project settings
 .ropeproject
 
-/.idea/
-/valrus.iml
+.idea/
+*.iml

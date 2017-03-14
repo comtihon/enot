@@ -2,11 +2,16 @@ import os
 import shutil
 from os.path import join
 from erl_terms.erl_terms_core import decode
+from shutil import copyfile
 
 
 def read_file(path: str) -> str:
     with open(path, 'r') as f:
         return f.read()
+
+
+def copy_file(src: str, dst: str):
+    copyfile(src, dst)
 
 
 # TODO catch read errors

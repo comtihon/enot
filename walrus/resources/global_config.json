@@ -1,0 +1,11 @@
+{
+  "compiler" : "walrus",
+  "cache":
+  [
+    {
+      "type": "local",
+      "url": "file://~/.cache/walrus",
+      "temp_dir": "/tmp/walrus"
+    }
+  ]
+}

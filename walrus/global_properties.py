@@ -1,11 +1,18 @@
 import json
-import os
 from os.path import join
 
+from appdirs import *
+from pkg_resources import Requirement, resource_filename
+
+import walrus
 from walrus.compiler import Compiler
-from walrus.pac_cache import CacheType
 from walrus.pac_cache.cache_man import CacheMan
-from walrus.utils.file_utils import write_file, read_file
+from walrus.utils.file_utils import read_file, ensure_dir, copy_file
+
+
+def init_config(source, path, file):
+    ensure_dir(path)
+    copy_file(source, join(path, file))
 
 
 class WalrusGlobalProperties:
@@ -14,39 +21,19 @@ class WalrusGlobalProperties:
     compiler = ""  # walrus | rebar | erlang.mk | rebar3 | package-local
     cache: CacheMan = None
 
-    def __init__(self, path='/home/tihon/.walrus'):  # TODO hardcoded config    #TODO make os independent
+    def __init__(self, path=user_config_dir(walrus.APPNAME)):
         if not os.path.exists(path):
             os.makedirs(path)
-        config_path = join(path, 'config.json')
+        config_path = join(path, 'global_config.json')
         if not os.path.exists(config_path):
-            conf = WalrusGlobalProperties.get_default_conf()
-            write_file(config_path, json.dumps(conf))  # TODO handle write error
-        else:
-            content = read_file(config_path)
-            conf = json.loads(content)
+            template = resource_filename(Requirement.parse(walrus.APPNAME), 'walrus/resources/global_config.json')
+            init_config(template, path, 'global_config.json')
+        content = read_file(config_path)
+        conf = json.loads(content)
         self.cache_url = conf['cache_url']
         self.temp_dir = conf['temp_dir']
         self.__set_compiler(conf)
         self.__set_up_cache(conf)
-
-    @staticmethod
-    def get_default_conf():  # TODO remove me to resource
-        return \
-            {
-                'compiler': 'walrus',
-                'cache':
-                    [
-                        {
-                            'type': CacheType.LOCAL,
-                            'url': 'file:///home/tihon/.walrus/cache',
-                            'temp_dir': '/tmp/walrus',
-                        },
-                        {  # TODO remove this test entry
-                            'type': CacheType.ARTIFACTORY,
-                            'url': 'http://127.0.0.1:8081/artifactory/generic-local'
-                        }
-                    ]
-            }
 
     def __set_up_cache(self, conf: dict):
         self.cache = CacheMan(conf)

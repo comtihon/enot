@@ -11,15 +11,11 @@ from walrus.utils.file_utils import remove_dir
 
 
 class LocalCache(Cache):
-    temp_dir = ""
-
     def __init__(self, temp_dir, cache_url):
-        super().__init__()
         path = cache_url[7:]
+        super().__init__(temp_dir, path)
         if not os.path.exists(path):
             os.makedirs(path)
-        self.path = path
-        self.temp_dir = temp_dir
 
     def exists(self, package: Package) -> bool:
         return if_dir_exists(self.path, self.__get_package_path(package))
@@ -31,9 +27,9 @@ class LocalCache(Cache):
         remove_dir(temp_path)
         repo = Repo.clone_from(package.url, temp_path)
         assert not repo.bare
-        tag = repo.create_head(package.vsn)
-        repo.head.reference = tag
-        repo.head.reset(index=True, working_tree=True)
+        git = repo.git
+        git.checkout(package.vsn)
+        repo.create_head(package.vsn)
         LocalCache.fill_package_from_temp(package, temp_path)
 
     # make package to scan and update it's config
@@ -46,23 +42,12 @@ class LocalCache(Cache):
         ensure_dir(full_dir)
         print('add ' + package.get_name())
         path = package.config.path
-        cache_ebin = join(full_dir, 'ebin')
-        if rewrite or not os.path.exists(cache_ebin):
-            package_ebin = join(path, 'ebin')
-            print('copy ' + package_ebin + ' to' + cache_ebin)
-            shutil.copytree(package_ebin, cache_ebin)
-        cache_include = join(full_dir, 'include')
-        if rewrite or not os.path.exists(cache_include):
-            package_include = join(path, 'include')
-            if os.path.exists(package_include):
-                print('copy ' + package_include + ' to' + cache_include)
-                shutil.copytree(package_include, cache_include)
-        cache_src = join(full_dir, 'src')
-        if rewrite or not os.path.exists(cache_src):
-            if package.config.with_source:
-                package_src = join(path, 'src')
-                print('copy ' + package_src + ' to' + cache_src)
-                shutil.copytree(package_src, cache_src)
+        LocalCache.__copy_data(rewrite, full_dir, path, 'ebin')
+        LocalCache.__copy_include(rewrite, full_dir, path)
+        if package.config.with_source:
+            LocalCache.__copy_data(rewrite, full_dir, path, 'src')
+        if package.config.with_source and package.config.has_nifs:
+            LocalCache.__copy_data(rewrite, full_dir, path, 'c_src')
 
     # link package from local cache to project
     def link_package(self, package: Package, path: str):
@@ -76,6 +61,12 @@ class LocalCache(Cache):
         LocalCache.link(package_path, path, package_name, 'include')
         LocalCache.link(package_path, path, package_name, 'src')
         LocalCache.link(package_path, path, package_name, 'ebin')
+        if package.config.has_nifs:
+            LocalCache.link(package_path, path, package_name, 'priv')
+
+    def __get_package_path(self, package: Package):
+        namespace = package.url.split('/')[-2]
+        return join(package.get_name(), namespace, package.vsn, self.erlang_version)
 
     @staticmethod
     def fill_package_from_temp(package: Package, path: str):
@@ -87,6 +78,19 @@ class LocalCache(Cache):
         include_dst = join(current_dir, 'deps', name, dir_to_link)
         link_if_needed(include_src, include_dst)
 
-    def __get_package_path(self, package: Package):
-        namespace = package.url.split('/')[-2]
-        return join(package.get_name(), namespace, package.vsn, self.erlang_version)
+    @staticmethod
+    def __copy_include(rewrite, full_dir, path):
+        cache_include = join(full_dir, 'include')
+        if rewrite or not os.path.exists(cache_include):
+            package_include = join(path, 'include')
+            if os.path.exists(package_include):
+                print('copy ' + package_include + ' to' + cache_include)
+                shutil.copytree(package_include, cache_include)
+
+    @staticmethod
+    def __copy_data(rewrite, full_dir, path, source_dir):
+        cache_src = join(full_dir, source_dir)
+        if rewrite or not os.path.exists(cache_src):
+            package_src = join(path, source_dir)
+            print('copy ' + package_src + ' to' + cache_src)
+            shutil.copytree(package_src, cache_src)

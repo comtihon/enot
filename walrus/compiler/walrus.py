@@ -31,7 +31,7 @@ class WalrusCompiler(AbstractCompiler):
         return self.do_compile(filenames, all_files)
 
     def do_compile(self, filenames, files):
-        env_vars = dict(os.environ)
+        env_vars = dict(os.environ)     # TODO '-Dnamespaced_types', '-Dotp_17_or_above'
         cmd = [self.compiler, "-I", self.include_path, "-o", self.output_path]
         env_vars['ERL_LIBS'] = self.deps_path
         for file in files:

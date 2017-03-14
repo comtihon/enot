@@ -14,9 +14,8 @@ class ArtifactoryCache(Cache):
     def fetch_package(self, package: Package):
         pass
 
-    def __init__(self, cache_url):
-        super().__init__()
-        self.path = cache_url
+    def __init__(self, temp_dir, cache_url):
+        super().__init__(temp_dir, cache_url)
 
     def get_package(self, package: Package):
         pass

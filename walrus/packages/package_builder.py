@@ -1,14 +1,18 @@
+from os.path import join
+import json
 from walrus.compiler.compiler_factory import get_compiler
 from walrus.global_properties import WalrusGlobalProperties
 from walrus.packages.config import config
 from walrus.packages.config.config_factory import read_project
 from walrus.packages.package import Package
+from walrus.utils.file_utils import ensure_empty, copy_to, tar
 
 
 class Builder:
     path = ""  # path in system of building project
     system_config = None  # system configuration
     packages = {}  # all project's packages
+    project: Package = None
 
     def __init__(self, path: str):
         super().__init__()
@@ -21,27 +25,44 @@ class Builder:
             package_content = project_config.get_valrus_package()
             config.write_walrus_file(self.path, package_content)
 
+    # Compose a package file
+    def package(self):
+        temp_dir = join(self.system_config.temp_dir, self.project.get_name())
+        ensure_empty(temp_dir)
+        exported = self.project.export()
+        with open(join(temp_dir, self.project.get_name() + '.json'), 'w') as outfile:
+            json.dump(exported, outfile, sort_keys=True, indent=4)
+        copy_to('ebin', temp_dir)
+        if self.project.config.with_source:
+            copy_to('src', temp_dir)
+        tar(temp_dir, join(temp_dir, self.project.get_name() + '.wp'))
+
     # Parse package config, download missing deps to /tmp
     def populate(self):
-        first_level = Package.frompath(self.path)
-        self.__populate_deps(first_level.deps)
-        return first_level
+        self.project = Package.frompath(self.path)
+        self.__populate_deps(self.project.deps)
+
+    def build(self):
+        self.__build_tree(self.project, is_subpackage=False)
+
+    def deps(self):
+        self.__build_deps(self.project, is_subpackage=False)
 
     # Build all deps, add to cache and link to project
-    def build_deps(self, package: Package, is_subpackage=True):
+    def __build_deps(self, package: Package, is_subpackage=True):
         # TODO check if package.config.path exists (if deps were populated before calling build_deps/build_tree)
         print('check ' + package.get_name())
         if is_subpackage and self.system_config.cache.exists(package):
             return True
         for dep in package.list_deps():
             if not self.system_config.cache.exists(dep):  # if package not in cache - build and add to cache
-                if not self.build_tree(dep):
+                if not self.__build_tree(dep):
                     raise RuntimeError('Can\'t built dep ' + dep.get_name())
             self.system_config.cache.link_package(dep, package.config.path)
 
     # Build package and it's deps
-    def build_tree(self, package: Package, is_subpackage=True):
-        self.build_deps(package, is_subpackage)  # TODO add an ability to compile deps in parallel
+    def __build_tree(self, package: Package, is_subpackage=True):
+        self.__build_deps(package, is_subpackage)  # TODO add an ability to compile deps in parallel
         compiler = get_compiler(self.system_config, package.config)
         res = compiler.compile()
         if is_subpackage and res:

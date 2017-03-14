@@ -8,17 +8,23 @@ from walrus.utils.file_utils import read_file
 
 
 class RebarConfig(ConfigFile):
-    def __init__(self, path):
+    platform_defines = []
+
+    def __init__(self, path, has_nif):
         super().__init__(path)
         self.path = path
+        self.has_nifs = has_nif
 
     def read_config(self):
         super().read_app_primary_params()
         rebarconfig = decode(read_file(join(self.path, 'rebar.config')))
+        deps = {}
         for (key, value) in rebarconfig:
             if key == 'deps':
-                return self.parse_deps(value)
-        return {}
+                deps = self.parse_deps(value)
+            if key == 'erl_opts':
+                self.parse_erl_opts(value)
+        return deps
 
     def parse_deps(self, deps):
         return_deps = {}
@@ -33,3 +39,10 @@ class RebarConfig(ConfigFile):
 
     def get_compiler(self):
         return Compiler.REBAR
+
+    def parse_erl_opts(self, value):
+        for opt in value:
+            if not isinstance(opt, str):
+                if opt[0] == 'platform_define':
+                    (_, case, define) = opt  # TODO come formats have 4-sized tuple
+                    self.platform_defines.append({case, define})

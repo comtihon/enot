@@ -11,9 +11,11 @@ def main(args=None):
     if 'build' in args:
         return build(os.getcwd())
     elif 'walrusify' in args:
-        return walrusify(os.getcwd())  # TODO path
+        return walrusify(os.getcwd())
     elif 'release' in args:
         return release()
+    elif 'package' in args:
+        return package(os.getcwd())
     elif 'deps' in args:
         return deps(os.getcwd())
     else:
@@ -24,8 +26,8 @@ def main(args=None):
 
 def build(path):
     builder = Builder(path)
-    package = builder.populate()
-    if not builder.build_tree(package, is_subpackage=False):
+    builder.populate()
+    if not builder.build():
         sys.exit(1)
     else:
         sys.exit(0)
@@ -38,9 +40,15 @@ def release():
 #  TODO add an ability to link full deps tree to project
 def deps(path):
     builder = Builder(path)
-    package = builder.populate()
-    builder.build_deps(package, is_subpackage=False)
+    builder.populate()
+    builder.deps()
     sys.exit(0)
+
+
+def package(path):
+    builder = Builder(path)
+    builder.populate()
+    builder.package()
 
 
 def walrusify(path):

@@ -17,9 +17,10 @@ def get_dep(line):
 
 
 class ErlangMkConfig(ConfigFile):
-    def __init__(self, path):
+    def __init__(self, path, has_nif):
         super().__init__(path)
         self.path = path
+        self.has_nifs = has_nif
 
     def read_config(self) -> dict:
         super().read_app_primary_params()

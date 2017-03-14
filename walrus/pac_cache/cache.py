@@ -12,11 +12,14 @@ class CacheType(Enum):
 
 
 class Cache(ABC):
+    temp_dir = ""
     path = ""
     erlang_version = None
 
-    def __init__(self):
+    def __init__(self, temp_dir, path):
         self.erlang_version = Cache.get_erlang_version()
+        self.temp_dir = temp_dir
+        self.path = path
 
     @abstractmethod
     def exists(self, package: Package):

@@ -5,13 +5,13 @@ from walrus.packages.config import ErlangMkConfig, WalrusConfig, RebarConfig, Co
 
 
 def read_project(path):
-    files = [f for f in listdir(path) if isfile(join(path, f))]
+    files, dirs = split_files_and_dirs(path)
     if 'walrusfile.json' in files:
-        return WalrusConfig(path)
+        return WalrusConfig(path, 'c_src' in dirs)
     elif 'erlang.mk' in files:
-        return ErlangMkConfig(path)
+        return ErlangMkConfig(path, 'c_src' in dirs)
     elif 'rebar.config' in files:
-        return RebarConfig(path)
+        return RebarConfig(path, 'c_src' in dirs)
     raise ValueError("Unknown build system in project " + path)
 
 
@@ -23,3 +23,15 @@ def upgrade_conf(path, conf: ConfigFile):
         print('wrong name specified ' + dep_conf.name + ' vs ' + conf.name)
         dep_conf.name = conf.name
     return dep_conf
+
+
+def split_files_and_dirs(path):
+    all_objects = listdir(path)
+    files = []
+    dirs = []
+    for o in all_objects:
+        if isfile(join(path, o)):
+            files.append(o)
+        else:
+            dirs.append(o)
+    return files, dirs

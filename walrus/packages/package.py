@@ -1,5 +1,6 @@
 import json
 
+from walrus.packages.config import ConfigFile
 from walrus.packages.config import config_factory
 from walrus.packages.config.stub_config import StubConfig
 
@@ -7,7 +8,7 @@ from walrus.packages.config.stub_config import StubConfig
 class Package:
     url = None  # git url
     vsn = None  # git tag / git commit hash
-    config = None  # ConfigFile
+    config: ConfigFile = None  # ConfigFile
     deps = None  # list of deps.
 
     def __init__(self, config=None, url=None, vsn=None):

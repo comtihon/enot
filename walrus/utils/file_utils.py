@@ -1,8 +1,10 @@
 import os
 import shutil
+import tarfile
 from os.path import join
-from erl_terms.erl_terms_core import decode
 from shutil import copyfile
+
+from erl_terms.erl_terms_core import decode
 
 
 def read_file(path: str) -> str:
@@ -12,6 +14,17 @@ def read_file(path: str) -> str:
 
 def copy_file(src: str, dst: str):
     copyfile(src, dst)
+
+
+def copy_to(src: str, dst: str):
+    shutil.copytree(src, join(dst, src))
+
+
+def tar(src: str, dst: str):
+    archive = tarfile.open(dst, "w")
+    for name in os.listdir(src):
+        archive.add(join(src, name))
+    archive.close()
 
 
 # TODO catch read errors
@@ -49,6 +62,12 @@ def link_if_needed(include_src, include_dst):
 def ensure_dir(path: str):
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+# If dir exists delete and and create again
+def ensure_empty(path: str):
+    remove_dir(path)
+    ensure_dir(path)
 
 
 def remove_dir(path: str):

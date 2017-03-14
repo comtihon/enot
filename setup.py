@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(name=walrus.APPNAME,
       version='1.0.0',
       description='Erlang package management and build system',
-      author='Valerii Tikhonov',
+      author=walrus.APPAUTHOR,
       author_email='valerii.tikhonov@gmail.com',
       url='https://github.com/comtihon/walrus',
       packages=find_packages(),

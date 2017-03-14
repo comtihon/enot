@@ -11,8 +11,13 @@ from walrus.utils.file_utils import read_file, ensure_dir, copy_file
 
 
 def init_config(source, path, file):
+    cache_dir = user_cache_dir(walrus.APPNAME, walrus.APPAUTHOR)
     ensure_dir(path)
-    copy_file(source, join(path, file))
+    ensure_dir(cache_dir)
+    with open(source, 'r') as r:
+        content = r.read()
+    with open(join(path, file), 'w') as f:
+        f.write(str.replace(content, '{{ local_cache }}', cache_dir))
 
 
 class WalrusGlobalProperties:
@@ -30,7 +35,7 @@ class WalrusGlobalProperties:
             init_config(template, path, 'global_config.json')
         content = read_file(config_path)
         conf = json.loads(content)
-        self.cache_url = conf['cache_url']
+        self.cache_url = conf['url']
         self.temp_dir = conf['temp_dir']
         self.__set_compiler(conf)
         self.__set_up_cache(conf)

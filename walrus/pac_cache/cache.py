@@ -9,6 +9,7 @@ from walrus.packages import Package
 class CacheType(Enum):
     LOCAL = 'local'
     ARTIFACTORY = 'artifactory'
+    S3 = 's3'
 
 
 class Cache(ABC):

@@ -11,7 +11,8 @@ from walrus.utils.file_utils import remove_dir
 
 
 class LocalCache(Cache):
-    def __init__(self, temp_dir, cache_url):
+    def __init__(self, temp_dir, conf):
+        cache_url = conf['url']
         path = cache_url[7:]
         super().__init__(temp_dir, path)
         if not os.path.exists(path):

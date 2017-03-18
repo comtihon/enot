@@ -16,7 +16,7 @@ def get_compiler(walrus_global_config: WalrusGlobalProperties, package_config: C
 # TODO ensure projects have compilers in case of using system non-walrus. (obtain them + config, if don't).
 def select_compiler(compiler, package_config):
     if compiler == Compiler.WALRUS:
-        return WalrusCompiler(package_config.path, package_config.compose_app_file, package_config.name)
+        return WalrusCompiler(package_config)
     if compiler == Compiler.REBAR:
         return RebarCompiler()
     if compiler == Compiler.ERLANG_MK:

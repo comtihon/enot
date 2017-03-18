@@ -18,6 +18,8 @@ class ConfigFile(ABC):
     compose_app_file = True  # should compose app file when compiling
     app_deps = []  # deps from app.src or app file
     has_nifs = False  # git repo contains c_src folder
+    prebuild = []   # actions to be run before the build
+    postbuild = []  # actions to be run after the build
 
     def __init__(self, path: str):
         self.path = path

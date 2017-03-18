@@ -4,6 +4,7 @@ from os.path import isfile, join, isdir
 from subprocess import Popen, PIPE
 
 from walrus.compiler import AbstractCompiler
+from walrus.packages.config import ConfigFile
 from walrus.utils.file_utils import ensure_dir, read_file, write_file_lines
 
 
@@ -12,26 +13,33 @@ def is_erlang_source(file):
 
 
 class WalrusCompiler(AbstractCompiler):
+    prebuild = []
     deps_path = ""
     compose_app_file = True
 
-    def __init__(self, path: str, compose_app_file: bool, name: str):
+    def __init__(self, config: ConfigFile):
         super().__init__()
-        self.src_path = join(path, 'src')
-        self.include_path = join(path, 'include')
-        self.output_path = join(path, 'ebin')
-        self.compose_app_file = compose_app_file
-        self.deps_path = join(path, 'deps')
-        self.project_name = name
+        self.src_path = join(config.path, 'src')
+        self.include_path = join(config.path, 'include')
+        self.output_path = join(config.path, 'ebin')
+        self.compose_app_file = config.compose_app_file
+        self.deps_path = join(config.path, 'deps')
+        self.project_name = config.name
+        self.prebuild = config.prebuild
 
     def compile(self) -> bool:
         print('build ' + self.project_name)
+        self.run_prebuild()
         filenames, all_files = self.get_all_files(self.src_path)
         ensure_dir(self.output_path)
         return self.do_compile(filenames, all_files)
 
+    def run_prebuild(self):
+        for action in self.prebuild:
+            action.run()
+
     def do_compile(self, filenames, files):
-        env_vars = dict(os.environ)     # TODO '-Dnamespaced_types', '-Dotp_17_or_above'
+        env_vars = dict(os.environ)  # TODO '-Dnamespaced_types', '-Dotp_17_or_above'
         cmd = [self.compiler, "-I", self.include_path, "-o", self.output_path]
         env_vars['ERL_LIBS'] = self.deps_path
         for file in files:

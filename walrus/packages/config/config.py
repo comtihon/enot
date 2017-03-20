@@ -24,6 +24,16 @@ class ConfigFile(ABC):
 
     def __init__(self, path: str):
         self.path = path
+        self.prebuild = []
+        self.postbuild = []
+        self.build_vars = []
+        self.has_nifs = False
+        self.app_deps = []
+        self.compose_app_file = True
+        self.app_vsn = None
+        self.with_source = True
+        self.drop_unknown = True
+        self.name = ""
 
     # read config, return deps
     @abstractmethod
@@ -40,8 +50,7 @@ class ConfigFile(ABC):
     def export(self):
         return {'name': self.name,
                 'with_source': self.with_source,
-                'drop_unknown_deps': self.drop_unknown,
-                'build_vars': self.build_vars
+                'drop_unknown_deps': self.drop_unknown
                 }
 
     def read_app_primary_params(self):

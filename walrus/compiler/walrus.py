@@ -22,6 +22,7 @@ class WalrusCompiler(AbstractCompiler):
         self.src_path = join(config.path, 'src')
         self.include_path = join(config.path, 'include')
         self.output_path = join(config.path, 'ebin')
+        self.root_path = config.path
         self.compose_app_file = config.compose_app_file
         self.deps_path = join(config.path, 'deps')
         self.project_name = config.name
@@ -37,7 +38,7 @@ class WalrusCompiler(AbstractCompiler):
 
     def __run_prebuild(self):
         for action in self.prebuild:
-            action.run()
+            action.run(self.root_path)
 
     def __do_compile(self, filenames, files):
         env_vars = dict(os.environ)

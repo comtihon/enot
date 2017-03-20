@@ -10,5 +10,5 @@ class Shell(Action):
         super().__init__()
         self.params = params
 
-    def run(self):
-        subprocess.run(self.params, check=True, shell=True)
+    def run(self, path):
+        subprocess.run(self.params, check=True, shell=True, cwd=path)

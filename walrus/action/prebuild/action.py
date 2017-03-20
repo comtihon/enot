@@ -8,5 +8,5 @@ class ActionType(Enum):
 
 class Action(ABC):
     @abstractmethod
-    def run(self):
+    def run(self, path: str):
         pass

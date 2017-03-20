@@ -14,6 +14,7 @@ class RebarConfig(ConfigFile):
         super().__init__(path)
         self.path = path
         self.has_nifs = has_nif
+        self.platform_defines = []
 
     def read_config(self):
         super().read_app_primary_params()

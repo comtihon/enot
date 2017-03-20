@@ -17,5 +17,9 @@ Erlang advanced project manager
         ],
         "prebuild" : [
             {Action : Params}
+        ],
+        "build_vars" : [
+            {Var1 : Value}
+            Var2
         ]
     }

@@ -22,6 +22,8 @@ class WalrusConfig(ConfigFile):
             self.drop_unknown = parsed['drop_unknown_deps']
         if 'with_source' in parsed:
             self.with_source = parsed['with_source']
+        self.__parse_prebuild(parsed)
+        self.__parse_build_vars(parsed)
         return self.__parse_deps(parsed['deps'])
 
     def need_walrusify(self):
@@ -40,7 +42,13 @@ class WalrusConfig(ConfigFile):
                 print('Drop unused dep ' + name)
         return return_deps
 
-    def parse_prebuild(self, parsed):
+    def __parse_prebuild(self, parsed):
         if 'prebuild' in parsed:
-            for action_type, params in parsed['prebuild'].items():
+            for step in parsed['prebuild']:
+                [(action_type, params)] = step.items()
                 self.prebuild.append(action_factory.get_action(action_type, params))
+
+    def __parse_build_vars(self, parsed):
+        if 'build_vars' in parsed:
+            for keyvalue in parsed['build_vars'].items():
+                self.build_vars.append(keyvalue)

@@ -26,24 +26,22 @@ class WalrusCompiler(AbstractCompiler):
         self.deps_path = join(config.path, 'deps')
         self.project_name = config.name
         self.prebuild = config.prebuild
+        self.build_vars = config.build_vars
 
     def compile(self) -> bool:
         print('build ' + self.project_name)
-        self.run_prebuild()
-        filenames, all_files = self.get_all_files(self.src_path)
+        self.__run_prebuild()
+        filenames, all_files = self.__get_all_files(self.src_path)
         ensure_dir(self.output_path)
-        return self.do_compile(filenames, all_files)
+        return self.__do_compile(filenames, all_files)
 
-    def run_prebuild(self):
+    def __run_prebuild(self):
         for action in self.prebuild:
             action.run()
 
-    def do_compile(self, filenames, files):
-        env_vars = dict(os.environ)  # TODO '-Dnamespaced_types', '-Dotp_17_or_above'
-        cmd = [self.compiler, "-I", self.include_path, "-o", self.output_path]
-        env_vars['ERL_LIBS'] = self.deps_path
-        for file in files:
-            cmd.append(file)
+    def __do_compile(self, filenames, files):
+        env_vars = dict(os.environ)
+        cmd = self.__compose_compiler_call(env_vars, files)
         p = Popen(cmd, stdout=PIPE, stderr=PIPE, env=env_vars)
         if p.wait() != 0:
             print("Compilation failed: ")
@@ -51,11 +49,26 @@ class WalrusCompiler(AbstractCompiler):
             print(err.decode('utf8'))
             return False
         else:
-            self.write_app_file(filenames)
+            self.__write_app_file(filenames)
             return True
 
+    def __compose_compiler_call(self, env_vars, files):
+        cmd = [self.compiler, "-I", self.include_path, "-o", self.output_path]
+        self.__append_macro(cmd)
+        env_vars['ERL_LIBS'] = self.deps_path
+        for file in files:
+            cmd.append(file)
+        return cmd
+
+    def __append_macro(self, cmd):
+        for var in self.build_vars:
+            if not isinstance(var, str):
+                cmd += ['-D' + var[0] + '=' + var[1]]  # variable with value
+            else:
+                cmd += ['-D' + var[0]]  # just standalone variable
+
     # TODO change reading file by lines on decoding file on erlang terms, changing and encoding back
-    def write_app_file(self, all_files):
+    def __write_app_file(self, all_files):
         if self.compose_app_file:
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
             if '{modules' in app_src:
@@ -64,14 +77,14 @@ class WalrusCompiler(AbstractCompiler):
                 changed_file = create_modules_with_files(app_src, all_files)
             write_file_lines(changed_file, join(self.output_path, self.project_name + '.app'))
 
-    def get_all_files(self, path):
+    def __get_all_files(self, path):
         abs_files = []
         modules = []
         all_files = listdir(path)
         for file in all_files:
             abs_file = join(path, file)
             if isdir(abs_file):
-                dir_file_names, dir_abs_files = self.get_all_files(abs_file)
+                dir_file_names, dir_abs_files = self.__get_all_files(abs_file)
                 abs_files += dir_abs_files
                 modules += dir_file_names
             elif is_erlang_source(abs_file):

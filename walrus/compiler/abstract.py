@@ -15,6 +15,7 @@ class AbstractCompiler(ABC):
     src_path = ""
     include_path = ""
     output_path = ""
+    build_vars = []
 
     @abstractmethod
     def compile(self) -> bool:

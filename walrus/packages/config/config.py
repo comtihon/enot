@@ -20,6 +20,7 @@ class ConfigFile(ABC):
     has_nifs = False  # git repo contains c_src folder
     prebuild = []   # actions to be run before the build
     postbuild = []  # actions to be run after the build
+    build_vars = []   # erlang build vars, passed to the compiler (string or tuple of size 2)
 
     def __init__(self, path: str):
         self.path = path
@@ -39,7 +40,8 @@ class ConfigFile(ABC):
     def export(self):
         return {'name': self.name,
                 'with_source': self.with_source,
-                'drop_unknown_deps': self.drop_unknown
+                'drop_unknown_deps': self.drop_unknown,
+                'build_vars': self.build_vars
                 }
 
     def read_app_primary_params(self):

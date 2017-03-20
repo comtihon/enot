@@ -35,7 +35,10 @@ class Builder:
         copy_to('ebin', temp_dir)
         if self.project.config.with_source:
             copy_to('src', temp_dir)
-        tar(temp_dir, join(temp_dir, self.project.get_name() + '.wp'))
+            copy_to('include', temp_dir)
+        if self.project.config.has_nifs:
+            copy_to('c_src', temp_dir)
+        tar(temp_dir, join(self.path, self.project.get_name() + '.wp'))
 
     # Parse package config, download missing deps to /tmp
     def populate(self):

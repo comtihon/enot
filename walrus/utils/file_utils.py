@@ -17,7 +17,8 @@ def copy_file(src: str, dst: str):
 
 
 def copy_to(src: str, dst: str):
-    shutil.copytree(src, join(dst, src))
+    if os.path.exists(src):
+        shutil.copytree(src, join(dst, src))
 
 
 def tar(src: str, dst: str):

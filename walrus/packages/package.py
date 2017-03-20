@@ -9,7 +9,7 @@ class Package:
     url = None  # git url
     vsn = None  # git tag / git commit hash
     config: ConfigFile = None  # ConfigFile
-    deps = None  # list of deps.
+    deps: dict = {}  # package's deps.
 
     def __init__(self, config=None, url=None, vsn=None):
         self.url = url
@@ -47,12 +47,11 @@ class Package:
     def get_name(self):
         return self.config.name
 
-    def list_deps(self) -> list:
+    def list_deps(self):
         return self.deps.values()
 
     def __fill_deps(self):
-        deps = self.config.read_config()
-        for name, dep in deps.items():
+        self.deps = {}
+        for name, dep in self.config.read_config().items():
             print(name + ' ' + str(dep))
-            deps[name] = Package.fromdeps(name, dep)
-        self.deps = deps
+            self.deps[name] = Package.fromdeps(name, dep)

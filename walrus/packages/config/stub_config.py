@@ -4,7 +4,7 @@ from walrus.packages.config import ConfigFile
 class StubConfig(ConfigFile):
     def __init__(self, name):
         super().__init__("")
-        self.name = name
+        self._name = name
 
     def get_compiler(self):
         return None

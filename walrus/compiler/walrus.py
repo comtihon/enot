@@ -13,21 +13,29 @@ def is_erlang_source(file):
 
 
 class WalrusCompiler(AbstractCompiler):
-    prebuild = []
-    deps_path = ""
-    compose_app_file = True
-
     def __init__(self, config: ConfigFile):
         super().__init__()
-        self.src_path = join(config.path, 'src')
-        self.include_path = join(config.path, 'include')
-        self.output_path = join(config.path, 'ebin')
-        self.root_path = config.path
-        self.compose_app_file = config.compose_app_file
-        self.deps_path = join(config.path, 'deps')
-        self.project_name = config.name
-        self.prebuild = config.prebuild
-        self.build_vars = config.build_vars
+        self._src_path = join(config.path, 'src')
+        self._include_path = join(config.path, 'include')
+        self._output_path = join(config.path, 'ebin')
+        self._root_path = config.path
+        self._compose_app_file = config.compose_app_file
+        self._deps_path = join(config.path, 'deps')
+        self._project_name = config.name
+        self._prebuild = config.prebuild
+        self._build_vars = config.build_vars
+
+    @property
+    def prebuild(self) -> list:
+        return self._prebuild
+
+    @property
+    def deps_path(self) -> str:
+        return self._deps_path
+
+    @property
+    def compose_app_file(self) -> bool:
+        return self._compose_app_file
 
     def compile(self) -> bool:
         print('build ' + self.project_name)

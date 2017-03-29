@@ -10,18 +10,18 @@ from walrus.utils.file_utils import read_file
 class WalrusConfig(ConfigFile):
     def __init__(self, path, has_nif):
         super().__init__(path)
-        self.path = path
-        self.has_nifs = has_nif
+        self._path = path
+        self._has_nifs = has_nif
 
     def read_config(self) -> dict:
         super().read_app_primary_params()
         content = read_file(join(self.path, 'walrusfile.json'))
         parsed = json.loads(content)
-        self.name = parsed['name']
+        self._name = parsed['name']
         if 'drop_unknown_deps' in parsed:
-            self.drop_unknown = parsed['drop_unknown_deps']
+            self._drop_unknown = parsed['drop_unknown_deps']
         if 'with_source' in parsed:
-            self.with_source = parsed['with_source']
+            self._with_source = parsed['with_source']
         self.__parse_prebuild(parsed)
         self.__parse_build_vars(parsed)
         return self.__parse_deps(parsed['deps'])

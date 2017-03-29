@@ -1,21 +1,28 @@
-from walrus.pac_cache import CacheType
+from walrus.pac_cache import CacheType, Cache
 from walrus.pac_cache import cache_factory
 from walrus.pac_cache.local_cache import LocalCache
 from walrus.packages.package import Package
 
 
 class CacheMan:
-    local_cache: LocalCache = None
-    caches = []
-
     def __init__(self, conf: dict):
         for cache in conf['cache']:
             cache_type = cache['type']
             cache = cache_factory.get_cache(cache_type, cache, conf['temp_dir'])
+            self._local_cache = None
+            self._caches = []
             if cache_type == CacheType.LOCAL.value:
-                self.local_cache = cache
+                self._local_cache = cache
             else:
                 self.caches.append(cache)
+
+    @property
+    def local_cache(self) -> Cache:
+        return self._local_cache
+
+    @property
+    def caches(self) -> list:
+        return self._caches
 
     # TODO add ability to customise search policy (build instead of fetching from remote etc...).
     def exists(self, package: Package):

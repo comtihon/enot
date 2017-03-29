@@ -1,5 +1,6 @@
-from os.path import join
 import json
+from os.path import join
+
 from walrus.compiler.compiler_factory import get_compiler
 from walrus.global_properties import WalrusGlobalProperties
 from walrus.packages.config import config
@@ -9,15 +10,28 @@ from walrus.utils.file_utils import ensure_empty, copy_to, tar
 
 
 class Builder:
-    path = ""  # path in system of building project
-    system_config = None  # system configuration
-    packages = {}  # all project's packages
-    project: Package = None
-
     def __init__(self, path: str):
         super().__init__()
-        self.system_config = WalrusGlobalProperties()
-        self.path = path
+        self._system_config = WalrusGlobalProperties()
+        self._path = path
+        self._packages = {}
+        self._project = Package.frompath(path)
+
+    @property
+    def path(self) -> str:  # path in system of building project
+        return self._path
+
+    @property
+    def system_config(self) -> WalrusGlobalProperties:  # system configuration
+        return self._system_config
+
+    @property
+    def packages(self) -> dict:  # all project's packages
+        return self._packages
+
+    @property
+    def project(self) -> Package:  # root package being built
+        return self._project
 
     def walrusify(self):
         project_config = read_project(self.path)
@@ -42,7 +56,6 @@ class Builder:
 
     # Parse package config, download missing deps to /tmp
     def populate(self):
-        self.project = Package.frompath(self.path)
         self.__populate_deps(self.project.deps)
 
     def build(self):

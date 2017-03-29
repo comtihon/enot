@@ -6,19 +6,30 @@ from walrus.packages.config.stub_config import StubConfig
 
 
 class Package:
-    url = None  # git url
-    vsn = None  # git tag / git commit hash
-    config: ConfigFile = None  # ConfigFile
-    deps: dict = {}  # package's deps.
-
     def __init__(self, config=None, url=None, vsn=None):
-        self.url = url
-        self.vsn = vsn
-        self.config = config
+        self._url = url
+        self._vsn = vsn
+        self._config = config
         self.__fill_deps()
 
+    @property
+    def url(self) -> str:  # git url
+        return self._url
+
+    @property
+    def vsn(self) -> str:  # git tag / git commit hash
+        return self._vsn
+
+    @property
+    def config(self) -> ConfigFile:  # ConfigFile
+        return self._config
+
+    @property
+    def deps(self) -> dict:  # package's deps.
+        return self._deps
+
     def fill_from_path(self, path):
-        self.config = config_factory.upgrade_conf(path, self.config)
+        self._config = config_factory.upgrade_conf(path, self.config)
         self.__fill_deps()
 
     @classmethod
@@ -51,7 +62,7 @@ class Package:
         return self.deps.values()
 
     def __fill_deps(self):
-        self.deps = {}
+        self._deps = {}
         for name, dep in self.config.read_config().items():
             print(name + ' ' + str(dep))
             self.deps[name] = Package.fromdeps(name, dep)

@@ -8,13 +8,15 @@ from walrus.utils.file_utils import read_file
 
 
 class RebarConfig(ConfigFile):
-    platform_defines = []
-
     def __init__(self, path, has_nif):
         super().__init__(path)
-        self.path = path
-        self.has_nifs = has_nif
-        self.platform_defines = []
+        self._path = path
+        self._has_nifs = has_nif
+        self._platform_defines = []
+
+    @property
+    def platform_defines(self) -> list:
+        return self._platform_defines
 
     def read_config(self):
         super().read_app_primary_params()

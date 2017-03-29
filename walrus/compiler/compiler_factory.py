@@ -12,13 +12,13 @@ def get_compiler(walrus_global_config: WalrusGlobalProperties, package_config: C
     else:
         return select_compiler(walrus_global_config.compiler, package_config)
 
-
+# TODO ensure system has compilers installed (try to install them if not).
 # TODO ensure projects have compilers in case of using system non-walrus. (obtain them + config, if don't).
-def select_compiler(compiler, package_config):
+def select_compiler(compiler: Compiler, package_config: ConfigFile):
     if compiler == Compiler.WALRUS:
         return WalrusCompiler(package_config)
     if compiler == Compiler.REBAR:
         return RebarCompiler()
     if compiler == Compiler.ERLANG_MK:
         return ErlangMKCompiler()
-    raise RuntimeError('Unknown compiler ' + compiler + ' for ' + package_config.name)
+    raise RuntimeError('Unknown compiler ' + compiler.value + ' for ' + package_config.name)

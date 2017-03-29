@@ -21,10 +21,6 @@ def init_config(source, path, file):
 
 
 class WalrusGlobalProperties:
-    temp_dir = ""
-    compiler = ""  # walrus | rebar | erlang.mk | rebar3 | package-local
-    cache: CacheMan = None
-
     def __init__(self, path=user_config_dir(walrus.APPNAME)):
         if not os.path.exists(path):
             os.makedirs(path)
@@ -34,22 +30,31 @@ class WalrusGlobalProperties:
             init_config(template, path, 'global_config.json')
         content = read_file(config_path)
         conf = json.loads(content)
-        self.temp_dir = conf['temp_dir']
+        self._temp_dir = conf['temp_dir']
         self.__set_compiler(conf)
-        self.__set_up_cache(conf)
+        self._cache = CacheMan(conf)
 
-    def __set_up_cache(self, conf: dict):
-        self.cache = CacheMan(conf)
+    @property
+    def temp_dir(self) -> str:
+        return self._temp_dir
+
+    @property
+    def compiler(self) -> Compiler:
+        return self._compiler
+
+    @property
+    def cache(self) -> CacheMan:
+        return self._cache
 
     def __set_compiler(self, conf):
         if conf['compiler'] == 'walrus':
-            self.compiler = Compiler.WALRUS
+            self._compiler = Compiler.WALRUS
         elif conf['compiler'] == 'rebar':
-            self.compiler = Compiler.REBAR
+            self._compiler = Compiler.REBAR
         elif conf['compiler'] == 'erlang.mk':
-            self.compiler = Compiler.ERLANG_MK
+            self._compiler = Compiler.ERLANG_MK
         elif conf['compiler'] == 'package-local':
-            self.compiler = Compiler.LOCAL
+            self._compiler = Compiler.LOCAL
         else:
             print('Unknown complier : ' + conf['compiler'] + ' will use walrus')
-            self.compiler = Compiler.WALRUS
+            self._compiler = Compiler.WALRUS

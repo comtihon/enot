@@ -1,5 +1,6 @@
-import os
 import sys
+
+import os
 
 from walrus.packages import package_builder
 from walrus.packages.package_builder import Builder
@@ -24,6 +25,7 @@ def main(args=None):
         # TODO additional args
 
 
+# TODO release support
 def build(path):
     builder = Builder(path)
     builder.populate()

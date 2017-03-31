@@ -41,10 +41,10 @@ class Builder:
 
     # Compose a package file
     def package(self):
-        temp_dir = join(self.system_config.temp_dir, self.project.get_name())
+        temp_dir = join(self.system_config.temp_dir, self.project.name)
         ensure_empty(temp_dir)
         exported = self.project.export()
-        with open(join(temp_dir, self.project.get_name() + '.json'), 'w') as outfile:
+        with open(join(temp_dir, self.project.name + '.json'), 'w') as outfile:
             json.dump(exported, outfile, sort_keys=True, indent=4)
         copy_to('ebin', temp_dir)
         if self.project.config.with_source:
@@ -52,7 +52,7 @@ class Builder:
             copy_to('include', temp_dir)
         if self.project.config.has_nifs:
             copy_to('c_src', temp_dir)
-        tar(temp_dir, join(self.path, self.project.get_name() + '.wp'))
+        tar(temp_dir, join(self.path, self.project.name + '.wp'))
 
     # Parse package config, download missing deps to /tmp
     def populate(self):
@@ -67,13 +67,13 @@ class Builder:
     # Build all deps, add to cache and link to project
     def __build_deps(self, package: Package, is_subpackage=True):
         # TODO check if package.config.path exists (if deps were populated before calling build_deps/build_tree)
-        print('check ' + package.get_name())
+        print('check ' + package.name)
         if is_subpackage and self.system_config.cache.exists(package):
             return True
         for dep in package.list_deps():
             if not self.system_config.cache.exists(dep):  # if package not in cache - build and add to cache
                 if not self.__build_tree(dep):
-                    raise RuntimeError('Can\'t built dep ' + dep.get_name())
+                    raise RuntimeError('Can\'t built dep ' + dep.name)
             self.system_config.cache.link_package(dep, package.config.path)
 
     # Build package and it's deps

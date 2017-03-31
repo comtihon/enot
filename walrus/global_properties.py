@@ -1,10 +1,10 @@
 import json
 from os.path import join
 
+import walrus
 from appdirs import *
 from pkg_resources import Requirement, resource_filename
 
-import walrus
 from walrus.compiler import Compiler
 from walrus.pac_cache.cache_man import CacheMan
 from walrus.utils.file_utils import read_file, ensure_dir
@@ -47,14 +47,8 @@ class WalrusGlobalProperties:
         return self._cache
 
     def __set_compiler(self, conf):
-        if conf['compiler'] == 'walrus':
-            self._compiler = Compiler.WALRUS
-        elif conf['compiler'] == 'rebar':
-            self._compiler = Compiler.REBAR
-        elif conf['compiler'] == 'erlang.mk':
-            self._compiler = Compiler.ERLANG_MK
-        elif conf['compiler'] == 'package-local':
-            self._compiler = Compiler.LOCAL
-        else:
+        try:
+            self._compiler = Compiler(conf.get('compiler', 'walrus'))
+        except ValueError:
             print('Unknown complier : ' + conf['compiler'] + ' will use walrus')
             self._compiler = Compiler.WALRUS

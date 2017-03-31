@@ -19,6 +19,7 @@ class ConfigFile(ABC):
         self._app_deps = []
         self._compose_app_file = True
         self._app_vsn = None
+        self._conf_vsn = None
         self._with_source = True
         self._drop_unknown = True
         self._name = ""
@@ -40,8 +41,18 @@ class ConfigFile(ABC):
         return self._with_source
 
     @property
-    def app_vsn(self) -> str:  # version from app.src
+    def app_vsn(self) -> str:  # version from app.src.
         return self._app_vsn
+
+    @property
+    def conf_vsn(self) -> str or None:  # version from config
+        return self._conf_vsn
+
+    @property
+    def vsn(self) -> str:   # conf version overrides app version
+        if self.conf_vsn is None:
+            return self.app_vsn
+        return self.conf_vsn
 
     @property
     def compose_app_file(self) -> bool:  # should compose app file when compiling
@@ -86,7 +97,7 @@ class ConfigFile(ABC):
         if not res:
             self._compose_app_file = False
             res = read_erlang_file(join(self.path, 'ebin'), '.app')
-        if not res:
+        if not res:  # TODO generate app file instead.
             raise ValueError('No app or app.src file in app!')
         self.__set_app_primary_params(res)
 

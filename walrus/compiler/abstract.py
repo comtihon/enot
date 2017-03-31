@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 
+# TODO probably move me to separate file and make (string value, compiler constructor) and add get_compiler() method
 class Compiler(Enum):
-    WALRUS = 'walrus'
-    ERLANG_MK = 'erlang.mk'
-    REBAR = 'rebar'
-    LOCAL = 'package-local'
+    WALRUS = 'walrus'  # prefer walrus
+    ERLANG_MK = 'erlang.mk'  # prefer erlang.mk
+    REBAR = 'rebar'  # use rebar everywhere
+    NATIVE = 'native'   # use found by conf compiler (rebar.config, or erlang.mk exists)
+    MAKEFILE = 'makefile'   # just call Makefile
 
 
 class AbstractCompiler(ABC):

@@ -48,6 +48,7 @@ class ErlangMkConfig(ConfigFile):
         super().read_app_primary_params()
         makefile = join(self.path, 'Makefile')
         content = parse_makefile(makefile)
+        self.__conf_init(content)
         self.__parse_erl_opts(makefile, content)
         return self.__parse_deps(content)
 
@@ -70,15 +71,19 @@ class ErlangMkConfig(ConfigFile):
                     print('Dep ' + depname + ' not specified')
         return return_deps
 
+    def __conf_init(self, content: dict):
+        self.__conf_vsn = content.get('PROJECT_VERSION', None)
+
     def __parse_erl_opts(self, mkfile_path: str, content: dict):
+
         if 'ERLC_OPTS' in content:
             opt_str = content['ERLC_OPTS']
-            self.build_vars = get_erl_opts(opt_str.split(' '), content)
+            self._build_vars = get_erl_opts(opt_str.split(' '), content)
         else:  # no ERLC_OPTS in Makefile. Should scan it manually (+= can be used instead of = )
             data = read_file_lines(mkfile_path)
             lines = [x.strip('\n') for x in data]
             for line in lines:
                 if line.startswith('ERLC_OPTS'):
                     opt_str = line.split(' ')[2:]
-                    self.build_vars = get_erl_opts(opt_str, content)
+                    self._build_vars = get_erl_opts(opt_str, content)
                     return

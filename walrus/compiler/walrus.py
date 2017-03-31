@@ -1,7 +1,9 @@
+import subprocess
+from os.path import isfile, join, isdir
+from subprocess import PIPE
+
 import os
 from os import listdir
-from os.path import isfile, join, isdir
-from subprocess import Popen, PIPE
 
 from walrus.compiler import AbstractCompiler
 from walrus.packages.config import ConfigFile
@@ -51,11 +53,11 @@ class WalrusCompiler(AbstractCompiler):
     def __do_compile(self, filenames, files):
         env_vars = dict(os.environ)
         cmd = self.__compose_compiler_call(env_vars, files)
-        p = Popen(cmd, stdout=PIPE, stderr=PIPE, env=env_vars)
+        p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE, env=env_vars)
         if p.wait() != 0:
             print("Compilation failed: ")
-            err = p.stdout.read()
-            print(err.decode('utf8'))
+            print(p.stderr.read().decode('utf8'))
+            print(p.stdout.read().decode('utf8'))
             return False
         else:
             self.__write_app_file(filenames)

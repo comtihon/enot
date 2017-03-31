@@ -10,7 +10,7 @@ setup(name=walrus.APPNAME,
       packages=find_packages(),
       install_requires=['erl_terms', 'gitpython', 'artifactory', 'appdirs', 'boto'],
       include_package_data=True,
-      package_data={'walrus': ['resources/global_config.json']},
+      package_data={'walrus': ['resources/*']},
       entry_points={
           'console_scripts': [
               'walrus=walrus.__main__:main'

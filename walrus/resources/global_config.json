@@ -1,5 +1,5 @@
 {
-  "compiler" : "walrus",
+  "compiler" : "makefile",
   "temp_dir": "/tmp/walrus",
   "cache":
   [

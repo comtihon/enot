@@ -22,6 +22,8 @@ class WalrusConfig(ConfigFile):
             self._drop_unknown = parsed['drop_unknown_deps']
         if 'with_source' in parsed:
             self._with_source = parsed['with_source']
+        if 'version' in parsed:
+            self._conf_vsn = parsed['version']
         self.__parse_prebuild(parsed)
         self.__parse_build_vars(parsed)
         return self.__parse_deps(parsed['deps'])

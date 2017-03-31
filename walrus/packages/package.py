@@ -6,9 +6,8 @@ from walrus.packages.config.stub_config import StubConfig
 
 
 class Package:
-    def __init__(self, config=None, url=None, vsn=None):
+    def __init__(self, config=None, url=None):
         self._url = url
-        self._vsn = vsn
         self._config = config
         self.__fill_deps()
 
@@ -17,8 +16,8 @@ class Package:
         return self._url
 
     @property
-    def vsn(self) -> str:  # git tag / git commit hash
-        return self._vsn
+    def vsn(self) -> str:  # package version from configuration.
+        return self.config.vsn
 
     @property
     def config(self) -> ConfigFile:  # ConfigFile
@@ -27,6 +26,11 @@ class Package:
     @property
     def deps(self) -> dict:  # package's deps.
         return self._deps
+
+    # TODO is name enough unique?
+    @property
+    def name(self):
+        return self.config.name
 
     def fill_from_path(self, path):
         self._config = config_factory.upgrade_conf(path, self.config)
@@ -40,8 +44,8 @@ class Package:
     @classmethod
     def fromdeps(cls, name, dep):
         (url, vsn) = dep
-        config = StubConfig(name)
-        return cls(url=url, vsn=vsn, config=config)
+        config = StubConfig(name, vsn)
+        return cls(url=url, config=config)
 
     def export(self):
         return {'name': self.config.name,
@@ -54,11 +58,7 @@ class Package:
         export_config = self.config.export()
         return json.dumps({**export, **export_config}, sort_keys=True, indent=4)
 
-    # TODO is name enough unique?
-    def get_name(self):
-        return self.config.name
-
-    def list_deps(self):
+    def list_deps(self) -> list():
         return self.deps.values()
 
     def __fill_deps(self):

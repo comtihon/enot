@@ -22,10 +22,9 @@ def copy_to(src: str, dst: str):
 
 
 def tar(src: str, dst: str):
-    archive = tarfile.open(dst, "w")
-    for name in os.listdir(src):
-        archive.add(join(src, name))
-    archive.close()
+    with tarfile.open(dst, "w") as archive:
+        for name in os.listdir(src):
+            archive.add(join(src, name), arcname=name)
 
 
 # TODO catch read errors

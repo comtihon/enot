@@ -13,7 +13,7 @@ from walrus.utils.file_utils import read_file, ensure_dir
 def init_config(source, path, file):
     cache_dir = user_cache_dir(walrus.APPNAME, walrus.APPAUTHOR)
     ensure_dir(path)
-    ensure_dir(cache_dir)
+    ensure_dir(cache_dir)  # TODO write system temp dir
     with open(source, 'r') as r:
         content = r.read()
     with open(join(path, file), 'w') as f:

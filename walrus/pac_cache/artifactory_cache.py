@@ -1,9 +1,11 @@
 from walrus.pac_cache import Cache
 from walrus.packages.package import Package
-from artifactory import ArtifactoryPath
 
 
 class ArtifactoryCache(Cache):
+    def __init__(self, temp_dir, conf):
+        cache_url = conf['url']
+        super().__init__(temp_dir, cache_url)
 
     def exists(self, package: Package):
         pass
@@ -11,12 +13,8 @@ class ArtifactoryCache(Cache):
     def add_package(self, package: Package, rewrite: bool):
         pass
 
-    def fetch_package(self, package: Package):
+    def fetch_package(self, package: Package) -> bool:
         pass
-
-    def __init__(self, temp_dir, conf):
-        cache_url = conf['url']
-        super().__init__(temp_dir, cache_url)
 
     def get_package(self, package: Package):
         pass

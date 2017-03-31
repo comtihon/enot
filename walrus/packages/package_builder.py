@@ -1,12 +1,8 @@
-import json
-from os.path import join
-
 from walrus.compiler.compiler_factory import get_compiler
 from walrus.global_properties import WalrusGlobalProperties
 from walrus.packages.config import config
 from walrus.packages.config.config_factory import read_project
 from walrus.packages.package import Package
-from walrus.utils.file_utils import ensure_empty, copy_to, tar
 
 
 class Builder:
@@ -41,18 +37,7 @@ class Builder:
 
     # Compose a package file
     def package(self):
-        temp_dir = join(self.system_config.temp_dir, self.project.name)
-        ensure_empty(temp_dir)
-        exported = self.project.export()
-        with open(join(temp_dir, self.project.name + '.json'), 'w') as outfile:
-            json.dump(exported, outfile, sort_keys=True, indent=4)
-        copy_to('ebin', temp_dir)
-        if self.project.config.with_source:
-            copy_to('src', temp_dir)
-            copy_to('include', temp_dir)
-        if self.project.config.has_nifs:
-            copy_to('c_src', temp_dir)
-        tar(temp_dir, join(self.path, self.project.name + '.wp'))
+        self.system_config.cache.package(self.project)
 
     # Parse package config, download missing deps to /tmp
     def populate(self):

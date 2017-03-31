@@ -24,7 +24,7 @@ class LocalCache(Cache):
         return if_dir_exists(self.path, self.__get_package_path(package))
 
     # clone git repo to tmp, make package to scan and update it's config
-    def fetch_package(self, package: Package):
+    def fetch_package(self, package: Package) -> bool:
         temp_path = join(self.temp_dir, package.name)
         print('fetch ' + temp_path)
         remove_dir(temp_path)
@@ -34,6 +34,7 @@ class LocalCache(Cache):
         git.checkout(package.vsn)
         repo.create_head(package.vsn)
         LocalCache.fill_package_from_temp(package, temp_path)
+        return True
 
     # make package to scan and update it's config
     def get_package(self, package: Package):

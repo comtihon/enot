@@ -28,7 +28,7 @@ class S3Cache(Cache):
     def add_package(self, package: Package, rewrite: bool):
         pass
 
-    def fetch_package(self, package: Package):
+    def fetch_package(self, package: Package) -> bool:
         pass
 
     def get_package(self, package: Package):

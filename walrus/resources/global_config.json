@@ -4,6 +4,7 @@
   "cache":
   [
     {
+      "name": "local",
       "type": "local",
       "url": "file://{{ local_cache }}"
     }

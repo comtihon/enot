@@ -16,7 +16,7 @@ class LocalCache(Cache):
     def __init__(self, temp_dir, conf):
         cache_url = conf['url']
         path = cache_url[7:]
-        super().__init__(temp_dir, path)
+        super().__init__(conf['name'], temp_dir, path)
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -35,10 +35,6 @@ class LocalCache(Cache):
         repo.create_head(package.vsn)
         LocalCache.fill_package_from_temp(package, temp_path)
         return True
-
-    # make package to scan and update it's config
-    def get_package(self, package: Package):
-        LocalCache.fill_package_from_temp(package, join(self.temp_dir, package.name))
 
     # add built package to local cache
     def add_package(self, package: Package, rewrite=False):

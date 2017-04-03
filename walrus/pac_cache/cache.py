@@ -19,10 +19,11 @@ class CacheType(Enum):
 
 
 class Cache(ABC):
-    def __init__(self, temp_dir, path):
+    def __init__(self, name, temp_dir, path):
         self._erlang_version = Cache.get_erlang_version()
         self._temp_dir = temp_dir
         self._path = path
+        self._name = name
 
     @property
     def temp_dir(self) -> str:
@@ -33,11 +34,15 @@ class Cache(ABC):
         return self._path
 
     @property
+    def name(self) -> str:
+        return self._name
+
+    @property
     def erlang_version(self) -> str:
         return self._erlang_version
 
     @abstractmethod
-    def exists(self, package: Package):
+    def exists(self, package: Package) -> bool:
         pass
 
     @abstractmethod
@@ -45,11 +50,7 @@ class Cache(ABC):
         pass
 
     @abstractmethod
-    def get_package(self, package: Package):
-        pass
-
-    @abstractmethod
-    def add_package(self, package: Package, rewrite: bool):
+    def add_package(self, package: Package, rewrite: bool):  # add package to cache
         pass
 
     def link_package(self, package: Package, path: str):

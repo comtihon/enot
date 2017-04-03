@@ -5,7 +5,7 @@ from walrus.packages.package import Package
 class ArtifactoryCache(Cache):
     def __init__(self, temp_dir, conf):
         cache_url = conf['url']
-        super().__init__(temp_dir, cache_url)
+        super().__init__(conf['name'], temp_dir, cache_url)
 
     def exists(self, package: Package):
         pass
@@ -14,7 +14,4 @@ class ArtifactoryCache(Cache):
         pass
 
     def fetch_package(self, package: Package) -> bool:
-        pass
-
-    def get_package(self, package: Package):
         pass

@@ -89,7 +89,8 @@ class ConfigFile(ABC):
     def export(self):
         return {'name': self.name,
                 'with_source': self.with_source,
-                'drop_unknown_deps': self.drop_unknown
+                'drop_unknown_deps': self.drop_unknown,
+                'has_nifs': self.has_nifs
                 }
 
     def read_app_primary_params(self):

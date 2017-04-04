@@ -34,7 +34,7 @@ class S3Cache(Cache):
         bucket = self.connection.get_bucket(self.bucket)
         return bucket.get_key(self.__get_package_url(package))
 
-    def add_package(self, package: Package, rewrite: bool):  # TODO call this function. Get package from current dir or overwrite by param
+    def add_package(self, package: Package, rewrite: bool):
         bucket = self.connection.get_bucket(self.bucket)
         if not rewrite and bucket.get_key(self.__get_package_url(package)) is not None:
             return

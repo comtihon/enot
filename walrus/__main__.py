@@ -1,33 +1,49 @@
+"""Walrus - package manager for Erlang
+
+Usage:
+  walrus build
+  walrus package
+  walrus add_package <repo> [-wp PACKAGE]
+  walrus deps
+  walrus -v | --version
+  walrus -h | --help
+
+Options:
+  -p PACKAGE --package PACKAGE       path to package. If not specified, tries to add current application's package
+  -w --rewrite                       should rewrite package if already loaded to repository with same version
+                                     [default: False]
+  -h --help                          show this help message and exit
+  -v --version                       print version and exit
+"""
 import sys
 
 import os
+from docopt import docopt, DocoptExit
+from walrus import APPVSN
 
-from walrus.packages import package_builder
 from walrus.packages.package_builder import Builder
 
 
 def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
-    if 'build' in args:
-        return build(os.getcwd())
-    elif 'walrusify' in args:
-        return walrusify(os.getcwd())
-    elif 'release' in args:
-        return release()
-    elif 'package' in args:
-        return package(os.getcwd())
-    elif 'deps' in args:
-        return deps(os.getcwd())
-    else:
-        print('build | release | deps | walrusify')
+    try:
+        arguments = docopt(__doc__, argv=args, version=APPVSN)
+    except DocoptExit as usage:
+        print(usage)
         sys.exit(1)
-        # TODO additional args
+    path = os.getcwd()
+    if arguments['build']:
+        return build(path)
+    if arguments['deps']:
+        return deps(path)
+    if arguments['package']:
+        return package(path)
+    if arguments['add_package']:
+        return add_package(path, arguments)
 
 
 # TODO release support
 def build(path):
-    builder = Builder(path)
+    builder = Builder.init_from_path(path)
     builder.populate()
     if not builder.build():
         sys.exit(1)
@@ -41,23 +57,28 @@ def release():
 
 #  TODO add an ability to link full deps tree to project
 def deps(path):
-    builder = Builder(path)
+    builder = Builder.init_from_path(path)
     builder.populate()
     builder.deps()
     sys.exit(0)
 
 
 def package(path):
-    builder = Builder(path)
+    builder = Builder.init_from_path(path)
     builder.populate()
     builder.package()
+    sys.exit(0)  # TODO use sys.exit only in main. All sub functions should return bool()
 
 
-def walrusify(path):
-    if package_builder.walrusify(path):
-        sys.exit(0)
+def add_package(path, arguments):
+    repo = arguments['<repo>']
+    rewrite = arguments['--rewrite']
+    path_overwrite = arguments.get('--package', False)
+    if path_overwrite:
+        builder = Builder.init_from_package(path_overwrite)
     else:
-        sys.exit(1)
+        builder = Builder.init_from_path(path)
+    builder.add_package(repo, rewrite)
 
 
 if __name__ == "__main__":

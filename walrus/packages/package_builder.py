@@ -1,17 +1,25 @@
 from walrus.compiler.compiler_factory import get_compiler
 from walrus.global_properties import WalrusGlobalProperties
-from walrus.packages.config import config
-from walrus.packages.config.config_factory import read_project
 from walrus.packages.package import Package
 
 
 class Builder:
-    def __init__(self, path: str):
+    def __init__(self, path: str, package: Package):
         super().__init__()
         self._system_config = WalrusGlobalProperties()
         self._path = path
         self._packages = {}
-        self._project = Package.frompath(path)
+        self._project = package
+
+    @classmethod
+    def init_from_path(cls, path):
+        package = Package.frompath(path)
+        return cls(path, package)
+
+    @classmethod
+    def init_from_package(cls, path_to_package):
+        package = Package.frompackage(path_to_package)
+        return cls(path_to_package, package)
 
     @property
     def path(self) -> str:  # path in system of building project
@@ -29,12 +37,6 @@ class Builder:
     def project(self) -> Package:  # root package being built
         return self._project
 
-    def walrusify(self):
-        project_config = read_project(self.path)
-        if project_config.need_walrusify():
-            package_content = project_config.get_valrus_package()
-            config.write_walrus_file(self.path, package_content)
-
     # Compose a package file
     def package(self):
         self.system_config.cache.package(self.project)
@@ -42,6 +44,9 @@ class Builder:
     # Parse package config, download missing deps to /tmp
     def populate(self):
         self.__populate_deps(self.project.deps)
+
+    def add_package(self, remote, rewrite):
+        self.system_config.cache.add_package(self.project, remote, rewrite)
 
     def build(self):
         self.__build_tree(self.project, is_subpackage=False)
@@ -67,7 +72,7 @@ class Builder:
         compiler = get_compiler(self.system_config, package.config)
         res = compiler.compile()
         if is_subpackage and res:
-            self.system_config.cache.add_package(package)
+            self.system_config.cache.add_package_local(package)
         return res
 
     def __populate_deps(self, deps):  # TODO add an ability to operate with deps in parallel

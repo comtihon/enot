@@ -8,7 +8,7 @@ from walrus.utils.file_utils import read_file
 
 
 class WalrusConfig(ConfigFile):
-    def __init__(self, path, has_nif):
+    def __init__(self, path, has_nif=False):
         super().__init__(path)
         self._path = path
         self._has_nifs = has_nif
@@ -16,6 +16,9 @@ class WalrusConfig(ConfigFile):
     def read_config(self) -> dict:
         super().read_app_primary_params()
         content = read_file(join(self.path, 'walrusfile.json'))
+        return self.init_from_json(content)
+
+    def init_from_json(self, content: str):
         parsed = json.loads(content)
         self._name = parsed['name']
         if 'drop_unknown_deps' in parsed:

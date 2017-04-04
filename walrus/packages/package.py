@@ -1,6 +1,7 @@
 import json
+import tarfile
 
-from walrus.packages.config import ConfigFile
+from walrus.packages.config import ConfigFile, WalrusConfig
 from walrus.packages.config import config_factory
 from walrus.packages.config.stub_config import StubConfig
 
@@ -37,8 +38,18 @@ class Package:
         self.__fill_deps()
 
     @classmethod
-    def frompath(cls, path):
+    def frompath(cls, path: str):
         config = config_factory.read_project(path)
+        return cls(config=config)
+
+    @classmethod
+    def frompackage(cls, path: str):
+        package_name = path.split('/')[-1:]
+        with tarfile.open(path) as pack:
+            config = WalrusConfig(path)
+            f = pack.extractfile(package_name)
+            conf_json = f.read()
+            config.init_from_json(conf_json)
         return cls(config=config)
 
     @classmethod

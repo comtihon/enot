@@ -9,8 +9,6 @@ from walrus.packages.config import ConfigFile
 class MakefileCompiler(AbstractCompiler):
     def __init__(self, config: ConfigFile):
         super().__init__()
-        print(config.name)
-        print(config.path)
         self._src_path = join(config.path, 'src')
         self._include_path = join(config.path, 'include')
         self._output_path = join(config.path, 'ebin')

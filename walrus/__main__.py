@@ -42,6 +42,7 @@ def main(args=None):
 
 
 # TODO release support
+# Build project with all deps (fetch deps if needed)
 def build(path):
     builder = Builder.init_from_path(path)
     builder.populate()
@@ -56,6 +57,7 @@ def release():
 
 
 #  TODO add an ability to link full deps tree to project
+# Fetch and build deps
 def deps(path):
     builder = Builder.init_from_path(path)
     builder.populate()
@@ -63,6 +65,7 @@ def deps(path):
     sys.exit(0)
 
 
+# Create walrus package
 def package(path):
     builder = Builder.init_from_path(path)
     builder.populate()
@@ -70,6 +73,7 @@ def package(path):
     sys.exit(0)  # TODO use sys.exit only in main. All sub functions should return bool()
 
 
+# Add package to cache
 def add_package(path, arguments):
     repo = arguments['<repo>']
     rewrite = arguments['--rewrite']

@@ -21,5 +21,8 @@ Erlang advanced project manager
         "build_vars" : [
             {Var1 : Value}
             Var2
+        ],
+        "c_build_vars" : [
+            {VarName1 : VarValue1}
         ]
     }

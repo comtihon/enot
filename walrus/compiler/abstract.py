@@ -3,6 +3,11 @@ from enum import Enum
 
 
 # TODO probably move me to separate file and make (string value, compiler constructor) and add get_compiler() method
+from os.path import join
+
+from walrus.packages.config import ConfigFile
+
+
 class Compiler(Enum):
     WALRUS = 'walrus'  # prefer walrus
     ERLANG_MK = 'erlang.mk'  # prefer erlang.mk
@@ -12,22 +17,21 @@ class Compiler(Enum):
 
 
 class AbstractCompiler(ABC):
-    def __init__(self):
-        self._project_name = ""
+    def __init__(self, config: ConfigFile):
+        self._config = config
         self._compiler = "erlc"
-        self._root_path = ""
-        self._src_path = ""
-        self._include_path = ""
-        self._output_path = ""
-        self._build_vars = []
 
     @abstractmethod
     def compile(self) -> bool:
         pass
 
     @property
+    def config(self) -> ConfigFile:
+        return self._config
+
+    @property
     def project_name(self) -> str:
-        return self._project_name
+        return self.config.name
 
     @property
     def compiler(self) -> str:
@@ -35,20 +39,20 @@ class AbstractCompiler(ABC):
 
     @property
     def root_path(self) -> str:  # Project path.
-        return self._root_path
+        return self.config.path
 
     @property
     def src_path(self) -> str:
-        return self._src_path
+        return join(self.config.path, 'src')
 
     @property
     def include_path(self) -> str:
-        return self._include_path
+        return join(self.config.path, 'include')
 
     @property
     def output_path(self) -> str:
-        return self._output_path
+        return join(self.config.path, 'ebin')
 
     @property
     def build_vars(self) -> list:
-        return self._build_vars
+        return self.config.build_vars

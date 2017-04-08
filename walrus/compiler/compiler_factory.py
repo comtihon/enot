@@ -19,9 +19,9 @@ def select_compiler(compiler: Compiler, package_config: ConfigFile):
     if compiler == Compiler.WALRUS:
         return WalrusCompiler(package_config)
     if compiler == Compiler.REBAR:
-        return RebarCompiler()
+        return RebarCompiler(package_config)
     if compiler == Compiler.ERLANG_MK:
-        return ErlangMKCompiler()
+        return ErlangMKCompiler(package_config)
     if compiler == Compiler.MAKEFILE:
         return MakefileCompiler(package_config)
     raise RuntimeError('Unknown compiler ' + compiler.value + ' for ' + package_config.name)

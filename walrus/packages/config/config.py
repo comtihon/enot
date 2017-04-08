@@ -15,6 +15,7 @@ class ConfigFile(ABC):
         self._path = path
         self._prebuild = []
         self._build_vars = []
+        self._c_build_vars = []
         self._has_nifs = False
         self._app_deps = []
         self._compose_app_file = True
@@ -49,7 +50,7 @@ class ConfigFile(ABC):
         return self._conf_vsn
 
     @property
-    def vsn(self) -> str:   # conf version overrides app version
+    def vsn(self) -> str:  # conf version overrides app version
         if self.conf_vsn is None:
             return self.app_vsn
         return self.conf_vsn
@@ -73,6 +74,10 @@ class ConfigFile(ABC):
     @property
     def build_vars(self) -> list:  # erlang build vars, passed to the compiler (string or tuple of size 2)
         return self._build_vars
+
+    @property
+    def c_build_vars(self) -> list:  # c build vars. list of kv tuples
+        return self._c_build_vars
 
     # read config, return deps
     @abstractmethod

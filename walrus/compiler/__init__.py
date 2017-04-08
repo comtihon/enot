@@ -4,3 +4,4 @@ from walrus.compiler.erlang_mk import ErlangMKCompiler
 from walrus.compiler.rebar import RebarCompiler
 from walrus.compiler.walrus import WalrusCompiler
 from walrus.compiler.makefile import MakefileCompiler
+from walrus.compiler.c_compiler import CCompiler

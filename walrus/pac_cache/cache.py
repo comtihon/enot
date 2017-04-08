@@ -78,6 +78,7 @@ class Cache(ABC):
         ensure_empty(join(self.temp_dir, package.name))
         with tarfile.open(walpack) as pack:
             pack.extractall(pack_dir)
+        package.fill_from_path(pack_dir)
 
     @staticmethod
     def get_erlang_version():

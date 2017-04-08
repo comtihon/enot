@@ -1,5 +1,7 @@
 from walrus.pac_cache import CacheType, Cache
 from walrus.pac_cache import cache_factory
+
+from walrus.compiler import CCompiler
 from walrus.packages.package import Package
 
 
@@ -30,8 +32,11 @@ class CacheMan:
         for cache in self.caches.values():
             if cache.exists(package) and cache.fetch_package(package):  # remote cache has this package
                 cache.unpackage(package)
+                res = True
+                if package.config.has_nifs:
+                    res = CCompiler(package.config).compile()
                 self.local_cache.add_package(package)
-                return True
+                return res
         return False  # no cache has this package
 
     def link_package(self, package: Package, path: str):

@@ -4,9 +4,9 @@ from subprocess import PIPE
 
 import os
 from os import listdir
-
 from walrus.compiler import AbstractCompiler
-from walrus.packages.config import ConfigFile
+
+from walrus.compiler.c_compiler import CCompiler
 from walrus.utils.file_utils import ensure_dir, read_file, write_file_lines
 
 
@@ -15,39 +15,22 @@ def is_erlang_source(file):
 
 
 class WalrusCompiler(AbstractCompiler):
-    def __init__(self, config: ConfigFile):
-        super().__init__()
-        self._src_path = join(config.path, 'src')
-        self._include_path = join(config.path, 'include')
-        self._output_path = join(config.path, 'ebin')
-        self._root_path = config.path
-        self._compose_app_file = config.compose_app_file
-        self._deps_path = join(config.path, 'deps')
-        self._project_name = config.name
-        self._prebuild = config.prebuild
-        self._build_vars = config.build_vars
-
-    @property
-    def prebuild(self) -> list:
-        return self._prebuild
-
     @property
     def deps_path(self) -> str:
-        return self._deps_path
-
-    @property
-    def compose_app_file(self) -> bool:
-        return self._compose_app_file
+        return join(self.config.path, 'deps')
 
     def compile(self) -> bool:
         print('build ' + self.project_name)
         self.__run_prebuild()
         filenames, all_files = self.__get_all_files(self.src_path)
         ensure_dir(self.output_path)
-        return self.__do_compile(filenames, all_files)
+        if self.config.has_nifs:
+            if CCompiler(self.config).compile():
+                return self.__do_compile(filenames, all_files)
+        return False
 
     def __run_prebuild(self):
-        for action in self.prebuild:
+        for action in self.config.prebuild:
             action.run(self.root_path)
 
     def __do_compile(self, filenames, files):
@@ -73,14 +56,15 @@ class WalrusCompiler(AbstractCompiler):
 
     def __append_macro(self, cmd):
         for var in self.build_vars:
-            if not isinstance(var, str):
-                cmd += ['-D' + var[0] + '=' + var[1]]  # variable with value
-            else:
-                cmd += ['-D' + var[0]]  # just standalone variable
+            if isinstance(var, dict):
+                for k, v in var.items():
+                    cmd += ['-D' + k + '=' + v]  # variable with value
+            elif isinstance(var, str):
+                cmd += ['-D' + var]  # just standalone variable
 
     # TODO change reading file by lines on decoding file on erlang terms, changing and encoding back
     def __write_app_file(self, all_files):
-        if self.compose_app_file:
+        if self.config.compose_app_file:
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
             if '{modules' in app_src:
                 changed_file = append_modules_with_files(app_src, all_files)

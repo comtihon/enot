@@ -43,7 +43,7 @@ class Builder:
 
     # Parse package config, download missing deps to /tmp
     def populate(self):
-        self.__populate_deps(self.project.deps)
+        self.__populate_deps(self.project.deps.values())
 
     def add_package(self, remote, rewrite):
         self.system_config.cache.add_package(self.project, remote, rewrite)
@@ -75,10 +75,18 @@ class Builder:
             self.system_config.cache.add_package_local(package)
         return res
 
-    def __populate_deps(self, deps):  # TODO add an ability to operate with deps in parallel
-        for name, dep in deps.items():
-            if name not in self.packages:
-                print('new dep: ' + name)
-            if not self.system_config.cache.exists(dep):
-                self.system_config.cache.fetch_package(dep)
-            self.__populate_deps(dep.deps)
+    # TODO lock deps after fetched.
+    def __populate_deps(self, level):  # TODO add an ability to operate with deps in parallel
+        next_level = []
+        for dep in level:
+            if dep.name not in self.packages:
+                print('new dep: ' + dep.name)
+                self.packages[dep.name] = dep.vsn
+                if not self.system_config.cache.exists(dep):
+                    self.system_config.cache.fetch_package(dep)
+                next_level += dep.deps.values()
+            else:
+                if dep.vsn != self.packages[dep.name]:  # Warn only if it is not the same dep
+                    print('Skip ' + dep.name + ' (' + dep.vsn + '). Use ' + self.packages[dep.name])
+        if next_level:
+            self.__populate_deps(next_level)

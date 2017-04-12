@@ -1,6 +1,6 @@
 {
   "compiler" : "makefile",
-  "temp_dir": "/tmp/walrus",
+  "temp_dir": "{{ temp_dir }}",
   "cache":
   [
     {

@@ -63,6 +63,7 @@ class WalrusCompiler(AbstractCompiler):
                 cmd += ['-D' + var]  # just standalone variable
 
     # TODO change reading file by lines on decoding file on erlang terms, changing and encoding back
+    # TODO append conf version if app version is not set
     def __write_app_file(self, all_files):
         if self.config.compose_app_file:
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))

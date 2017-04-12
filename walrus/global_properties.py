@@ -3,6 +3,7 @@ from os.path import join
 
 import walrus
 from appdirs import *
+from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
 from walrus.compiler import Compiler
@@ -13,11 +14,12 @@ from walrus.utils.file_utils import read_file, ensure_dir
 def init_config(source, path, file):
     cache_dir = user_cache_dir(walrus.APPNAME, walrus.APPAUTHOR)
     ensure_dir(path)
-    ensure_dir(cache_dir)  # TODO write system temp dir
+    ensure_dir(cache_dir)
     with open(source, 'r') as r:
         content = r.read()
     with open(join(path, file), 'w') as f:
-        f.write(str.replace(content, '{{ local_cache }}', cache_dir))
+        template = Template(content)
+        f.write(template.render(local_cache=cache_dir, temp_dir='/tmp/walrus'))
 
 
 class WalrusGlobalProperties:

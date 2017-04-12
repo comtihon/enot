@@ -25,8 +25,12 @@ class Package:
         return self._config
 
     @property
-    def deps(self) -> dict:  # package's deps.
+    def dep_packages(self) -> dict:  # package's deps.
         return self._deps
+
+    @property
+    def deps(self) -> list:  # package's deps names
+        return list(self.dep_packages.keys())
 
     # TODO is name enough unique?
     @property
@@ -62,7 +66,7 @@ class Package:
         return {'name': self.config.name,
                 'url': self.url,
                 'vsn': self.vsn,
-                'deps': [dep.export() for _, dep in self.deps.items()]}
+                'deps': [dep.export() for _, dep in self.dep_packages.items()]}
 
     def get_valrus_package(self):
         export = self.export()
@@ -70,10 +74,10 @@ class Package:
         return json.dumps({**export, **export_config}, sort_keys=True, indent=4)
 
     def list_deps(self) -> list():
-        return self.deps.values()
+        return self.dep_packages.values()
 
     def __fill_deps(self):
         self._deps = {}
         for name, dep in self.config.read_config().items():
             print(name + ' ' + str(dep))
-            self.deps[name] = Package.fromdeps(name, dep)
+            self.dep_packages[name] = Package.fromdeps(name, dep)

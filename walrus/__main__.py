@@ -4,7 +4,9 @@ Usage:
   walrus build
   walrus package
   walrus add_package <repo> [-wp PACKAGE]
+  walrus release
   walrus deps
+  walrus version
   walrus -v | --version
   walrus -h | --help
 
@@ -33,8 +35,12 @@ def main(args=None):
     path = os.getcwd()
     if arguments['build']:
         return build(path)
+    if arguments['version']:
+        return version(path)
     if arguments['deps']:
         return deps(path)
+    if arguments['release']:
+        return release(path)
     if arguments['package']:
         return package(path)
     if arguments['add_package']:
@@ -52,8 +58,18 @@ def build(path):
         sys.exit(0)
 
 
-def release():
-    return True
+# Print project's version. Prefer walrus.conf vsn, but if none - use app.src version.
+def version(path):
+    builder = Builder.init_from_path(path)
+    print(builder.project.vsn)
+    sys.exit(0)
+
+
+# Build a release. Will use current rel dir with config or create new, if none is found
+def release(path):
+    builder = Builder.init_from_path(path)
+    builder.release()
+    sys.exit(0)
 
 
 #  TODO add an ability to link full deps tree to project
@@ -61,7 +77,7 @@ def release():
 def deps(path):
     builder = Builder.init_from_path(path)
     builder.populate()
-    builder.deps()
+    builder.dep_packages()
     sys.exit(0)
 
 
@@ -83,6 +99,7 @@ def add_package(path, arguments):
     else:
         builder = Builder.init_from_path(path)
     builder.add_package(repo, rewrite)
+    sys.exit(0)
 
 
 if __name__ == "__main__":

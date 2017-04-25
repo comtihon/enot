@@ -37,6 +37,7 @@ class LocalCache(Cache):
         return True
 
     # add built package to local cache
+    # TODO rebar3 built packages output in _build/...
     def add_package(self, package: Package, rewrite=False):
         full_dir = join(self.path, self.__get_package_path(package))
         ensure_dir(full_dir)
@@ -57,21 +58,25 @@ class LocalCache(Cache):
         copy_file(resource, join(full_dir, 'Makefile'))
 
     # link package from local cache to project
-    def link_package(self, package: Package, path: str):
-        if not path:
-            path = os.getcwd()
-        package_path = join(self.path, self.__get_package_path(package))
-        package_name = package.name
-        dep_dir = join(path, 'deps', package_name)
+    def link_package(self, package: Package, package_path: str):
+        if not package_path:
+            package_path = os.getcwd()
+        cache_path = join(self.path, self.__get_package_path(package))
+        dep_dir = join(package_path, 'deps', package.name)
         ensure_dir(dep_dir)
-        print('link ' + package_name)
+        print('link ' + package.name)
         # TODO link everything found? (except package file)
-        LocalCache.link(package_path, path, package_name, 'Makefile')
-        LocalCache.link(package_path, path, package_name, 'include')
-        LocalCache.link(package_path, path, package_name, 'src')
-        LocalCache.link(package_path, path, package_name, 'ebin')
+        LocalCache.link(cache_path, package_path, package.name, 'Makefile')
+        LocalCache.link(cache_path, package_path, package.name, 'include')
+        LocalCache.link(cache_path, package_path, package.name, 'src')
+        LocalCache.link(cache_path, package_path, package.name, 'ebin')
         if package.config.has_nifs:
-            LocalCache.link(package_path, path, package_name, 'priv')
+            LocalCache.link(cache_path, package_path, package.name, 'priv')
+
+    # link custom dir/file from local cache to path
+    def link_custom(self, package: Package, path: str, custom: str):
+        cache_path = join(self.path, self.__get_package_path(package))
+        LocalCache.link(cache_path, path, package.name, custom)
 
     def __get_package_path(self, package: Package):
         namespace = package.url.split('/')[-2]
@@ -83,9 +88,9 @@ class LocalCache(Cache):
 
     # TODO relinking deps on vsn switching
     @staticmethod
-    def link(package_path, current_dir, name, dir_to_link):
-        include_src = join(package_path, dir_to_link)
-        include_dst = join(current_dir, 'deps', name, dir_to_link)
+    def link(cache_path, package_path, name, dir_to_link):
+        include_src = join(cache_path, dir_to_link)
+        include_dst = join(package_path, 'deps', name, dir_to_link)
         link_if_needed(include_src, include_dst)
 
     @staticmethod

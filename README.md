@@ -6,6 +6,7 @@ Erlang advanced project manager
 
     {
         "name" : AppName,
+        "version" : AppVsn,
         "drop_unknown_deps" : Boolean,
         "with_source" : Boolean,
         "deps" : [

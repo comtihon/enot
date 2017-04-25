@@ -2,9 +2,8 @@ import json
 from os.path import join
 
 from walrus.action.prebuild import action_factory
-from walrus.packages.config import ConfigFile
-
 from walrus.compiler.abstract import Compiler
+from walrus.packages.config import ConfigFile
 from walrus.utils.file_utils import read_file
 
 
@@ -25,7 +24,7 @@ class WalrusConfig(ConfigFile):
         self._drop_unknown = parsed.get('drop_unknown_deps', True)
         self._with_source = parsed.get('with_source', True)
         self._conf_vsn = parsed.get('version', None)
-        self._has_nifs = parsed.get('has_nifs', self._has_nifs)
+        self._has_nifs = parsed.get('has_nifs', self._has_nifs)  # TODO Get rid of this.
         self.__parse_prebuild(parsed)
         self.__parse_build_vars(parsed)
         return self.__parse_deps(parsed['deps'])

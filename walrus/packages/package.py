@@ -1,9 +1,18 @@
 import json
+import subprocess
 import tarfile
+from os.path import join
+from subprocess import PIPE
+
+import os
+import walrus
+from jinja2 import Template
+from pkg_resources import Requirement, resource_filename
 
 from walrus.packages.config import ConfigFile, WalrusConfig
 from walrus.packages.config import config_factory
 from walrus.packages.config.stub_config import StubConfig
+from walrus.utils.file_utils import ensure_dir, write_file, read_file, copy_file
 
 
 class Package:
@@ -42,12 +51,12 @@ class Package:
         self.__fill_deps()
 
     @classmethod
-    def frompath(cls, path: str):
+    def from_path(cls, path: str):
         config = config_factory.read_project(path)
         return cls(config=config)
 
     @classmethod
-    def frompackage(cls, path: str):
+    def from_package(cls, path: str):
         package_name = path.split('/')[-1:]
         with tarfile.open(path) as pack:
             config = WalrusConfig(path)
@@ -57,9 +66,9 @@ class Package:
         return cls(config=config)
 
     @classmethod
-    def fromdeps(cls, name, dep):
+    def from_deps(cls, name, dep, compiler=None):
         (url, vsn) = dep
-        config = StubConfig(name, vsn)
+        config = StubConfig(name, vsn, compiler)
         return cls(url=url, config=config)
 
     def export(self):
@@ -68,10 +77,33 @@ class Package:
                 'vsn': self.vsn,
                 'deps': [dep.export() for _, dep in self.dep_packages.items()]}
 
-    def get_valrus_package(self):
+    def to_package(self):
         export = self.export()
         export_config = self.config.export()
         return json.dumps({**export, **export_config}, sort_keys=True, indent=4)
+
+    # Generate a release
+    def to_release(self, relx_path: str) -> bool:
+        ensure_dir(join(self.config.path, 'rel'))
+        resave_relconf, relconf_path, relconf = self.__modify_resource('relx.config')
+        resave_vmargs, vmargs_path, vmargs = self.__modify_resource('vm.args', 'rel')
+        resave_sysconf, sysconf_path, sysconf = self.__modify_resource('sys.config', 'rel')
+        try:
+            p = subprocess.Popen(relx_path, stdout=PIPE, stderr=PIPE, cwd=self.config.path)
+            if p.wait() != 0:
+                print(self.name + ' release failed: ')
+                print(p.stderr.read().decode('utf8'))
+                print(p.stdout.read().decode('utf8'))
+                return False
+            else:
+                return True
+        finally:  # Return previous file values, if were changed.
+            if resave_vmargs:
+                write_file(vmargs_path, vmargs)
+            if resave_relconf:
+                write_file(relconf_path, relconf)
+            if resave_sysconf:
+                write_file(sysconf_path, sysconf)
 
     def list_deps(self) -> list():
         return self.dep_packages.values()
@@ -80,4 +112,22 @@ class Package:
         self._deps = {}
         for name, dep in self.config.read_config().items():
             print(name + ' ' + str(dep))
-            self.dep_packages[name] = Package.fromdeps(name, dep)
+            self.dep_packages[name] = Package.from_deps(name, dep)
+
+    def __modify_resource(self, resource, path=''):
+        resource_path = self.__ensure_resource(resource, path)
+        resource = read_file(resource_path)
+        if '{{ ' in resource:
+            template = Template(resource)
+            resource_filled = template.render(app=self)
+            write_file(resource_path, resource_filled)
+            return True, resource_path, resource
+        return False, resource_path, resource
+
+    def __ensure_resource(self, resource, path):
+        resource_path = join(self.config.path, path, resource)
+        if not os.path.isfile(resource_path):
+            resource = resource_filename(Requirement.parse(walrus.APPNAME), join('walrus/resources', resource))
+            print('copy ' + resource + ' to ' + resource_path)
+            copy_file(resource, resource_path)
+        return resource_path

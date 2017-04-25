@@ -4,12 +4,12 @@ from walrus.pac_cache import S3Cache
 from walrus.pac_cache.cache import Cache, CacheType
 
 
-def get_cache(cache_type: str, conf: dict, tepm_dir: str) -> Cache:
-    if cache_type == CacheType.LOCAL.value:
+def get_cache(cache_type: CacheType, conf: dict, tepm_dir: str) -> Cache:
+    if cache_type == CacheType.LOCAL:
         return LocalCache(tepm_dir, conf)
-    elif cache_type == CacheType.ARTIFACTORY.value:
+    elif cache_type == CacheType.ARTIFACTORY:
         return ArtifactoryCache(tepm_dir, conf)
-    elif cache_type == CacheType.S3.value:
+    elif cache_type == CacheType.S3:
         return S3Cache(tepm_dir, conf)
     else:
-        raise RuntimeError('Unknown cache type: ' + cache_type)
+        raise RuntimeError('Unknown cache type: ' + cache_type.value)

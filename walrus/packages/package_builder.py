@@ -1,16 +1,9 @@
-import subprocess
-from os.path import join
-from subprocess import PIPE
 
-import os
-import walrus
-from jinja2 import Template
-from pkg_resources import Requirement, resource_filename
-
-from walrus.compiler.compiler_factory import get_compiler
+from walrus.compiler import Compiler, ErlangMKCompiler
+from walrus.compiler.compiler_factory import get_compiler, get_package_compiler
 from walrus.global_properties import WalrusGlobalProperties
 from walrus.packages.package import Package
-from walrus.utils.file_utils import copy_file, ensure_dir, read_file, write_file
+from walrus.utils.file_utils import get_cmd
 
 
 class Builder:
@@ -20,15 +13,19 @@ class Builder:
         self._path = path
         self._packages = {}
         self._project = package
+        if self.system_config.compiler == Compiler.REBAR3:  # TODO refactor me somehow
+            self.__ensure_rebar3()
+        elif self.system_config.compiler == Compiler.ERLANG_MK:
+            self.__ensure_erlangmk()
 
     @classmethod
     def init_from_path(cls, path):
-        package = Package.frompath(path)
+        package = Package.from_path(path)
         return cls(path, package)
 
     @classmethod
     def init_from_package(cls, path_to_package):
-        package = Package.frompackage(path_to_package)
+        package = Package.from_package(path_to_package)
         return cls(path_to_package, package)
 
     @property
@@ -66,44 +63,8 @@ class Builder:
 
     # TODO check if there is a need to compile first.
     def release(self):
-        ensure_dir(join(self.path, 'rel'))
-        resave_relconf, relconf_path, relconf = self.__modify_resource('relx.config')
-        resave_vmargs, vmargs_path, vmargs = self.__modify_resource('vm.args', 'rel')
-        resave_sysconf, sysconf_path, sysconf = self.__modify_resource('sys.config', 'rel')
-        try:  # TODO ensure relx installed. Install if not.
-            p = subprocess.Popen('./relx', stdout=PIPE, stderr=PIPE, cwd=self.path)
-            if p.wait() != 0:
-                print(self.project.name + ' release failed: ')
-                print(p.stderr.read().decode('utf8'))
-                print(p.stdout.read().decode('utf8'))
-                return False
-            else:
-                return True
-        finally:  # Return previous file values, if were changed.
-            if resave_vmargs:
-                write_file(vmargs_path, vmargs)
-            if resave_relconf:
-                write_file(relconf_path, relconf)
-            if resave_sysconf:
-                write_file(sysconf_path, sysconf)
-
-    def __modify_resource(self, resource, path=''):
-        resource_path = self.__ensure_resource(resource, path)
-        resource = read_file(resource_path)
-        if '{{ ' in resource:
-            template = Template(resource)
-            resource_filled = template.render(app=self.project)
-            write_file(resource_path, resource_filled)
-            return True, resource_path, resource
-        return False, resource_path, resource
-
-    def __ensure_resource(self, resource, path):
-        resource_path = join(self.path, path, resource)
-        if not os.path.isfile(resource_path):
-            resource = resource_filename(Requirement.parse(walrus.APPNAME), join('walrus/resources', resource))
-            print('copy ' + resource + ' to ' + resource_path)
-            copy_file(resource, resource_path)
-        return resource_path
+        relx_path = self.__ensure_relx()
+        return self.project.to_release(relx_path)
 
     # TODO check all included in release apps for presence in deps
     # TODO take applications from app.src and add to relx.config
@@ -147,3 +108,44 @@ class Builder:
                     print('Skip ' + dep.name + ' (' + dep.vsn + '). Use ' + self.packages[dep.name])
         if next_level:
             self.__populate_deps(next_level)
+
+    def __ensure_relx(self):
+        return self.__ensure_tool('relx', 'https://github.com/erlware/relx.git', 'v3.22.4', Compiler.REBAR3)
+
+    def __ensure_rebar3(self):
+        return self.__ensure_tool('rebar3', 'https://github.com/erlang/rebar3.git', '3.3.6', Compiler.BOOTSTRAP)
+
+    def __ensure_erlangmk(self):
+        return ErlangMKCompiler.ensure(self.path)
+
+    # Find binary. It can installed in the system, located in project directory, be in local or remote cache.
+    # If there is no - try to make it.
+    def __ensure_tool(self, tool_name, tool_repo, tool_vsn, compiler_type):
+        tool_path = get_cmd(self.path, tool_name)
+        if tool_path is None:
+            tool = Package.from_deps(tool_name, (tool_repo, tool_vsn), compiler_type)
+            if self.system_config.cache.local_cache.exists(tool):  # tool is in local cache
+                self.__link_tool(tool, tool_name)
+                tool_path = './' + tool_name
+            else:
+                if self.system_config.cache.exists(tool):  # tool was downloaded from remote cache
+                    self.__link_tool(tool, tool_name)
+                    tool_path = './' + tool_name
+                else:  # should clone tool git repo, download and build it
+                    self.system_config.cache.local_cache.fetch_package(tool)
+                    self.__populate_deps(tool.deps.values())
+                    self.__build_deps(tool, is_subpackage=False)  # build deps before
+                    compiler = get_package_compiler(tool)
+                    if compiler_type == Compiler.REBAR3:  # ensure installed compiler before using it
+                        self.__ensure_rebar3()
+                    if compiler.compile():
+                        self.system_config.cache.add_package_local(tool)
+                        self.__link_tool(tool, tool_name)
+                        tool_path = './' + tool_name
+                    else:
+                        raise RuntimeError('Could not obtain ' + tool_name)
+        return tool_path
+
+    def __link_tool(self, path, tool):  # TODO won't work for relx until it will be in /
+        self.system_config.cache.local_cache.link_custom(path, self.path, tool)
+        return './' + tool

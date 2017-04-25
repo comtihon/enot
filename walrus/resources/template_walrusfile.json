@@ -1,0 +1,10 @@
+{
+  "name": "{{ name }}",
+  "version": "0.0.1",
+  "drop_unknown_deps": true,
+  "with_source": true,
+  "deps": [],
+  "prebuild": [],
+  "build_vars": [],
+  "c_build_vars": []
+}

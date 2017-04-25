@@ -1,9 +1,10 @@
-import os
 import shutil
+import subprocess
 import tarfile
 from os.path import join
 from shutil import copyfile
 
+import os
 from erl_terms.erl_terms_core import decode
 
 
@@ -62,6 +63,28 @@ def link_if_needed(include_src, include_dst):
 def ensure_dir(path: str):
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+# Get path to cmd or None if not found in system
+def get_cmd(path: str, cmd) -> str or None:
+    if ensure_programm(cmd):  # check cmd in system
+        return cmd
+    else:
+        if os.path.isfile(join(path, cmd)):  # check cmd in current dir
+            return './' + cmd
+    return None
+
+
+# Check if program installed in system
+def ensure_programm(name: str) -> bool:
+    try:
+        subprocess.call([name])
+        return True
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            return False
+        else:
+            raise
 
 
 # If dir exists delete and and create again

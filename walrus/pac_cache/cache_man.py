@@ -1,24 +1,25 @@
-from walrus.pac_cache import CacheType, Cache
-from walrus.pac_cache import cache_factory
-
 from walrus.compiler import CCompiler
+from walrus.pac_cache import CacheType, Cache, LocalCache
+from walrus.pac_cache import cache_factory
 from walrus.packages.package import Package
 
 
 class CacheMan:
     def __init__(self, conf: dict):
+        self._local_cache = None
+        self._caches = {}
         for cache in conf['cache']:
-            cache_type = cache['type']
+            cache_type = CacheType(cache['type'])
             cache = cache_factory.get_cache(cache_type, cache, conf['temp_dir'])
-            self._local_cache = None
-            self._caches = {}
-            if cache_type == CacheType.LOCAL.value:
+            if cache_type == CacheType.LOCAL and isinstance(cache, LocalCache):
+                if self._local_cache is not None:
+                    raise RuntimeError('More that one local cache found in config!')
                 self._local_cache = cache
             else:
                 self.caches[cache.name] = cache
 
     @property
-    def local_cache(self) -> Cache:
+    def local_cache(self) -> LocalCache:
         return self._local_cache
 
     @property

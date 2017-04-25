@@ -1,7 +1,9 @@
-from walrus.compiler import AbstractCompiler, Compiler, MakefileCompiler
+from walrus.compiler import AbstractCompiler, Compiler
 from walrus.compiler import ErlangMKCompiler
 from walrus.compiler import RebarCompiler
 from walrus.compiler import WalrusCompiler
+from walrus.compiler import MakefileCompiler
+from walrus.compiler import BootstrapCompiler
 from walrus.global_properties import WalrusGlobalProperties
 from walrus.packages.config import ConfigFile
 
@@ -11,6 +13,10 @@ def get_compiler(walrus_global_config: WalrusGlobalProperties, package_config: C
         return select_compiler(package_config.get_compiler(), package_config)
     else:
         return select_compiler(walrus_global_config.compiler, package_config)
+
+
+def get_package_compiler(package_config: ConfigFile) -> AbstractCompiler:
+    return select_compiler(package_config.get_compiler(), package_config)
 
 
 # TODO ensure system has compilers installed (try to install them if not).
@@ -24,4 +30,6 @@ def select_compiler(compiler: Compiler, package_config: ConfigFile):
         return ErlangMKCompiler(package_config)
     if compiler == Compiler.MAKEFILE:
         return MakefileCompiler(package_config)
+    if compiler == Compiler.BOOTSTRAP:
+        return BootstrapCompiler(package_config)
     raise RuntimeError('Unknown compiler ' + compiler.value + ' for ' + package_config.name)

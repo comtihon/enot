@@ -1,25 +1,25 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-
-
-# TODO probably move me to separate file and make (string value, compiler constructor) and add get_compiler() method
 from os.path import join
 
 from walrus.packages.config import ConfigFile
 
 
+# TODO probably move me to separate file and make (string value, compiler constructor) and add get_compiler() method
 class Compiler(Enum):
     WALRUS = 'walrus'  # prefer walrus
     ERLANG_MK = 'erlang.mk'  # prefer erlang.mk
     REBAR = 'rebar'  # use rebar everywhere
-    NATIVE = 'native'   # use found by conf compiler (rebar.config, or erlang.mk exists)
-    MAKEFILE = 'makefile'   # just call Makefile
+    REBAR3 = 'rebar3'  # use rebar3 compiler
+    NATIVE = 'native'  # use found by conf compiler (rebar.config, or erlang.mk exists)
+    MAKEFILE = 'makefile'  # just call Makefile
+    BOOTSTRAP = 'bootstrap'  # for those projects, who are afraid of Makefiles. Just call bootstrap in project's root
 
 
 class AbstractCompiler(ABC):
-    def __init__(self, config: ConfigFile):
+    def __init__(self, config: ConfigFile, compiler='erlc'):
         self._config = config
-        self._compiler = "erlc"
+        self._compiler = compiler
 
     @abstractmethod
     def compile(self) -> bool:

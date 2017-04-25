@@ -53,9 +53,6 @@ class Cache(ABC):
     def add_package(self, package: Package, rewrite: bool):  # add package to cache
         pass
 
-    def link_package(self, package: Package, path: str):
-        pass
-
     def package(self, package: Package):
         temp_dir = join(self.temp_dir, package.name)
         ensure_empty(temp_dir)

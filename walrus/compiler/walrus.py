@@ -89,6 +89,7 @@ class WalrusCompiler(AbstractCompiler):
         return modules, abs_files
 
 
+# TODO can use j2 template instead
 def create_modules_with_files(app_src, all_files):
     [before, after] = str.split(app_src, '{applications,', 1)
     module_line = '{modules,' + str(all_files) + '},'

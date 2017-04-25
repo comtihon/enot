@@ -1,8 +1,8 @@
-# walrus
+# Coon
 Erlang advanced project manager 
 
 
-### Walrus config
+### coon config
 
     {
         "name" : AppName,

@@ -35,7 +35,7 @@ class RebarConfig(ConfigFile):
     def __parse_deps(self, deps):
         return_deps = {}
         for (name, _, addr) in deps:
-            if name in self.app_deps:
+            if name in self.applications:
                 (_, url, vsn) = addr
                 (_, vsn_value) = vsn
                 return_deps[name] = (url, vsn_value)

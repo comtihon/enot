@@ -1,11 +1,9 @@
 {application, '{{ name }}', [
   {description, ""},
-  {vsn, "1"},
+  {vsn, "{{ vsn_tmp }}"},
   {registered, []},
-  {applications, [
-    kernel,
-    stdlib
-  ]},
+  {applications, {{ apps_tmp }}},
+  {modules, {{ modules_tmp }}},
   {mod, {'{{ name }}_app', []}},
   {env, []}
 ]}.

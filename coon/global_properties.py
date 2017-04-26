@@ -18,8 +18,7 @@ def init_config(source, path, file):
     with open(source, 'r') as r:
         content = r.read()
     with open(join(path, file), 'w') as f:
-        template = Template(content)
-        f.write(template.render(local_cache=cache_dir, temp_dir='/tmp/coon'))
+        f.write(Template(content).render(local_cache=cache_dir, temp_dir='/tmp/coon'))
 
 
 class GlobalProperties:

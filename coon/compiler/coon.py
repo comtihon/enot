@@ -3,11 +3,12 @@ from os.path import isfile, join, isdir
 from subprocess import PIPE
 
 import os
+from jinja2 import Template
 from os import listdir
 from coon.compiler import AbstractCompiler
 
 from coon.compiler.c_compiler import CCompiler
-from coon.utils.file_utils import ensure_dir, read_file, write_file_lines
+from coon.utils.file_utils import ensure_dir, read_file
 
 
 def is_erlang_source(file):
@@ -25,7 +26,7 @@ class CoonCompiler(AbstractCompiler):
         filenames, all_files = self.__get_all_files(self.src_path)
         ensure_dir(self.output_path)
         if self.config.has_nifs:
-            if CCompiler(self.config).compile():
+            if CCompiler(self.package).compile():
                 return self.__do_compile(filenames, all_files)
         return False
 
@@ -62,16 +63,12 @@ class CoonCompiler(AbstractCompiler):
             elif isinstance(var, str):
                 cmd += ['-D' + var]  # just standalone variable
 
-    # TODO change reading file by lines on decoding file on erlang terms, changing and encoding back
-    # TODO append conf version if app version is not set
     def __write_app_file(self, all_files):
         if self.config.compose_app_file:
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
-            if '{modules' in app_src:
-                changed_file = append_modules_with_files(app_src, all_files)
-            else:
-                changed_file = create_modules_with_files(app_src, all_files)
-            write_file_lines(changed_file, join(self.output_path, self.project_name + '.app'))
+            app_path = join(self.output_path, self.project_name + '.app')
+            with open(app_path, 'w') as f:
+                f.write(Template(app_src).render(modules=all_files, app=self.package))
 
     def __get_all_files(self, path):
         abs_files = []
@@ -87,41 +84,3 @@ class CoonCompiler(AbstractCompiler):
                 abs_files.append(abs_file)
                 modules.append(file[:-4])  # remove .erl
         return modules, abs_files
-
-
-# TODO can use j2 template instead
-def create_modules_with_files(app_src, all_files):
-    [before, after] = str.split(app_src, '{applications,', 1)
-    module_line = '{modules,' + str(all_files) + '},'
-    return before + module_line + '{applications,' + after
-
-
-def append_modules_with_files(app_src, all_files):
-    [before, after] = str.split(app_src, '{modules,', 1)
-    [modules, after_modules] = str.split(after, ']', 1)
-    to_write = __get_modules_to_add(modules, all_files)
-    if not to_write:
-        return app_src
-    else:
-        return before + '{modules,' + str(to_write) + after_modules
-
-
-def __get_all_existing_modules(all_modules_str):
-    splitted = str.split(all_modules_str, ',')
-    existing = [x.strip("\n[ ") for x in splitted]
-    if existing == ['']:
-        return []
-    else:
-        return existing
-
-
-def __get_modules_to_add(all_modules, all_files):
-    existing_modules = __get_all_existing_modules(all_modules)
-    modules_to_add = []
-    for file in all_files:
-        if file not in existing_modules:
-            modules_to_add.append(file)
-    if not modules_to_add:
-        return []
-    else:
-        return modules_to_add + existing_modules

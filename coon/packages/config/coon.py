@@ -39,7 +39,7 @@ class CoonConfig(ConfigFile):
         return_deps = {}
         for dep in deps:
             name = dep['name']
-            if name in self.app_deps:
+            if name in self.applications:
                 return_deps[name] = (dep['url'], dep['vsn'])
             else:
                 print('Drop unused dep ' + name)

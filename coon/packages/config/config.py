@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from os.path import join
 
-from coon.utils.file_utils import write_file, read_erlang_file
+from coon.utils.erl_file_utils import parse_app_config
+from coon.utils.file_utils import write_file
 
 
 def write_coonfig(path, package_config):
@@ -17,7 +18,7 @@ class ConfigFile(ABC):
         self._build_vars = []
         self._c_build_vars = []
         self._has_nifs = False
-        self._app_deps = []
+        self._applications = []
         self._compose_app_file = True
         self._app_vsn = None
         self._conf_vsn = None
@@ -60,8 +61,8 @@ class ConfigFile(ABC):
         return self._compose_app_file
 
     @property
-    def app_deps(self) -> list:  # deps from app.src or app file
-        return self._app_deps
+    def applications(self) -> list:  # deps from app.src or app file
+        return self._applications
 
     @property
     def has_nifs(self) -> bool:  # git repo contains c_src folder
@@ -99,20 +100,16 @@ class ConfigFile(ABC):
                 }
 
     def read_app_primary_params(self):
-        res = read_erlang_file(join(self.path, 'src'), '.app.src')
-        if not res:
+        try:
+            res = parse_app_config(join(self.path, 'src'), '.app.src')
+        except FileNotFoundError:
             self._compose_app_file = False
-            res = read_erlang_file(join(self.path, 'ebin'), '.app')
-        if not res:  # TODO generate app file instead.
-            raise ValueError('No app or app.src file in app!')
+            res = parse_app_config(join(self.path, 'ebin'), '.app')  # TODO generate app.src file from config instead.
         self.__set_app_primary_params(res)
 
-    def __set_app_primary_params(self, file):
-        [decoded] = file
-        (_, name, opts) = decoded
+    def __set_app_primary_params(self, res):
+        (name, vsn, apps) = res
+        self._app_vsn = vsn
+        self._applications = apps
         self._name = name.replace("'", '')
-        for (k, v) in opts:
-            if k == 'vsn':
-                self._app_vsn = v
-            if k == 'applications':
-                self._app_deps = v
+

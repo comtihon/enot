@@ -87,7 +87,7 @@ class Builder:
     # Build package and it's deps
     def __build_tree(self, package: Package, is_subpackage=True):
         self.__build_deps(package, is_subpackage)  # TODO add an ability to compile deps in parallel
-        compiler = get_compiler(self.system_config, package.config)
+        compiler = get_compiler(self.system_config, package)
         res = compiler.compile()
         if is_subpackage and res:
             self.system_config.cache.add_package_local(package)

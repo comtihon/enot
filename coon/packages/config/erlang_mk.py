@@ -63,7 +63,7 @@ class ErlangMkConfig(ConfigFile):
                 depname = 'dep_' + dep
                 if depname in content:
                     url, tag = get_dep(content[depname])
-                    if dep in deps and dep in self.app_deps:
+                    if dep in deps and dep in self.applications:
                         return_deps[dep] = (url, tag)
                     else:
                         print('Drop unused dep ' + dep)

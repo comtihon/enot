@@ -17,8 +17,8 @@ class Compiler(Enum):
 
 
 class AbstractCompiler(ABC):
-    def __init__(self, config: ConfigFile, compiler='erlc'):
-        self._config = config
+    def __init__(self, package, compiler='erlc'):  # TODO resolve circular deps and add Package to spec here
+        self._package = package
         self._compiler = compiler
 
     @abstractmethod
@@ -26,8 +26,12 @@ class AbstractCompiler(ABC):
         pass
 
     @property
+    def package(self):
+        return self._package
+
+    @property
     def config(self) -> ConfigFile:
-        return self._config
+        return self.package.config
 
     @property
     def project_name(self) -> str:

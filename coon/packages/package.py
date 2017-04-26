@@ -4,13 +4,13 @@ import tarfile
 from os.path import join
 from subprocess import PIPE
 
-import os
 import coon
+import os
+from coon.packages.config import ConfigFile, CoonConfig
+from coon.packages.config import config_factory
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
-from coon.packages.config import ConfigFile, CoonConfig
-from coon.packages.config import config_factory
 from coon.packages.config.stub_config import StubConfig
 from coon.utils.file_utils import ensure_dir, write_file, read_file, copy_file
 
@@ -36,6 +36,10 @@ class Package:
     @property
     def dep_packages(self) -> dict:  # package's deps.
         return self._deps
+
+    @property
+    def std_deps(self) -> list:  # standard erlang deps. Used in app.src templates
+        return ['kernel', 'stdlib']
 
     @property
     def deps(self) -> list:  # package's deps names
@@ -118,8 +122,7 @@ class Package:
         resource_path = self.__ensure_resource(resource, path)
         resource = read_file(resource_path)
         if '{{ ' in resource:
-            template = Template(resource)
-            resource_filled = template.render(app=self)
+            resource_filled = Template(resource).render(app=self)
             write_file(resource_path, resource_filled)
             return True, resource_path, resource
         return False, resource_path, resource

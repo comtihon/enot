@@ -1,25 +1,13 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from os.path import join
 
 from coon.packages.config import ConfigFile
 
 
-# TODO probably move me to separate file and make (string value, compiler constructor) and add get_compiler() method
-class Compiler(Enum):
-    COON = 'coon'  # prefer coon
-    ERLANG_MK = 'erlang.mk'  # prefer erlang.mk
-    REBAR = 'rebar'  # use rebar everywhere
-    REBAR3 = 'rebar3'  # use rebar3 compiler
-    NATIVE = 'native'  # use found by conf compiler (rebar.config, or erlang.mk exists)
-    MAKEFILE = 'makefile'  # just call Makefile
-    BOOTSTRAP = 'bootstrap'  # for those projects, who are afraid of Makefiles. Just call bootstrap in project's root
-
-
 class AbstractCompiler(ABC):
-    def __init__(self, package, compiler='erlc'):  # TODO resolve circular deps and add Package to spec here
+    def __init__(self, package, executable='erlc'):  # TODO resolve circular deps and add Package to spec here
         self._package = package
-        self._compiler = compiler
+        self._executable = executable
 
     @abstractmethod
     def compile(self) -> bool:
@@ -38,8 +26,8 @@ class AbstractCompiler(ABC):
         return self.config.name
 
     @property
-    def compiler(self) -> str:
-        return self._compiler
+    def executable(self) -> str:
+        return self._executable
 
     @property
     def root_path(self) -> str:  # Project path.

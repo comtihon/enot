@@ -1,7 +1,10 @@
-
-from coon.compiler import Compiler, ErlangMKCompiler
-from coon.compiler.compiler_factory import get_compiler, get_package_compiler
+from coon.compiler import Compiler
+from coon.compiler.compiler_factory import get_compiler
+from coon.compiler.tool import AbstractTool, Rebar3Tool
+from coon.compiler.tool import ErlangMKTool, RebarTool
+from coon.compiler.tool.relxtool import RelxTool
 from coon.global_properties import GlobalProperties
+from coon.pac_cache import LocalCache
 from coon.packages.package import Package
 from coon.utils.file_utils import get_cmd
 
@@ -15,6 +18,8 @@ class Builder:
         self._project = package
         if self.system_config.compiler == Compiler.REBAR3:  # TODO refactor me somehow
             self.__ensure_rebar3()
+        elif self.system_config.compiler == Compiler.REBAR:
+            self.__ensure_rebar()
         elif self.system_config.compiler == Compiler.ERLANG_MK:
             self.__ensure_erlangmk()
 
@@ -110,42 +115,56 @@ class Builder:
             self.__populate_deps(next_level)
 
     def __ensure_relx(self):
-        return self.__ensure_tool('relx', 'https://github.com/erlware/relx.git', 'v3.22.4', Compiler.REBAR3)
+        rebar3path = self.__ensure_rebar3()
+        if rebar3path:
+            if rebar3path.startswith('./'):  # rebar3 in local cache, should link it to relx in case of build
+                link = link_tool_fun
+            else:
+                link = None
+            return self.__ensure_tool(RelxTool(rebar3path), link_tool=link)
+        return False
 
     def __ensure_rebar3(self):
-        return self.__ensure_tool('rebar3', 'https://github.com/erlang/rebar3.git', '3.3.6', Compiler.BOOTSTRAP)
+        return self.__ensure_tool(Rebar3Tool())
+
+    def __ensure_rebar(self):
+        return self.__ensure_tool(RebarTool())
 
     def __ensure_erlangmk(self):
-        return ErlangMKCompiler.ensure(self.path)
+        return self.__ensure_tool(ErlangMKTool(), False)  # ErlangMK doesn't need to be installed via git
 
-    # Find binary. It can installed in the system, located in project directory, be in local or remote cache.
+    # Find binary. It can installed in the system, located in project directory, be in local cache.
     # If there is no - try to make it.
-    def __ensure_tool(self, tool_name, tool_repo, tool_vsn, compiler_type):
-        tool_path = get_cmd(self.path, tool_name)
+    def __ensure_tool(self, tool: AbstractTool, fetch_git=True, link_tool: function or None = None):
+        tool_path = get_cmd(self.path, tool.name)
         if tool_path is None:
-            tool = Package.from_deps(tool_name, (tool_repo, tool_vsn), compiler_type)
-            if self.system_config.cache.local_cache.exists(tool):  # tool is in local cache
-                self.__link_tool(tool, tool_name)
-                tool_path = './' + tool_name
-            else:
-                if self.system_config.cache.exists(tool):  # tool was downloaded from remote cache
-                    self.__link_tool(tool, tool_name)
-                    tool_path = './' + tool_name
-                else:  # should clone tool git repo, download and build it
-                    self.system_config.cache.local_cache.fetch_package(tool)
-                    self.__populate_deps(tool.deps.values())
-                    self.__build_deps(tool, is_subpackage=False)  # build deps before
-                    compiler = get_package_compiler(tool)
-                    if compiler_type == Compiler.REBAR3:  # ensure installed compiler before using it
-                        self.__ensure_rebar3()
-                    if compiler.compile():
-                        self.system_config.cache.add_package_local(tool)
-                        self.__link_tool(tool, tool_name)
-                        tool_path = './' + tool_name
-                    else:
-                        raise RuntimeError('Could not obtain ' + tool_name)
+            tool_path = self.__find_in_local(tool.name)
+        if tool_path is None:
+            tool_path = self.__build_tool(tool, fetch_git, link_tool)
+        if tool_path is None:
+            raise RuntimeError("Can't obtain " + tool.name)
         return tool_path
 
-    def __link_tool(self, path, tool):  # TODO won't work for relx until it will be in /
-        self.system_config.cache.local_cache.link_custom(path, self.path, tool)
-        return './' + tool
+    def __find_in_local(self, tool_name):
+        if self.system_config.cache.local_cache.tool_exists(tool_name):  # tool is in local cache
+            self.system_config.cache.local_cache.link_tool(self.project, tool_name)
+            return './' + tool_name
+        return None
+
+    def __build_tool(self, tool: AbstractTool, fetch_git: bool, link_tool):
+        tool = Package.from_deps(tool.name, (tool.url, tool.version), tool.compiler)
+        if fetch_git:
+            path = self.system_config.cache.local_cache.fetch_package(tool)
+        else:
+            path = self.system_config.cache.local_cache.path
+        if link_tool is not None:
+            link_tool(tool, tool.compiler.value)
+        tool_path = tool.build(path)
+        self.system_config.cache.local_cache.add_tool(tool.name, tool_path)
+        self.system_config.cache.local_cache.link_tool(self.project, tool.name)
+        return './' + tool.name
+
+
+# link one tool to another
+def link_tool_fun(package: Package, name: str, local_cache: LocalCache):
+    local_cache.link_tool(package, name)

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from os.path import join
 
+from coon.compiler import Compiler
 from coon.utils.erl_file_utils import parse_app_config
 from coon.utils.file_utils import write_file
 
@@ -86,7 +87,7 @@ class ConfigFile(ABC):
         pass
 
     @abstractmethod
-    def get_compiler(self):
+    def get_compiler(self) -> Compiler:
         pass
 
     def need_coonsify(self):
@@ -112,4 +113,3 @@ class ConfigFile(ABC):
         self._app_vsn = vsn
         self._applications = apps
         self._name = name.replace("'", '')
-

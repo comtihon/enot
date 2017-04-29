@@ -2,7 +2,7 @@ from os.path import join
 
 from erl_terms.erl_terms_core import decode
 
-from coon.compiler.abstract import Compiler
+from coon.compiler.compiler_type import Compiler
 from coon.packages.config import ConfigFile
 from coon.utils.file_utils import read_file
 

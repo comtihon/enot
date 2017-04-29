@@ -2,7 +2,7 @@ import json
 from os.path import join
 
 from coon.action.prebuild import action_factory
-from coon.compiler.abstract import Compiler
+from coon.compiler.compiler_type import Compiler
 from coon.packages.config import ConfigFile
 from coon.utils.file_utils import read_file
 

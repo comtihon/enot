@@ -35,9 +35,9 @@ class CacheMan:
                 return self.add_fetched(cache, package)
         return False  # no cache has this package
 
-    def link_package(self, package: Package, path: str):
+    def link_package(self, package: Package, dest_path: str):
         if self.local_cache:
-            self.local_cache.link_package(package, path)
+            self.local_cache.link_package(package, dest_path)
 
     def add_package_local(self, package: Package):
         if self.local_cache:

@@ -57,7 +57,7 @@ class CoonCompiler(AbstractCompiler):
         return env_vars
 
     def __compose_compiler_call(self, files):
-        cmd = [self.compiler]
+        cmd = [self.executable]
         if os.path.exists(self.include_path):
             cmd += ['-I', self.include_path]
         cmd += ['-o', self.output_path]

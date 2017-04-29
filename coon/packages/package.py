@@ -4,13 +4,13 @@ import tarfile
 from os.path import join
 from subprocess import PIPE
 
-import coon
 import os
-from coon.packages.config import ConfigFile, CoonConfig
-from coon.packages.config import config_factory
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
+import coon
+from coon.packages.config import ConfigFile, CoonConfig
+from coon.packages.config import config_factory
 from coon.packages.config.stub_config import StubConfig
 from coon.utils.file_utils import ensure_dir, write_file, read_file, copy_file
 

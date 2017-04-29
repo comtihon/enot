@@ -18,7 +18,7 @@ class CoonConfig(ConfigFile):
         content = read_file(join(self.path, 'coonfig.json'))
         return self.init_from_json(content)
 
-    def init_from_json(self, content: str):
+    def init_from_json(self, content: str) -> dict:
         parsed = json.loads(content)
         self._name = parsed['name']
         self._drop_unknown = parsed.get('drop_unknown_deps', True)
@@ -35,7 +35,7 @@ class CoonConfig(ConfigFile):
     def get_compiler(self):
         return Compiler.COON
 
-    def __parse_deps(self, deps):
+    def __parse_deps(self, deps) -> dict:
         return_deps = {}
         for dep in deps:
             name = dep['name']

@@ -56,7 +56,7 @@ class Builder:
         self.system_config.cache.add_package(self.project, remote, rewrite)
 
     def build(self):
-        self.__build_tree(self.project, is_subpackage=False)
+        return self.__build_tree(self.project, is_subpackage=False)
 
     def deps(self):
         self.__build_deps(self.project, is_subpackage=False)

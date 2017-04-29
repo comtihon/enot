@@ -14,6 +14,24 @@ def parse_app_config(path: str, suffix: str) -> (str, str or None, list or None)
     return name, vsn, apps
 
 
+# Will work only for comma last keys, without spaces between key and comma
+def get_value(key: str, pos: int, content: str, maxsplit=-1) -> str:
+    [_, rest] = str.split(content, '{' + key + ',')
+    tokens = str.split(rest, ',', maxsplit=maxsplit)
+    token = tokens[pos]
+    if '}' in token:
+        token = token.replace('}', '')
+    return token.strip()
+
+
+# Will work only for comma last keys, without spaces between key and comma
+def get_values(key: str, content: str) -> list:
+    [_, rest] = str.split(content, '{' + key + ',')
+    [_, start] = str.split(rest, '[', maxsplit=1)
+    [tokens, _] = str.split(start, ']', maxsplit=1)
+    return [dep.strip() for dep in tokens.split(',')]
+
+
 def find_app_file(path, suffix):
     res = [f for f in os.listdir(path) if join(path, f).endswith(suffix)]
     if not res:
@@ -24,9 +42,7 @@ def find_app_file(path, suffix):
 
 
 def find_app_name(content: str) -> str:
-    [_, rest] = str.split(content, '{application,')
-    [name, _] = str.split(rest, ',', maxsplit=1)
-    return name.strip()
+    return get_value('application', 0, content, 1)
 
 
 def find_app_vsn(content: str) -> str or None:

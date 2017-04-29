@@ -5,8 +5,8 @@ from subprocess import PIPE
 import os
 from jinja2 import Template
 from os import listdir
-from coon.compiler import AbstractCompiler
 
+from coon.compiler import AbstractCompiler
 from coon.compiler.c_compiler import CCompiler
 from coon.utils.file_utils import ensure_dir, read_file
 
@@ -24,10 +24,13 @@ class CoonCompiler(AbstractCompiler):
         print('build ' + self.project_name)
         self.__run_prebuild()
         filenames, all_files = self.__get_all_files(self.src_path)
+        print('ensure ' + self.output_path)
         ensure_dir(self.output_path)
         if self.config.has_nifs:
             if CCompiler(self.package).compile():
                 return self.__do_compile(filenames, all_files)
+        else:
+            return self.__do_compile(filenames, all_files)
         return False
 
     def __run_prebuild(self):
@@ -35,8 +38,8 @@ class CoonCompiler(AbstractCompiler):
             action.run(self.root_path)
 
     def __do_compile(self, filenames, files):
-        env_vars = dict(os.environ)
-        cmd = self.__compose_compiler_call(env_vars, files)
+        cmd = self.__compose_compiler_call(files)
+        env_vars = self.__set_env_vars()
         p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE, env=env_vars)
         if p.wait() != 0:
             print("Compilation failed: ")
@@ -47,10 +50,18 @@ class CoonCompiler(AbstractCompiler):
             self.__write_app_file(filenames)
             return True
 
-    def __compose_compiler_call(self, env_vars, files):
-        cmd = [self.compiler, "-I", self.include_path, "-o", self.output_path]
+    def __set_env_vars(self):
+        env_vars = dict(os.environ)
+        if self.package.deps is not []:
+            env_vars['ERL_LIBS'] = self.deps_path
+        return env_vars
+
+    def __compose_compiler_call(self, files):
+        cmd = [self.compiler]
+        if os.path.exists(self.include_path):
+            cmd += ['-I', self.include_path]
+        cmd += ['-o', self.output_path]
         self.__append_macro(cmd)
-        env_vars['ERL_LIBS'] = self.deps_path
         for file in files:
             cmd.append(file)
         return cmd

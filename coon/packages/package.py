@@ -43,7 +43,7 @@ class Package:
 
     @property
     def deps(self) -> list:  # package's deps names
-        return list(self.dep_packages.keys())
+        return list(self.dep_packages.keys())  # TODO may be config.applications?
 
     # TODO is name enough unique?
     @property

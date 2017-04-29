@@ -6,12 +6,13 @@ from coon.packages.config import ErlangMkConfig, CoonConfig, RebarConfig, Config
 
 def read_project(path):
     files, dirs = split_files_and_dirs(path)
+    has_nif = 'c_src' in dirs
     if 'coonfig.json' in files:
-        return CoonConfig(path, 'c_src' in dirs)
+        return CoonConfig(path, has_nif)
     elif 'erlang.mk' in files:
-        return ErlangMkConfig(path, 'c_src' in dirs)
+        return ErlangMkConfig(path, has_nif)
     elif 'rebar.config' in files:
-        return RebarConfig(path, 'c_src' in dirs)
+        return RebarConfig(path, has_nif)
     raise ValueError("Unknown build system in project " + path)
 
 

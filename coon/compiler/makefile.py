@@ -1,7 +1,7 @@
 import subprocess
 from subprocess import PIPE
 
-from coon.compiler import AbstractCompiler
+from coon.compiler.abstract import AbstractCompiler
 
 
 class MakefileCompiler(AbstractCompiler):

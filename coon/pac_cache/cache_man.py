@@ -1,5 +1,6 @@
-from coon.compiler import CCompiler
-from coon.pac_cache import CacheType, Cache, LocalCache
+from coon.compiler.c_compiler import CCompiler
+from coon.pac_cache.cache import CacheType, Cache
+from coon.pac_cache.local_cache import LocalCache
 from coon.pac_cache import cache_factory
 from coon.packages.package import Package
 

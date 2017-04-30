@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from os.path import join
 
-from coon.compiler import Compiler
+from coon.compiler.compiler_type import Compiler
 from coon.utils.erl_file_utils import parse_app_config
 from coon.utils.file_utils import write_file
 
@@ -30,6 +30,10 @@ class ConfigFile(ABC):
     @property
     def name(self) -> str:  # project's name
         return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
 
     @property
     def path(self) -> str:  # project's path in filesystem

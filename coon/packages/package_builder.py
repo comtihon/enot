@@ -1,11 +1,12 @@
-from coon.compiler import Compiler
 from coon.compiler.compiler_factory import get_compiler
-from coon.compiler.tool import AbstractTool, Rebar3Tool
-from coon.compiler.tool import ErlangMKTool, RebarTool
-from coon.compiler.tool.relxtool import RelxTool
+from coon.compiler.compiler_type import Compiler
 from coon.global_properties import GlobalProperties
-from coon.pac_cache import LocalCache
 from coon.packages.package import Package
+from coon.tool.erlang_mk import ErlangMKTool
+from coon.tool.rebar import RebarTool
+from coon.tool.rebar3 import Rebar3Tool
+from coon.tool.relxtool import RelxTool
+from coon.tool.tool import AbstractTool
 from coon.utils.file_utils import get_cmd
 
 
@@ -115,14 +116,7 @@ class Builder:
             self.__populate_deps(next_level)
 
     def __ensure_relx(self):
-        rebar3path = self.__ensure_rebar3()
-        if rebar3path:
-            if rebar3path.startswith('./'):  # rebar3 in local cache, should link it to relx in case of build
-                link = link_tool_fun
-            else:
-                link = None
-            return self.__ensure_tool(RelxTool(rebar3path), link_tool=link)
-        return False
+        return self.__ensure_tool(RelxTool())
 
     def __ensure_rebar3(self):
         return self.__ensure_tool(Rebar3Tool())
@@ -131,16 +125,16 @@ class Builder:
         return self.__ensure_tool(RebarTool())
 
     def __ensure_erlangmk(self):
-        return self.__ensure_tool(ErlangMKTool(), False)  # ErlangMK doesn't need to be installed via git
+        return self.__ensure_tool(ErlangMKTool())
 
     # Find binary. It can installed in the system, located in project directory, be in local cache.
     # If there is no - try to make it.
-    def __ensure_tool(self, tool: AbstractTool, fetch_git=True, link_tool: function or None = None):
+    def __ensure_tool(self, tool: AbstractTool):
         tool_path = get_cmd(self.path, tool.name)
         if tool_path is None:
             tool_path = self.__find_in_local(tool.name)
         if tool_path is None:
-            tool_path = self.__build_tool(tool, fetch_git, link_tool)
+            tool_path = self.__build_tool(tool)
         if tool_path is None:
             raise RuntimeError("Can't obtain " + tool.name)
         return tool_path
@@ -151,20 +145,9 @@ class Builder:
             return './' + tool_name
         return None
 
-    def __build_tool(self, tool: AbstractTool, fetch_git: bool, link_tool):
-        tool = Package.from_deps(tool.name, (tool.url, tool.version), tool.compiler)
-        if fetch_git:
-            path = self.system_config.cache.local_cache.fetch_package(tool)
-        else:
-            path = self.system_config.cache.local_cache.path
-        if link_tool is not None:
-            link_tool(tool, tool.compiler.value)
-        tool_path = tool.build(path)
+    def __build_tool(self, tool: AbstractTool):
+        path = self.system_config.cache.local_cache.temp_dir
+        tool_path = tool.ensure(path)
         self.system_config.cache.local_cache.add_tool(tool.name, tool_path)
         self.system_config.cache.local_cache.link_tool(self.project, tool.name)
         return './' + tool.name
-
-
-# link one tool to another
-def link_tool_fun(package: Package, name: str, local_cache: LocalCache):
-    local_cache.link_tool(package, name)

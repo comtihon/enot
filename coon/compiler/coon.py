@@ -6,7 +6,7 @@ import os
 from jinja2 import Template
 from os import listdir
 
-from coon.compiler import AbstractCompiler
+from coon.compiler.abstract import AbstractCompiler
 from coon.compiler.c_compiler import CCompiler
 from coon.utils.file_utils import ensure_dir, read_file
 

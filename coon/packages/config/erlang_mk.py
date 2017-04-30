@@ -3,7 +3,7 @@ from distutils.sysconfig import parse_makefile
 from os.path import join
 
 from coon.compiler.compiler_type import Compiler
-from coon.packages.config import ConfigFile
+from coon.packages.config.config import ConfigFile
 from coon.utils.file_utils import read_file_lines
 
 

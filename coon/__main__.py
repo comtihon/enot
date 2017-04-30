@@ -72,7 +72,7 @@ def create(path, arguments):
 def build(path):
     builder = Builder.init_from_path(path)
     builder.populate()
-    if not builder.build():
+    if not builder.ensure():
         sys.exit(1)
     else:
         sys.exit(0)

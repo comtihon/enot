@@ -1,14 +1,14 @@
+import test
 import unittest
 from os.path import join
 
 import os
 
 import coon.__main__
-import test
-from coon.packages.config import CoonConfig
+from coon.packages.config.coon import CoonConfig
 from coon.packages.package_builder import Builder
 from coon.utils.erl_file_utils import get_value, get_values
-from coon.utils.file_utils import remove_dir, ensure_empty
+from coon.utils.file_utils import read_file, ensure_empty, remove_dir
 
 '''
 Here are the tests, responsible for coon create
@@ -52,7 +52,7 @@ class CreateTests(unittest.TestCase):
         self.assertEqual("'test_project'", get_value('application', 0, file))
         self.assertEqual('"0.0.1"', get_value('vsn', 0, file))
         self.assertEqual(["'kernel'", "'stdlib'"], get_values('applications', file))
-        self.assertEqual(["'test_project_sup'", "'test_project_app'"], get_values('modules', file))
+        self.assertEqual(["'test_project_app'", "'test_project_sup'"], get_values('modules', file))
 
     def test_release_created(self):
         temp_dir = test.get_test_dir(self.test_name)
@@ -62,6 +62,18 @@ class CreateTests(unittest.TestCase):
         builder.populate()
         builder.build()
         self.assertEqual(True, builder.release())
+        self.assertEqual(True, os.path.exists(join(project_dir, '_rel')))
+        rel_dir = join(project_dir, '_rel', 'test_project')
+        self.assertEqual(True, os.path.exists(rel_dir))
+        self.assertEqual(True, os.path.exists(join(rel_dir, 'lib', 'test_project-0.0.1')))
+        self.assertEqual(True, os.path.exists(join(rel_dir, 'releases', '0.0.1')))
+        self.assertEqual(True, os.path.exists(join(project_dir, 'rel')))
+        self.assertEqual(True, os.path.exists(join(project_dir, 'rel', 'sys.config')))
+        self.assertEqual(True, os.path.exists(join(project_dir, 'rel', 'vm.args')))
+        rel_content = read_file(join(project_dir, 'rel', 'vm.args'))
+        rel_expected = '''-name {{ app.name }}@127.0.0.1
+-setcookie {{ app.name }}'''
+        self.assertEqual(rel_content.strip(), rel_expected)
 
     def tearDown(self):
         remove_dir(test.get_test_dir(self.test_name))

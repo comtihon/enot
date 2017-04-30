@@ -1,4 +1,4 @@
-from coon.pac_cache import Cache
+from coon.pac_cache.cache import Cache
 from coon.packages.package import Package
 
 

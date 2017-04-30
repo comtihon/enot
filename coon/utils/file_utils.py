@@ -39,8 +39,12 @@ def write_file_lines(file_lines: list, path: str):
 
 
 # TODO catch write errors
-def write_file(path: str, content: str) -> str:
-    with open(path, 'w') as f:
+def write_file(path: str, content: str, binary=False) -> str:
+    if binary:
+        mode = 'wb'
+    else:
+        mode = 'w'
+    with open(path, mode) as f:
         f.write(content)
     return path
 

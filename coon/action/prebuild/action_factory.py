@@ -1,4 +1,5 @@
-from coon.action.prebuild import Action, ActionType, Shell
+from coon.action.prebuild.action import Action, ActionType
+from coon.action.prebuild.shell import Shell
 
 
 def get_action(action_type: str, params: str) -> Action:

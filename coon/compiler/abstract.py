@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from os.path import join
 
-from coon.packages.config import ConfigFile
+from coon.packages.package import Package
+from coon.packages.config.config import ConfigFile
 
 
 class AbstractCompiler(ABC):
-    def __init__(self, package, executable='erlc'):  # TODO resolve circular deps and add Package to spec here
+    def __init__(self, package: Package, executable='erlc'):
         self._package = package
         self._executable = executable
 

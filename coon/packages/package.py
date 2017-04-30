@@ -9,7 +9,8 @@ from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
 import coon
-from coon.packages.config import ConfigFile, CoonConfig
+from coon.packages.config.config import ConfigFile
+from coon.packages.config.coon import CoonConfig
 from coon.packages.config import config_factory
 from coon.packages.config.stub_config import StubConfig
 from coon.utils.file_utils import ensure_dir, write_file, read_file, copy_file
@@ -70,9 +71,9 @@ class Package:
         return cls(config=config)
 
     @classmethod
-    def from_deps(cls, name, dep, compiler=None):
+    def from_deps(cls, name, dep):
         (url, vsn) = dep
-        config = StubConfig(name, vsn, compiler)
+        config = StubConfig(name, vsn)
         return cls(url=url, config=config)
 
     def export(self):

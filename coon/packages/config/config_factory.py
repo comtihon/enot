@@ -1,10 +1,14 @@
-from os import listdir
 from os.path import isfile, join
 
-from coon.packages.config import ErlangMkConfig, CoonConfig, RebarConfig, ConfigFile
+from os import listdir
+
+from coon.packages.config.config import ConfigFile
+from coon.packages.config.coon import CoonConfig
+from coon.packages.config.erlang_mk import ErlangMkConfig
+from coon.packages.config.rebar import RebarConfig
 
 
-def read_project(path):
+def read_project(path) -> ConfigFile:
     files, dirs = split_files_and_dirs(path)
     has_nif = 'c_src' in dirs
     if 'coonfig.json' in files:
@@ -17,7 +21,7 @@ def read_project(path):
 
 
 # read config based on path, merge with stub config
-def upgrade_conf(path, conf: ConfigFile):
+def upgrade_conf(path, conf: ConfigFile) -> ConfigFile:
     dep_conf = read_project(path)
     dep_conf.read_app_primary_params()
     if dep_conf.name != conf.name:

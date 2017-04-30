@@ -1,10 +1,11 @@
-from coon.compiler import AbstractCompiler, Compiler
-from coon.compiler import ErlangMKCompiler
-from coon.compiler import RebarCompiler
-from coon.compiler import CoonCompiler
-from coon.compiler import MakefileCompiler
-from coon.compiler import BootstrapCompiler
-from coon.packages import Package
+from coon.compiler.abstract import AbstractCompiler
+from coon.compiler.compiler_type import Compiler
+from coon.compiler.erlang_mk import ErlangMKCompiler
+from coon.compiler.rebar import RebarCompiler
+from coon.compiler.coon import CoonCompiler
+from coon.compiler.makefile import MakefileCompiler
+from coon.compiler.bootstrap import BootstrapCompiler
+from coon.packages.package import Package
 
 from coon.global_properties import GlobalProperties
 
@@ -14,10 +15,6 @@ def get_compiler(global_config: GlobalProperties, package: Package) -> AbstractC
         return select_compiler(package.config.get_compiler(), package)
     else:
         return select_compiler(global_config.compiler, package)
-
-
-def get_package_compiler(package: Package) -> AbstractCompiler:
-    return select_compiler(package.config.get_compiler(), package)
 
 
 # TODO ensure system has compilers installed (try to install them if not).

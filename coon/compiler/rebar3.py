@@ -1,4 +1,4 @@
-from coon.compiler import AbstractCompiler
+from coon.compiler.abstract import AbstractCompiler
 
 
 class Rebar3Compiler(AbstractCompiler):

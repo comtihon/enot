@@ -8,7 +8,7 @@ from os.path import join
 
 import os
 
-from coon.packages import Package
+from coon.packages.package import Package
 from coon.utils.file_utils import ensure_empty, copy_to, tar
 
 

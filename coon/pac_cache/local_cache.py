@@ -1,4 +1,5 @@
 import shutil
+import stat
 from os.path import join
 
 import os
@@ -6,7 +7,7 @@ from git import Repo
 from pkg_resources import Requirement, resource_filename
 
 import coon
-from coon.pac_cache import Cache
+from coon.pac_cache.cache import Cache
 from coon.packages.package import Package
 from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file
 from coon.utils.file_utils import remove_dir
@@ -19,12 +20,17 @@ class LocalCache(Cache):
         super().__init__(conf['name'], temp_dir, path)
         if not os.path.exists(path):
             os.makedirs(path)
+        ensure_dir(self.tool_dir)
+
+    @property
+    def tool_dir(self):
+        return join(self.path, 'tool')
 
     def exists(self, package: Package) -> bool:
         return if_dir_exists(self.path, self.__get_package_path(package))
 
     def tool_exists(self, toolname: str) -> bool:
-        return os.path.exists(join(self.path, 'tool', toolname))
+        return os.path.exists(join(self.tool_dir, toolname))
 
     # clone git repo to tmp, make package to scan and update it's config
     def fetch_package(self, package: Package) -> str:
@@ -37,7 +43,7 @@ class LocalCache(Cache):
         git = repo.git
         git.checkout(package.vsn)
         repo.create_head(package.vsn)
-        LocalCache.fill_package_from_temp(package, temp_path)
+        package.fill_from_path(temp_path)
         return temp_path
 
     # add built package to local cache
@@ -63,7 +69,10 @@ class LocalCache(Cache):
 
     def add_tool(self, toolname: str, toolpath: str):
         print('add ' + toolname)
-        copy_file(join(self.path, 'tool', toolname), join(toolpath, toolname))
+        tool_dst = join(self.tool_dir, toolname)
+        copy_file(toolpath, tool_dst)
+        st = os.stat(tool_dst)
+        os.chmod(tool_dst, st.st_mode | stat.S_IEXEC)
 
     # link package from local cache to project
     def link_package(self, package: Package, dest_path: str):
@@ -82,16 +91,12 @@ class LocalCache(Cache):
             LocalCache.link(cache_path, dest_path, package.name, 'priv')
 
     def link_tool(self, package: Package, toolname: str):
-        cache_path = join(self.path, 'tool', toolname)
+        cache_path = join(self.tool_dir, toolname)
         link_if_needed(cache_path, join(package.config.path, toolname))
 
     def __get_package_path(self, package: Package):
         namespace = package.url.split('/')[-2]
         return join(namespace, package.name, package.vsn, self.erlang_version)
-
-    @staticmethod
-    def fill_package_from_temp(package: Package, path: str):
-        package.fill_from_path(path)
 
     # TODO relinking deps on vsn switching
     @staticmethod

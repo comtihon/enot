@@ -6,7 +6,7 @@ from appdirs import *
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
-from coon.compiler import Compiler
+from coon.compiler.compiler_type import Compiler
 from coon.pac_cache.cache_man import CacheMan
 from coon.utils.file_utils import read_file, ensure_dir
 

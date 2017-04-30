@@ -1,3 +1,4 @@
+from coon.compiler.relx import RelxCompiler
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.compiler_type import Compiler
 from coon.global_properties import GlobalProperties
@@ -70,7 +71,7 @@ class Builder:
     # TODO check if there is a need to compile first.
     def release(self):
         relx_path = self.__ensure_relx()
-        return self.project.to_release(relx_path)
+        return RelxCompiler(self.project, relx_path).compile()
 
     # TODO check all included in release apps for presence in deps
     # TODO take applications from app.src and add to relx.config

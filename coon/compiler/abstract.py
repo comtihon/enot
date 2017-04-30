@@ -1,18 +1,16 @@
-from abc import ABC, abstractmethod
+import subprocess
+from abc import ABC
 from os.path import join
+from subprocess import PIPE
 
-from coon.packages.package import Package
 from coon.packages.config.config import ConfigFile
+from coon.packages.package import Package
 
 
 class AbstractCompiler(ABC):
     def __init__(self, package: Package, executable='erlc'):
         self._package = package
         self._executable = executable
-
-    @abstractmethod
-    def compile(self) -> bool:
-        pass
 
     @property
     def package(self):
@@ -49,3 +47,13 @@ class AbstractCompiler(ABC):
     @property
     def build_vars(self) -> list:
         return self.config.build_vars
+
+    def compile(self) -> bool:
+        p = subprocess.Popen(self.executable, stdout=PIPE, stderr=PIPE, cwd=self.root_path)
+        if p.wait() != 0:
+            print(self.project_name + ' compilation failed: ')
+            print(p.stderr.read().decode('utf8'))
+            print(p.stdout.read().decode('utf8'))
+            return False
+        else:
+            return True

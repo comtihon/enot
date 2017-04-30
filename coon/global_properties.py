@@ -6,7 +6,7 @@ from appdirs import *
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
-from coon.compiler import Compiler
+from coon.compiler.compiler_type import Compiler
 from coon.pac_cache.cache_man import CacheMan
 from coon.utils.file_utils import read_file, ensure_dir
 
@@ -18,8 +18,7 @@ def init_config(source, path, file):
     with open(source, 'r') as r:
         content = r.read()
     with open(join(path, file), 'w') as f:
-        template = Template(content)
-        f.write(template.render(local_cache=cache_dir, temp_dir='/tmp/coon'))
+        f.write(Template(content).render(local_cache=cache_dir, temp_dir='/tmp/coon'))
 
 
 class GlobalProperties:

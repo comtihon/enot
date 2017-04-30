@@ -72,7 +72,7 @@ def create(path, arguments):
 def build(path):
     builder = Builder.init_from_path(path)
     builder.populate()
-    if not builder.build():
+    if not builder.ensure():
         sys.exit(1)
     else:
         sys.exit(0)
@@ -133,7 +133,10 @@ def __ensure_template(src_dir, name, suffix, overwrite_name=False):
         content = r.read()
     if not os.path.exists(app_srcfile):
         with open(app_srcfile, 'w') as f:
-            f.write(Template(content).render(name=name))
+            f.write(Template(content).render(name=name,
+                                             vsn_tmp="{{ app.vsn }}",
+                                             apps_tmp="{{ app.std_deps + app.deps }}",
+                                             modules_tmp="{{ modules }}"))
 
 
 if __name__ == "__main__":

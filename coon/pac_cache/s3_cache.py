@@ -5,8 +5,8 @@ import boto.s3.connection
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
-from coon.pac_cache import Cache
-from coon.packages import Package
+from coon.pac_cache.cache import Cache
+from coon.packages.package import Package
 
 
 class S3Cache(Cache):

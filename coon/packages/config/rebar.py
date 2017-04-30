@@ -2,8 +2,8 @@ from os.path import join
 
 from erl_terms.erl_terms_core import decode
 
-from coon.compiler.abstract import Compiler
-from coon.packages.config import ConfigFile
+from coon.compiler.compiler_type import Compiler
+from coon.packages.config.config import ConfigFile
 from coon.utils.file_utils import read_file
 
 
@@ -35,7 +35,7 @@ class RebarConfig(ConfigFile):
     def __parse_deps(self, deps):
         return_deps = {}
         for (name, _, addr) in deps:
-            if name in self.app_deps:
+            if name in self.applications:
                 (_, url, vsn) = addr
                 (_, vsn_value) = vsn
                 return_deps[name] = (url, vsn_value)

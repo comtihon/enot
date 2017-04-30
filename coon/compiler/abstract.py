@@ -1,41 +1,32 @@
-from abc import ABC, abstractmethod
-from enum import Enum
+import subprocess
+from abc import ABC
 from os.path import join
+from subprocess import PIPE
 
-from coon.packages.config import ConfigFile
-
-
-# TODO probably move me to separate file and make (string value, compiler constructor) and add get_compiler() method
-class Compiler(Enum):
-    COON = 'coon'  # prefer coon
-    ERLANG_MK = 'erlang.mk'  # prefer erlang.mk
-    REBAR = 'rebar'  # use rebar everywhere
-    REBAR3 = 'rebar3'  # use rebar3 compiler
-    NATIVE = 'native'  # use found by conf compiler (rebar.config, or erlang.mk exists)
-    MAKEFILE = 'makefile'  # just call Makefile
-    BOOTSTRAP = 'bootstrap'  # for those projects, who are afraid of Makefiles. Just call bootstrap in project's root
+from coon.packages.config.config import ConfigFile
+from coon.packages.package import Package
 
 
 class AbstractCompiler(ABC):
-    def __init__(self, config: ConfigFile, compiler='erlc'):
-        self._config = config
-        self._compiler = compiler
+    def __init__(self, package: Package, executable='erlc'):
+        self._package = package
+        self._executable = executable
 
-    @abstractmethod
-    def compile(self) -> bool:
-        pass
+    @property
+    def package(self):
+        return self._package
 
     @property
     def config(self) -> ConfigFile:
-        return self._config
+        return self.package.config
 
     @property
     def project_name(self) -> str:
         return self.config.name
 
     @property
-    def compiler(self) -> str:
-        return self._compiler
+    def executable(self) -> str:
+        return self._executable
 
     @property
     def root_path(self) -> str:  # Project path.
@@ -56,3 +47,13 @@ class AbstractCompiler(ABC):
     @property
     def build_vars(self) -> list:
         return self.config.build_vars
+
+    def compile(self) -> bool:
+        p = subprocess.Popen(self.executable, stdout=PIPE, stderr=PIPE, cwd=self.root_path)
+        if p.wait() != 0:
+            print(self.project_name + ' compilation failed: ')
+            print(p.stderr.read().decode('utf8'))
+            print(p.stdout.read().decode('utf8'))
+            return False
+        else:
+            return True

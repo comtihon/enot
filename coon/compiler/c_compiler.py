@@ -4,6 +4,7 @@ from subprocess import PIPE
 
 import os
 import coon
+from coon.packages.package import Package
 from pkg_resources import Requirement, resource_filename
 
 from coon.compiler.abstract import AbstractCompiler
@@ -11,6 +12,9 @@ from coon.utils.file_utils import copy_file, ensure_dir
 
 
 class CCompiler(AbstractCompiler):
+    def __init__(self, package: Package, executable='make'):
+        super().__init__(package, executable)
+
     @property
     def output_path(self) -> str:
         return join(self.config.path, 'priv')
@@ -30,7 +34,7 @@ class CCompiler(AbstractCompiler):
         for var in self.config.c_build_vars:
             for k, v in var.items():
                 env_vars[k] = v
-        p = subprocess.Popen(['make'], stdout=PIPE, stderr=PIPE, cwd=self.src_path, env=env_vars)
+        p = subprocess.Popen(self.executable, stdout=PIPE, stderr=PIPE, cwd=self.src_path, env=env_vars)
         if p.wait() != 0:
             print(self.project_name + ' compilation failed: ')
             print(p.stderr.read().decode('utf8'))

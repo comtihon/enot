@@ -1,5 +1,6 @@
-from coon.compiler import CCompiler
-from coon.pac_cache import CacheType, Cache, LocalCache
+from coon.compiler.c_compiler import CCompiler
+from coon.pac_cache.cache import CacheType, Cache
+from coon.pac_cache.local_cache import LocalCache
 from coon.pac_cache import cache_factory
 from coon.packages.package import Package
 
@@ -35,9 +36,9 @@ class CacheMan:
                 return self.add_fetched(cache, package)
         return False  # no cache has this package
 
-    def link_package(self, package: Package, path: str):
+    def link_package(self, package: Package, dest_path: str):
         if self.local_cache:
-            self.local_cache.link_package(package, path)
+            self.local_cache.link_package(package, dest_path)
 
     def add_package_local(self, package: Package):
         if self.local_cache:

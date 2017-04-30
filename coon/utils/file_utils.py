@@ -5,7 +5,6 @@ from os.path import join
 from shutil import copyfile
 
 import os
-from erl_terms.erl_terms_core import decode
 
 
 def read_file(path: str) -> str:
@@ -40,8 +39,12 @@ def write_file_lines(file_lines: list, path: str):
 
 
 # TODO catch write errors
-def write_file(path: str, content: str) -> str:
-    with open(path, 'w') as f:
+def write_file(path: str, content: str, binary=False) -> str:
+    if binary:
+        mode = 'wb'
+    else:
+        mode = 'w'
+    with open(path, mode) as f:
         f.write(content)
     return path
 
@@ -96,17 +99,3 @@ def ensure_empty(path: str):
 def remove_dir(path: str):
     if os.path.exists(path):
         shutil.rmtree(path)
-
-
-# TODO may be searching directly by name is more efficient. But also can be less reliable.
-def read_erlang_file(path: str, app: str) -> list or False:
-    res = [f for f in os.listdir(path) if join(path, f).endswith(app)]
-    if not res:
-        return False
-    elif len(res) == 1:
-        [fileapp] = res
-        file_str = read_file(join(path, fileapp))
-        return decode(file_str)
-    else:
-        print('more than one app.src in application!')
-        raise RuntimeError('More than one app.src in app')

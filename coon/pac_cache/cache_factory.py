@@ -1,6 +1,6 @@
-from coon.pac_cache import ArtifactoryCache
-from coon.pac_cache import LocalCache
-from coon.pac_cache import S3Cache
+from coon.pac_cache.artifactory_cache import ArtifactoryCache
+from coon.pac_cache.local_cache import LocalCache
+from coon.pac_cache.s3_cache import S3Cache
 from coon.pac_cache.cache import Cache, CacheType
 
 

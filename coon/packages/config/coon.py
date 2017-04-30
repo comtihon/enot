@@ -2,8 +2,8 @@ import json
 from os.path import join
 
 from coon.action.prebuild import action_factory
-from coon.compiler.abstract import Compiler
-from coon.packages.config import ConfigFile
+from coon.compiler.compiler_type import Compiler
+from coon.packages.config.config import ConfigFile
 from coon.utils.file_utils import read_file
 
 
@@ -18,7 +18,7 @@ class CoonConfig(ConfigFile):
         content = read_file(join(self.path, 'coonfig.json'))
         return self.init_from_json(content)
 
-    def init_from_json(self, content: str):
+    def init_from_json(self, content: str) -> dict:
         parsed = json.loads(content)
         self._name = parsed['name']
         self._drop_unknown = parsed.get('drop_unknown_deps', True)
@@ -35,11 +35,11 @@ class CoonConfig(ConfigFile):
     def get_compiler(self):
         return Compiler.COON
 
-    def __parse_deps(self, deps):
+    def __parse_deps(self, deps) -> dict:
         return_deps = {}
         for dep in deps:
             name = dep['name']
-            if name in self.app_deps:
+            if name in self.applications:
                 return_deps[name] = (dep['url'], dep['vsn'])
             else:
                 print('Drop unused dep ' + name)

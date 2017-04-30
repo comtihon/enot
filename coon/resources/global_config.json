@@ -1,5 +1,5 @@
 {
-  "compiler" : "makefile",
+  "compiler" : "coon",
   "temp_dir": "{{ temp_dir }}",
   "cache":
   [

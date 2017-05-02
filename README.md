@@ -27,3 +27,8 @@ Erlang advanced project manager
             {VarName1 : VarValue1}
         ]
     }
+    
+### Testing
+    
+    sudo pip install pytest mock
+    make tests

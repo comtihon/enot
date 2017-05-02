@@ -1,5 +1,6 @@
 import json
 from os.path import join
+import mock
 
 from coon.action.prebuild import action_factory
 from coon.compiler.compiler_type import Compiler
@@ -20,14 +21,17 @@ class CoonConfig(ConfigFile):
 
     def init_from_json(self, content: str) -> dict:
         parsed = json.loads(content)
-        self._name = parsed['name']
-        self._drop_unknown = parsed.get('drop_unknown_deps', True)
-        self._with_source = parsed.get('with_source', True)
-        self._conf_vsn = parsed.get('version', None)
-        self._has_nifs = parsed.get('has_nifs', self._has_nifs)  # TODO Get rid of this.
-        self.__parse_prebuild(parsed)
-        self.__parse_build_vars(parsed)
-        return self.__parse_deps(parsed['deps'])
+        return self.init_from_dict(parsed)
+
+    def init_from_dict(self, content: dict) -> dict:
+        self._name = content['name']
+        self._drop_unknown = content.get('drop_unknown_deps', True)
+        self._with_source = content.get('with_source', True)
+        self._conf_vsn = content.get('version', None)
+        self._has_nifs = content.get('has_nifs', self._has_nifs)  # TODO Get rid of this.
+        self.__parse_prebuild(content)
+        self.__parse_build_vars(content)
+        return self.__parse_deps(content.get('deps', []))
 
     def need_coonsify(self):
         return False

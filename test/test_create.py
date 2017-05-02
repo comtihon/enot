@@ -52,7 +52,10 @@ class CreateTests(unittest.TestCase):
         self.assertEqual("'test_project'", get_value('application', 0, file))
         self.assertEqual('"0.0.1"', get_value('vsn', 0, file))
         self.assertEqual(["'kernel'", "'stdlib'"], get_values('applications', file))
-        self.assertEqual(["'test_project_app'", "'test_project_sup'"], get_values('modules', file))
+        modules = get_values('modules', file)
+        self.assertEqual(2, len(modules))
+        self.assertEqual(True, "'test_project_app'" in modules)
+        self.assertEqual(True, "'test_project_sup'" in modules)
 
     def test_release_created(self):
         temp_dir = test.get_test_dir(self.test_name)

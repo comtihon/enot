@@ -33,6 +33,8 @@ def get_values(key: str, content: str) -> list:
 
 
 def find_app_file(path, suffix):
+    if not os.path.exists(path):
+        raise FileNotFoundError('No ' + suffix + ' file in ' + path)
     res = [f for f in os.listdir(path) if join(path, f).endswith(suffix)]
     if not res:
         raise FileNotFoundError('No ' + suffix + ' file in ' + path)

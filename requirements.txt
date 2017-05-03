@@ -1,0 +1,8 @@
+erl_terms
+docopt
+gitpython
+artifactory
+appdirs
+boto
+Jinja2
+mock

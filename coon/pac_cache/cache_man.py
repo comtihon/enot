@@ -9,7 +9,7 @@ class CacheMan:
     def __init__(self, conf: dict):
         self._local_cache = None
         self._caches = {}
-        for cache in conf['cache']:
+        for cache in conf.get('cache', []):
             cache_type = CacheType(cache['type'])
             cache = cache_factory.get_cache(cache_type, cache, conf['temp_dir'])
             if cache_type == CacheType.LOCAL and isinstance(cache, LocalCache):

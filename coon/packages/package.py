@@ -2,7 +2,6 @@ import json
 import tarfile
 
 from coon.packages.config import config_factory
-
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig
 from coon.packages.config.stub_config import StubConfig
@@ -84,6 +83,7 @@ class Package:
 
     def __fill_deps(self):
         self._deps = {}
-        for name, dep in self.config.read_config().items():
-            print(name + ' ' + str(dep))
-            self.dep_packages[name] = Package.from_deps(name, dep)
+        if self.config:
+            for name, dep in self.config.read_config().items():
+                print(name + ' ' + str(dep))
+                self.dep_packages[name] = Package.from_deps(name, dep)

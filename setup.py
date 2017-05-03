@@ -1,6 +1,21 @@
 import coon
 from setuptools import setup, find_packages
 
+
+def get_requirements() -> list:
+    with open('requirements.txt', 'r') as f:
+        deps = f.readlines()
+    return [get_name(dep) for dep in deps if dep is not '']
+
+
+def get_name(dep: str) -> str:
+    if '==' in dep:
+        [name, _] = str.split(dep, '==')
+        return name.strip()
+    else:
+        return dep.strip()
+
+
 setup(name=coon.APPNAME,
       version=coon.APPVSN,
       description='Erlang package management and build system',
@@ -8,7 +23,7 @@ setup(name=coon.APPNAME,
       author_email='valerii.tikhonov@gmail.com',
       url='https://github.com/comtihon/coon',
       packages=find_packages(),
-      install_requires=['erl_terms', 'docopt', 'gitpython', 'artifactory', 'appdirs', 'boto', 'Jinja2'],
+      install_requires=get_requirements(),
       include_package_data=True,
       package_data={'coon': ['resources/*']},
       entry_points={

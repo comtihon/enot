@@ -2,8 +2,8 @@ from coon.packages.config.config import ConfigFile
 
 
 class StubConfig(ConfigFile):
-    def __init__(self, name: str, vsn: str or None):
-        super().__init__("")
+    def __init__(self, name: str, vsn: str or None, path=""):
+        super().__init__(path)
         self._name = name
         self._app_vsn = vsn
 

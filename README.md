@@ -1,4 +1,4 @@
-# Coon
+# Coon [![Build Status](https://travis-ci.org/comtihon/coon.svg?branch=master)](https://travis-ci.org/comtihon/coon)
 Erlang advanced project manager 
 
 

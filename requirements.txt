@@ -6,3 +6,4 @@ appdirs
 boto
 Jinja2
 mock
+pytest

@@ -20,6 +20,7 @@ class LocalCache(Cache):
         super().__init__(conf['name'], temp_dir, path)
         if not os.path.exists(path):
             os.makedirs(path)
+        ensure_dir(temp_dir)
         ensure_dir(self.tool_dir)
 
     @property

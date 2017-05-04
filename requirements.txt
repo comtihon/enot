@@ -3,7 +3,7 @@ docopt
 gitpython
 artifactory
 appdirs
-boto
+boto3
 Jinja2
 mock
 pytest

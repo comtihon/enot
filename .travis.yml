@@ -7,4 +7,4 @@ python:
 before_install:
   - sudo apt-get -y install erlang
 install: "pip install -r requirements.txt"
-script: make install tests
+script: make tests

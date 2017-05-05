@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from os.path import join
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from coon.utils.file_utils import write_file
 
 
-class AbstractTool(ABC):
+class AbstractTool(metaclass=ABCMeta):
     @property
     @abstractmethod
     def name(self) -> str:

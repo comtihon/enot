@@ -2,7 +2,7 @@ import json
 import shlex
 import subprocess
 import tarfile
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from enum import Enum
 from os.path import join
 
@@ -18,7 +18,7 @@ class CacheType(Enum):
     S3 = 's3'
 
 
-class Cache(ABC):
+class Cache(metaclass=ABCMeta):
     def __init__(self, name, temp_dir, path):
         self._erlang_version = Cache.get_erlang_version()
         self._temp_dir = temp_dir

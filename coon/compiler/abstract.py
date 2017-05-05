@@ -1,5 +1,5 @@
 import subprocess
-from abc import ABC
+from abc import ABCMeta
 from os.path import join
 from subprocess import PIPE
 
@@ -7,7 +7,7 @@ from coon.packages.config.config import ConfigFile
 from coon.packages.package import Package
 
 
-class AbstractCompiler(ABC):
+class AbstractCompiler(metaclass=ABCMeta):
     def __init__(self, package: Package, executable='erlc'):
         self._package = package
         self._executable = executable

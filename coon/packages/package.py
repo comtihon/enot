@@ -1,7 +1,7 @@
+import json
 import tarfile
 
 from coon.packages.config import config_factory
-from json import dumps
 
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig
@@ -76,8 +76,8 @@ class Package:
 
     def to_package(self):
         export = self.export()
-        export_config = self.config.export()
-        return dumps({**export, **export_config}, sort_keys=True, indent=4)
+        export.update(self.config.export())
+        return json.dumps(export, sort_keys=True, indent=4)
 
     def list_deps(self) -> list():
         return self.dep_packages.values()

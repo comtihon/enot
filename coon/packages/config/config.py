@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from os.path import join
 
 from coon.compiler.compiler_type import Compiler
@@ -10,7 +10,7 @@ def write_coonfig(path, package_config):
     write_file(join(path, 'coonfig.json'), package_config)
 
 
-class ConfigFile(ABC):
+class ConfigFile(metaclass=ABCMeta):
     """Class for working with project configuration"""
 
     def __init__(self, path: str):

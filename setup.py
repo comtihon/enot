@@ -13,9 +13,9 @@ def get_requirements() -> list:
             continue
         dep = get_name(dep)
         if dep == 'enum34':  # drop enum34 if on python 3.4+
-            if sys.version_info[1] > 4:
+            if sys.version_info[0] == 3 and sys.version_info[1] > 4:
                 continue
-        result += dep
+        result.append(dep)
     return result
 
 

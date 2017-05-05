@@ -1,3 +1,5 @@
+import sys
+
 import coon
 from setuptools import setup, find_packages
 
@@ -5,7 +7,16 @@ from setuptools import setup, find_packages
 def get_requirements() -> list:
     with open('requirements.txt', 'r') as f:
         deps = f.readlines()
-    return [get_name(dep) for dep in deps if dep is not '']
+    result = []
+    for dep in deps:
+        if dep == '':  # drop empty deps
+            continue
+        dep = get_name(dep)
+        if dep == 'enum34':  # drop enum34 if on python 3.4+
+            if sys.version_info[1] > 4:
+                continue
+        result += dep
+    return result
 
 
 def get_name(dep: str) -> str:

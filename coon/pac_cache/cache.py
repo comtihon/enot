@@ -3,10 +3,10 @@ import shlex
 import subprocess
 import tarfile
 from abc import ABCMeta, abstractmethod
-from enum import Enum
 from os.path import join
 
 import os
+from enum import Enum
 
 from coon.packages.package import Package
 from coon.utils.file_utils import ensure_empty, copy_to, tar
@@ -79,12 +79,6 @@ class Cache(metaclass=ABCMeta):
 
     @staticmethod
     def get_erlang_version():
-        proc = subprocess.run(
-            shlex.split("erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell"),
-            stdout=subprocess.PIPE)
-        if proc.returncode == 0:
-            version = proc.stdout.decode('utf-8').strip()
-            return version.translate({ord(c): None for c in '"'})
-        else:
-            print("Can't get erlang version")  # TODO handle error
-            return None
+        vsn = subprocess.check_output(  # TODO handle error
+            shlex.split("erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell"))
+        return vsn.decode('utf-8').strip("\n\r\"")

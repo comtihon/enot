@@ -13,4 +13,4 @@ class Shell(Action):
         return self._params
 
     def run(self, path):
-        subprocess.run(self.params, check=True, shell=True, cwd=path)
+        subprocess.check_call(self.params, shell=True, cwd=path)

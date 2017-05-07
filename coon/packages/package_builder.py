@@ -26,7 +26,7 @@ class Builder:
             self.__ensure_erlangmk()
 
     @classmethod
-    def init_from_path(cls, path):
+    def init_from_path(cls, path) -> 'Builder':
         package = Package.from_path(path)
         return cls(path, package)
 

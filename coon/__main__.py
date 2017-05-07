@@ -72,7 +72,7 @@ def create(path, arguments):
 def build(path):
     builder = Builder.init_from_path(path)
     builder.populate()
-    if not builder.ensure():
+    if not builder.build():
         sys.exit(1)
     else:
         sys.exit(0)
@@ -97,7 +97,7 @@ def release(path):
 def deps(path):
     builder = Builder.init_from_path(path)
     builder.populate()
-    builder.dep_packages()
+    builder.deps()
     sys.exit(0)
 
 

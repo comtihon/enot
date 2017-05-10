@@ -135,7 +135,7 @@ def __ensure_template(src_dir, name, suffix, overwrite_name=False):
         with open(app_srcfile, 'w') as f:
             f.write(Template(content).render(name=name,
                                              vsn_tmp="{{ app.vsn }}",
-                                             apps_tmp="{{ app.std_deps + app.deps }}",
+                                             apps_tmp="{{ app.std_apps + app.apps }}",
                                              modules_tmp="{{ modules }}"))
 
 

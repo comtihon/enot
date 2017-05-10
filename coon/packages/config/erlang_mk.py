@@ -65,7 +65,7 @@ class ErlangMkConfig(ConfigFile):
                     url, tag = get_dep(content[depname])
                     if dep in deps and dep in self.applications:
                         return_deps[dep] = (url, tag)
-                    else:
+                    else:  # TODO should we drop unused here? (same as coon.__parse_deps/2)
                         print('Drop unused dep ' + dep)
                 else:
                     print('Dep ' + depname + ' not specified')

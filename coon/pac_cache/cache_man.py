@@ -69,7 +69,7 @@ class CacheMan:
 
     # Fetch all deps (if they are not already fetched to local cache)
     def fetch_all_deps(self, cache, package: Package):
-        for name, dep in package.dep_packages.items():
+        for name, dep in package.deps.items():
             if not self.local_cache.exists(dep):
                 if cache.exists(dep) and cache.fetch_package(dep):
                     self.add_fetched(cache, dep)  # TODO dep is now has full config, which is not needed

@@ -39,14 +39,14 @@ class CoonConfig(ConfigFile):
     def get_compiler(self):
         return Compiler.COON
 
+    # TODO refactor me. There can be a case when applications is empty and should be populated with deps
     def __parse_deps(self, deps) -> dict:
         return_deps = {}
         for dep in deps:
             name = dep['name']
-            if name in self.applications:
-                return_deps[name] = (dep['url'], dep['vsn'])
-            else:
-                print('Drop unused dep ' + name)
+            if name not in self.applications and self.applications is not []:  # If applications were modified by hand
+                print('Unused dep ' + name)  # Warn user about unused deps
+            return_deps[name] = (dep['url'], dep['vsn'])
         return return_deps
 
     def __parse_prebuild(self, parsed):

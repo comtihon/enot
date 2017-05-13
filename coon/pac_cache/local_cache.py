@@ -2,14 +2,14 @@ import shutil
 import stat
 from os.path import join
 
+import coon
 import os
 from git import Repo
 from pkg_resources import Requirement, resource_filename
 
-import coon
 from coon.pac_cache.cache import Cache
 from coon.packages.package import Package
-from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file
+from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file, list_dir
 from coon.utils.file_utils import remove_dir
 
 
@@ -28,7 +28,8 @@ class LocalCache(Cache):
         return join(self.path, 'tool')
 
     def exists(self, package: Package) -> bool:
-        return if_dir_exists(self.path, self.__get_package_path(package))
+        print('check ' + self.path + ' ' + self.get_package_path(package))
+        return if_dir_exists(self.path, self.get_package_path(package)) is not None
 
     def tool_exists(self, toolname: str) -> bool:
         return os.path.exists(join(self.tool_dir, toolname))
@@ -49,8 +50,8 @@ class LocalCache(Cache):
 
     # add built package to local cache
     # TODO rebar3 built packages output in _build/...
-    def add_package(self, package: Package, rewrite=False):
-        full_dir = join(self.path, self.__get_package_path(package))
+    def add_package(self, package: Package, rewrite=False) -> bool:
+        full_dir = join(self.path, self.get_package_path(package))
         ensure_dir(full_dir)
         print('add ' + package.name)
         path = package.config.path
@@ -63,10 +64,15 @@ class LocalCache(Cache):
         # TODO config from cache always have has_nifs false.
         if package.config.has_nifs:
             LocalCache.__copy_data(rewrite, full_dir, path, 'priv')
-        # TODO include package file?
+        coon_package = join(full_dir, package.name + '.cp')
+        if not os.path.isfile(coon_package):
+            package.generate_package()  # TODO package.config.path should be fulldir?
+        copy_file(join(full_dir, 'coonfig.json'), join(path, 'coonfig.json'))
+        copy_file(coon_package, join(path, package.name + '.cp'))
         resource = resource_filename(Requirement.parse(coon.APPNAME), 'coon/resources/EmptyMakefile')
         print('copy ' + resource + ' to ' + join(full_dir, 'Makefile'))
         copy_file(resource, join(full_dir, 'Makefile'))
+        return True
 
     def add_tool(self, toolname: str, toolpath: str):
         print('add ' + toolname)
@@ -79,25 +85,17 @@ class LocalCache(Cache):
     def link_package(self, package: Package, dest_path: str):
         if not dest_path:
             dest_path = os.getcwd()
-        cache_path = join(self.path, self.__get_package_path(package))
+        cache_path = join(self.path, self.get_package_path(package))
         dep_dir = join(dest_path, 'deps', package.name)
         ensure_dir(dep_dir)
         print('link ' + package.name)
-        # TODO link everything found? (except package file)
-        LocalCache.link(cache_path, dest_path, package.name, 'Makefile')
-        LocalCache.link(cache_path, dest_path, package.name, 'include')
-        LocalCache.link(cache_path, dest_path, package.name, 'src')
-        LocalCache.link(cache_path, dest_path, package.name, 'ebin')
-        if package.config.has_nifs:
-            LocalCache.link(cache_path, dest_path, package.name, 'priv')
+        for file in list_dir(cache_path):
+            if file != package.name + '.cp':
+                LocalCache.link(cache_path, dest_path, package.name, file)
 
     def link_tool(self, package: Package, toolname: str):
         cache_path = join(self.tool_dir, toolname)
         link_if_needed(cache_path, join(package.config.path, toolname))
-
-    def __get_package_path(self, package: Package):
-        namespace = package.url.split('/')[-2]
-        return join(namespace, package.name, package.vsn, self.erlang_version)
 
     # TODO relinking deps on vsn switching
     @staticmethod
@@ -120,5 +118,5 @@ class LocalCache(Cache):
         cache_src = join(full_dir, source_dir)
         if rewrite or not os.path.exists(cache_src):
             package_src = join(path, source_dir)
-            print('copy ' + package_src + ' to' + cache_src)
+            print('copy ' + package_src + ' to ' + cache_src)
             shutil.copytree(package_src, cache_src)

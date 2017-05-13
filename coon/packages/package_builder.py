@@ -53,14 +53,14 @@ class Builder:
 
     # Compose a package file
     def package(self):
-        self.system_config.cache.package(self.project)
+        self.project.generate_package()
 
     # Parse package config, download missing deps to /tmp
     def populate(self):
         self.__populate_deps(self.project.dep_packages.values())
 
-    def add_package(self, remote, rewrite):
-        self.system_config.cache.add_package(self.project, remote, rewrite)
+    def add_package(self, remote: str, rewrite: bool, recurse: bool) -> bool:
+        return self.system_config.cache.add_package(self.project, remote, rewrite, recurse)
 
     def build(self):
         return self.__build_tree(self.project, is_subpackage=False)
@@ -68,20 +68,12 @@ class Builder:
     def deps(self):
         self.__build_deps(self.project, is_subpackage=False)
 
-    # TODO check if there is a need to compile first.
     def release(self):
         relx_path = self.__ensure_relx()
         return RelxCompiler(self.project, relx_path).compile()
 
-    # TODO check all included in release apps for presence in deps
-    # TODO take applications from app.src and add to relx.config
-    def __check_app_deps(self, deps):
-        # TODO ensure, if deps in relx.config are needed
-        return
-
     # Build all deps, add to cache and link to project
     def __build_deps(self, package: Package, is_subpackage=True):
-        # TODO check if package.config.path exists (if deps were populated before calling build_deps/build_tree)
         print('check ' + package.name)
         if is_subpackage and self.system_config.cache.exists(package):
             return True
@@ -90,6 +82,7 @@ class Builder:
                 if not self.__build_tree(dep):
                     raise RuntimeError('Can\'t built dep ' + dep.name)
             self.system_config.cache.link_package(dep, package.config.path)
+            self.__build_deps(dep)  # link all dep's deps (build them and add to cache if necessary)
 
     # Build package and it's deps
     def __build_tree(self, package: Package, is_subpackage=True):
@@ -106,6 +99,7 @@ class Builder:
         for dep in level:
             if dep.name not in self.packages:
                 print('new dep: ' + dep.name)
+                print(dep.export())
                 self.packages[dep.name] = dep.vsn
                 if not self.system_config.cache.exists(dep):
                     self.system_config.cache.fetch_package(dep)

@@ -33,7 +33,7 @@ class TestClass(unittest.TestCase):
         return join(os.getcwd(), self.test_dir, 'tmp')
 
     @property
-    def conf_path(self):
+    def conf_file(self):
         return join(os.getcwd(), self.test_dir, 'global_config.json')
 
     @property
@@ -50,7 +50,7 @@ class TestClass(unittest.TestCase):
     def setUp(self):
         ensure_empty(test.get_test_dir(self.test_name))
         conf = self.global_config
-        with open(self.conf_path, 'w') as outfile:
+        with open(self.conf_file, 'w') as outfile:
             json.dump(conf, outfile, sort_keys=True, indent=4)
 
     def tearDown(self):

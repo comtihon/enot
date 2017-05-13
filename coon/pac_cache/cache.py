@@ -1,15 +1,13 @@
-import json
 import shlex
 import subprocess
 import tarfile
 from abc import ABCMeta, abstractmethod
 from os.path import join
 
-import os
 from enum import Enum
 
 from coon.packages.package import Package
-from coon.utils.file_utils import ensure_empty, copy_to, tar
+from coon.utils.file_utils import ensure_empty, copy_file
 
 
 class CacheType(Enum):
@@ -50,32 +48,21 @@ class Cache(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def add_package(self, package: Package, rewrite: bool):  # add package to cache
+    def add_package(self, package: Package, rewrite=True) -> bool:  # add package to cache
         pass
-
-    def package(self, package: Package):
-        temp_dir = join(self.temp_dir, package.name)
-        ensure_empty(temp_dir)
-        exported = package.export()
-        with open(join(temp_dir, package.name + '.json'), 'w') as outfile:
-            json.dump(exported, outfile, sort_keys=True, indent=4)
-        copy_to('ebin', temp_dir)
-        if package.config.with_source:
-            copy_to('src', temp_dir)
-            copy_to('include', temp_dir)
-            if package.config.has_nifs:
-                copy_to('c_src', temp_dir)
-        if package.config.has_nifs:
-            copy_to('priv', temp_dir)
-        tar(temp_dir, join(os.getcwd(), package.name + '.wp'))
 
     def unpackage(self, package: Package):
         pack_dir = join(self.temp_dir, package.name)
-        walpack = pack_dir + '.wp'
+        coonpack = pack_dir + '.cp'
         ensure_empty(join(self.temp_dir, package.name))
-        with tarfile.open(walpack) as pack:
+        with tarfile.open(coonpack) as pack:
             pack.extractall(pack_dir)
+        copy_file(coonpack, join(pack_dir, package.name + '.cp'))
         package.fill_from_path(pack_dir)
+
+    def get_package_path(self, package: Package):
+        namespace = package.url.split('/')[-2]
+        return join(namespace, package.name, package.vsn, self.erlang_version)
 
     @staticmethod
     def get_erlang_version():

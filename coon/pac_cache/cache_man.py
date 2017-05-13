@@ -1,7 +1,10 @@
+from os.path import join
+
+from coon.pac_cache import cache_factory
+
 from coon.compiler.c_compiler import CCompiler
 from coon.pac_cache.cache import CacheType, Cache
 from coon.pac_cache.local_cache import LocalCache
-from coon.pac_cache import cache_factory
 from coon.packages.package import Package
 
 
@@ -27,13 +30,14 @@ class CacheMan:
     def caches(self) -> {str: Cache}:
         return self._caches
 
+    # TODO test me
     # TODO add ability to customise search policy (build instead of fetching from remote etc...).
     def exists(self, package: Package) -> bool:
-        if self.local_cache.exists(package):  # local cache has this package
+        if package.url is not None and self.local_cache.exists(package):  # local cache has this package
             return True
         for cache in self.caches.values():
             if cache.exists(package) and cache.fetch_package(package):  # remote cache has this package
-                return self.add_fetched(cache, package)
+                return self.add_fetched(cache, package)  # TODO fetch all deps
         return False  # no cache has this package
 
     def link_package(self, package: Package, dest_path: str):
@@ -48,32 +52,51 @@ class CacheMan:
         if self.local_cache:
             self.local_cache.fetch_package(package)
 
-    def package(self, package: Package):
-        if self.local_cache:
-            self.local_cache.package(package)
-
-    def add_package(self, package: Package, remote: str, rewrite: bool):
+    # Add package to remote cache. If recurse - add all package's deps to remote cache (if they are not there)
+    # Package's deps should exist in local cache. It is guaranteed by calling `coon package`
+    def add_package(self, package: Package, remote: str, rewrite: bool, recurse: bool) -> bool:
         if remote in self.caches.keys():
-            return self.caches[remote].add_package(package, rewrite)
+            if recurse:  # check deps in local cache
+                self.__check_all_deps(package)
+            result = self.caches[remote].add_package(package, rewrite)
+            if recurse and result:
+                self.__add_all_deps(self.caches[remote], package)  # TODO no package in local cache. Need to create it
+            return result
         else:
             raise RuntimeError('Cache not found: ' + remote)
 
     # Untar package data, fill package conf, add to local cache
-    def add_fetched(self, cache, package):
+    def add_fetched(self, cache: Cache, package: Package):
         cache.unpackage(package)
         res = True
         if package.config.has_nifs:
-            res = CCompiler(package.config).compile()
+            res = CCompiler(package).compile()
         self.local_cache.add_package(package)
         return res
 
     # Fetch all deps (if they are not already fetched to local cache)
-    def fetch_all_deps(self, cache, package: Package):
+    def __fetch_all_deps(self, cache, package: Package):  # TODO where to use it?
         for name, dep in package.dep_packages.items():
             if not self.local_cache.exists(dep):
                 if cache.exists(dep) and cache.fetch_package(dep):
                     self.add_fetched(cache, dep)  # TODO dep is now has full config, which is not needed
                     self.local_cache.add_package(package)
-                    self.fetch_all_deps(cache, dep)
+                    self.__fetch_all_deps(cache, dep)
                 else:
                     raise RuntimeError('Dep not found ' + dep.name)
+
+    # Check if all deps exist in local cache
+    def __check_all_deps(self, package: Package):
+        for name, dep in package.dep_packages.items():
+            if not self.local_cache.exists(dep):
+                raise RuntimeError('Dep ' + dep.name + ' not found in local cache. Rerun package.')
+            self.__check_all_deps(dep)
+
+    # Add all deps to cache
+    def __add_all_deps(self, cache: Cache, package: Package):
+        for name, dep in package.dep_packages.items():
+            if not cache.exists(dep):
+                # set dep's path - path to package in local cache
+                dep.config.path = join(self.local_cache.path, self.local_cache.get_package_path(dep))
+                cache.add_package(dep)
+            self.__add_all_deps(cache, dep)

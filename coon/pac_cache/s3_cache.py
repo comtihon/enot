@@ -13,12 +13,11 @@ class S3Cache(Cache):
     def exists(self, package: Package) -> bool:
         raise RuntimeError('not implemented')
 
-    def add_package(self, package: Package, rewrite: bool):
+    def add_package(self, package: Package, rewrite=True) -> bool:
         raise RuntimeError('not implemented')
 
     def fetch_package(self, package: Package) -> bool:
         raise RuntimeError('not implemented')
 
     def __get_package_url(self, package: Package):
-        namespace = package.url.split('/')[-2]
-        return join(namespace, package.name, package.vsn, self.erlang_version, package.name) + '.wp'
+        return join(self.get_package_path(package), package.name) + '.cp'

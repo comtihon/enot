@@ -46,7 +46,7 @@ class CreateTests(TestClass):
 
     @patch('coon.global_properties.ensure_conf_file')
     def test_compile_created(self, mock_conf):
-        mock_conf.return_value = self.conf_path
+        mock_conf.return_value = self.conf_file
         project_dir = join(self.test_dir, 'test_project')
         coon.__main__.create(self.test_dir, {'<name>': 'test_project'})
         builder = Builder.init_from_path(project_dir)
@@ -69,7 +69,7 @@ class CreateTests(TestClass):
 
     @patch('coon.global_properties.ensure_conf_file')
     def test_release_created(self, mock_conf):
-        mock_conf.return_value = self.conf_path
+        mock_conf.return_value = self.conf_file
         project_dir = join(self.test_dir, 'test_project')
         coon.__main__.create(self.test_dir, {'<name>': 'test_project'})
         builder = Builder.init_from_path(project_dir)

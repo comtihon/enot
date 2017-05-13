@@ -20,7 +20,7 @@ class ToolsTests(TestClass):
     @patch('coon.utils.file_utils.ensure_programm')
     @patch('coon.global_properties.ensure_conf_file')
     def test_in_system(self, mock_conf, mock_get_cmd):
-        mock_conf.return_value = self.conf_path
+        mock_conf.return_value = self.conf_file
         mock_get_cmd.return_value = "rebar"
         builder = Builder(self.test_dir, Package(StubConfig('test', None, path=self.test_dir)))
         self.assertEqual(False, os.path.exists(join(self.tmp_dir, 'rebar')))
@@ -32,7 +32,7 @@ class ToolsTests(TestClass):
     @patch('coon.utils.file_utils.ensure_programm')
     @patch('coon.global_properties.ensure_conf_file')
     def test_in_cache(self, mock_conf, mock_get_cmd):
-        mock_conf.return_value = self.conf_path
+        mock_conf.return_value = self.conf_file
         mock_get_cmd.return_value = False
         ensure_dir(join(self.cache_dir, 'tool'))
         with open(join(self.cache_dir, 'tool', 'rebar'), 'w') as outfile:  # 'load' tool to cache
@@ -46,7 +46,7 @@ class ToolsTests(TestClass):
     @patch('coon.utils.file_utils.ensure_programm')
     @patch('coon.global_properties.ensure_conf_file')
     def test_missing(self, mock_conf, mock_get_cmd, mock_http_read):
-        mock_conf.return_value = self.conf_path
+        mock_conf.return_value = self.conf_file
         mock_get_cmd.return_value = False
         ensure_dir(self.tmp_dir)
         mock_http_read.return_value = b'some rebar binary content'

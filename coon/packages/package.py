@@ -1,11 +1,14 @@
 import json
 import tarfile
+from os.path import join
 
+import os
 from coon.packages.config import config_factory
 
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig
 from coon.packages.config.stub_config import StubConfig
+from coon.utils.file_utils import tar
 
 
 class Package:
@@ -74,10 +77,24 @@ class Package:
                 'vsn': self.vsn,
                 'deps': [dep.export() for _, dep in self.dep_packages.items()]}
 
-    def to_package(self):
-        export = self.export()
-        export.update(self.config.export())
-        return json.dumps(export, sort_keys=True, indent=4)
+    def generate_package(self):
+        pack_dir = self.config.path
+        exported = self.export()
+        config = join(pack_dir, 'coonfig.json')
+        if not os.path.isfile(config):
+            with open(join(pack_dir, 'coonfig.json'), 'w') as outfile:
+                json.dump(exported, outfile, sort_keys=True, indent=4)
+        dirs_to_add = []
+        add_if_exist(pack_dir, 'ebin', dirs_to_add)
+        add_if_exist(pack_dir, 'priv', dirs_to_add)
+        if self.config.with_source:
+            add_if_exist(pack_dir, 'src', dirs_to_add)
+            add_if_exist(pack_dir, 'include', dirs_to_add)
+            add_if_exist(pack_dir, 'c_src', dirs_to_add)
+        add_if_exist(pack_dir, 'coonfig.json', dirs_to_add)
+        package_dst = join(pack_dir, self.name + '.cp')
+        print('create package ' + package_dst)
+        tar(pack_dir, dirs_to_add, package_dst)
 
     def list_deps(self) -> list():
         return self.dep_packages.values()
@@ -88,3 +105,8 @@ class Package:
             for name, dep in self.config.read_config().items():
                 print(name + ' ' + str(dep))
                 self.dep_packages[name] = Package.from_deps(name, dep)
+
+
+def add_if_exist(src_dir, dir_to_add, dirs):
+    if os.path.exists(join(src_dir, dir_to_add)):
+        dirs.append(dir_to_add)

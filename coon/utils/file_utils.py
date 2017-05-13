@@ -5,6 +5,7 @@ from os.path import join
 from shutil import copyfile
 
 import os
+from os import listdir
 
 
 def read_file(path: str) -> str:
@@ -21,10 +22,14 @@ def copy_to(src: str, dst: str):
         shutil.copytree(src, join(dst, src))
 
 
-def tar(src: str, dst: str):
-    with tarfile.open(dst, "w") as archive:
-        for name in os.listdir(src):
-            archive.add(join(src, name), arcname=name)
+def list_dir(path: str) -> list:
+    return listdir(path)
+
+
+def tar(path: str, dirs: list, dst: str):
+    with tarfile.open(dst, 'w') as archive:
+        for d in dirs:
+            archive.add(join(path, d), arcname=d)
 
 
 # TODO catch read errors
@@ -57,7 +62,8 @@ def if_dir_exists(path: str, dir_to_check: str) -> str or None:
         return full
 
 
-def link_if_needed(include_src, include_dst):
+def link_if_needed(include_src, include_dst):  # TODO recheck if link really exists (sometimes error here)
+    # TODO recheck if link should be updated - if link exists, but points to old include_src
     print('link ' + include_src + ' -> ' + include_dst)
     if os.path.exists(include_src) and not os.path.exists(include_dst):
         os.symlink(include_src, include_dst)

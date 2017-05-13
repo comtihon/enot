@@ -4,7 +4,7 @@ Usage:
   coon create <name>
   coon build
   coon package
-  coon add_package <repo> [-wp PACKAGE]
+  coon add_package <repo> [-wp PACKAGE] [-r RECURSE]
   coon release
   coon deps
   coon version
@@ -14,7 +14,8 @@ Usage:
 Options:
   -p PACKAGE --package PACKAGE       path to package. If not specified, tries to add current application's package
   -w --rewrite                       should rewrite package if already loaded to repository with same version
-                                     [default: False]
+                                     [default: True]
+  -r RECURSE --recurse RECURSE       add package and all it's deps recursively [default: True]
   -h --help                          show this help message and exit
   -v --version                       print version and exit
 """
@@ -39,23 +40,28 @@ def main(args=None):
         print(usage)
         sys.exit(1)
     path = os.getcwd()
+    result = False
     if arguments['create']:
-        return create(path, arguments)
+        result = create(path, arguments)
     if arguments['build']:
-        return build(path)
+        result = build(path)
     if arguments['version']:
-        return version(path)
+        result = version(path)
     if arguments['deps']:
-        return deps(path)
+        result = deps(path)
     if arguments['release']:
-        return release(path)
+        result = release(path)
     if arguments['package']:
-        return package(path)
+        result = package(path)
     if arguments['add_package']:
-        return add_package(path, arguments)
+        result = add_package(path, arguments)
+    if result:
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 
-def create(path, arguments):
+def create(path: str, arguments: dict):
     name = arguments['<name>']
     project_dir = join(path, name)
     src_dir = join(project_dir, 'src')
@@ -65,61 +71,65 @@ def create(path, arguments):
     __ensure_template(src_dir, name, '_sup.erl')
     __ensure_template(src_dir, name, '.app.src')
     __ensure_template(project_dir, name, 'coonfig.json', True)
+    return True
 
 
 # TODO upgrade deps support
 # Build project with all deps (fetch deps if needed)
 def build(path):
     builder = Builder.init_from_path(path)
+    return do_build(builder)
+
+
+def do_build(builder):
     builder.populate()
-    if not builder.build():
-        sys.exit(1)
-    else:
-        sys.exit(0)
+    return builder.build()
 
 
 # Print project's version. Prefer coonfing.json vsn, but if none - use app.src version.
 def version(path):
     builder = Builder.init_from_path(path)
     print(builder.project.vsn)
-    sys.exit(0)
+    return True
 
 
 # Build a release. Will use current rel dir with config or create new, if none is found
 def release(path):
     builder = Builder.init_from_path(path)
+    if not do_build(builder):
+        return False
     builder.release()
-    sys.exit(0)
+    return True
 
 
-#  TODO add an ability to link full deps tree to project
 # Fetch and build deps
 def deps(path):
     builder = Builder.init_from_path(path)
     builder.populate()
     builder.deps()
-    sys.exit(0)
+    return True
 
 
 # Create coon package
 def package(path):
     builder = Builder.init_from_path(path)
-    builder.populate()
+    if not do_build(builder):
+        return False
     builder.package()
-    sys.exit(0)  # TODO use sys.exit only in main. All sub functions should return bool()
+    return True
 
 
-# Add package to cache
+# Add created package to cache
 def add_package(path, arguments):
     repo = arguments['<repo>']
     rewrite = arguments['--rewrite']
+    recurse = arguments['--recurse']
     path_overwrite = arguments.get('--package', False)
     if path_overwrite:
         builder = Builder.init_from_package(path_overwrite)
     else:
         builder = Builder.init_from_path(path)
-    builder.add_package(repo, rewrite)
-    sys.exit(0)
+    return builder.add_package(repo, rewrite, recurse)
 
 
 def __ensure_template(src_dir, name, suffix, overwrite_name=False):

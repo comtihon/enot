@@ -39,6 +39,10 @@ class ConfigFile(metaclass=ABCMeta):
     def path(self) -> str:  # project's path in filesystem
         return self._path
 
+    @path.setter
+    def path(self, path):
+        self._path = path
+
     @property
     def drop_unknown(self) -> bool:  # if deps, not specified in app.src should be dropped
         return self._drop_unknown
@@ -69,7 +73,7 @@ class ConfigFile(metaclass=ABCMeta):
     def applications(self) -> list:  # deps from app.src or app file
         return self._applications
 
-    @property
+    @property  # TODO refactor me
     def has_nifs(self) -> bool:  # git repo contains c_src folder
         return self._has_nifs
 

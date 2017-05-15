@@ -61,4 +61,4 @@ def find_apps(content: str) -> list or None:
     [apps, _] = str.split(start, ']', maxsplit=1)
     if '{{' in apps:  # if jinja2 template
         return None
-    return [dep.strip() for dep in apps.split(',') if dep is not '']
+    return [dep.strip('\' \r\n') for dep in apps.split(',') if dep is not '']

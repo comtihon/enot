@@ -64,11 +64,12 @@ class LocalCache(Cache):
         # TODO config from cache always have has_nifs false.
         if package.config.has_nifs:
             LocalCache.__copy_data(rewrite, full_dir, path, 'priv')
-        coon_package = join(full_dir, package.name + '.cp')
+        coon_package = join(path, package.name + '.cp')
         if not os.path.isfile(coon_package):
+            print('generate missing package')
             package.generate_package()  # TODO package.config.path should be fulldir?
-        copy_file(join(full_dir, 'coonfig.json'), join(path, 'coonfig.json'))
-        copy_file(coon_package, join(path, package.name + '.cp'))
+        copy_file(join(path, 'coonfig.json'), join(full_dir, 'coonfig.json'))
+        copy_file(coon_package, join(full_dir, package.name + '.cp'))
         resource = resource_filename(Requirement.parse(coon.APPNAME), 'coon/resources/EmptyMakefile')
         print('copy ' + resource + ' to ' + join(full_dir, 'Makefile'))
         copy_file(resource, join(full_dir, 'Makefile'))

@@ -92,15 +92,14 @@ class ArtifactoryTests(TestClass):
         artifactory_cache = builder.system_config.cache.caches['artifactory-local']
         artifactory_cache.fetch_package(pack)
         self.assertEqual(True, os.path.isfile(join(self.tmp_dir, 'test_project.cp')))
-        # TODO
-        # builder.system_config.cache.add_fetched(artifactory_cache, pack)
-        # self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack))
+        builder.system_config.cache.add_fetched(artifactory_cache, pack)
+        self.assertEqual(True, builder.system_config.cache.local_cache.exists(pack))
 
     def test_uploading_with_deps(self):
-        True  # TODO
+        True  # TODO emulate project with multiple deps. Deps should be uploaded to cache recursively
 
     def test_downloading_with_deps(self):
-        True  # TODO
+        True  # TODO emulate project with multiple deps. Deps should be downloaded to local cache resursively
 
     def tearDown(self):
         super().tearDown()

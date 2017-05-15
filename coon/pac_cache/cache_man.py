@@ -69,7 +69,7 @@ class CacheMan:
     def add_fetched(self, cache: Cache, package: Package):
         cache.unpackage(package)
         res = True
-        if package.config.has_nifs:
+        if package.config.has_nifs:   # TODO test me
             res = CCompiler(package).compile()
         self.local_cache.add_package(package)
         return res

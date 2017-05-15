@@ -57,7 +57,7 @@ class Builder:
 
     # Parse package config, download missing deps to /tmp
     def populate(self):
-        self.__populate_deps(self.project.dep_packages.values())
+        self.__populate_deps(self.project.deps.values())
 
     def add_package(self, remote: str, rewrite: bool, recurse: bool) -> bool:
         return self.system_config.cache.add_package(self.project, remote, rewrite, recurse)
@@ -103,7 +103,7 @@ class Builder:
                 self.packages[dep.name] = dep.vsn
                 if not self.system_config.cache.exists(dep):
                     self.system_config.cache.fetch_package(dep)
-                next_level += dep.dep_packages.values()
+                next_level += dep.deps.values()
             else:
                 if dep.vsn != self.packages[dep.name]:  # Warn only if it is not the same dep
                     print('Skip ' + dep.name + ' (' + dep.vsn + '). Use ' + self.packages[dep.name])

@@ -25,7 +25,7 @@ class ConfigFile(metaclass=ABCMeta):
         self._conf_vsn = None
         self._with_source = True
         self._drop_unknown = True
-        self._name = ""
+        self._name = ''
 
     @property
     def name(self) -> str:  # project's name

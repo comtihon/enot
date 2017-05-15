@@ -39,7 +39,7 @@ class RebarConfig(ConfigFile):
                 (_, url, vsn) = addr
                 (_, vsn_value) = vsn
                 return_deps[name] = (url, vsn_value)
-            else:
+            else:  # TODO should we drop unused here? (same as coon.__parse_deps/2)
                 print('Drop unused dep ' + name)
         return return_deps
 

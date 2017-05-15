@@ -52,7 +52,7 @@ class CoonCompiler(AbstractCompiler):
 
     def __set_env_vars(self):
         env_vars = dict(os.environ)
-        if self.package.deps is not []:
+        if self.package.deps is not {}:
             env_vars['ERL_LIBS'] = self.deps_path
         return env_vars
 

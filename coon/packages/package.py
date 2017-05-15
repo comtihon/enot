@@ -30,16 +30,16 @@ class Package:
         return self._config
 
     @property
-    def dep_packages(self) -> dict:  # package's deps.
+    def deps(self) -> dict:  # package's deps.
         return self._deps
 
     @property
-    def std_deps(self) -> list:  # standard erlang deps. Used in app.src templates
+    def std_apps(self) -> list:  # standard erlang apps. Used in app.src templates
         return ['kernel', 'stdlib']
 
     @property
-    def deps(self) -> list:  # package's deps names
-        return list(self.dep_packages.keys())  # TODO may be config.applications?
+    def apps(self) -> list:  # appliations, which should be run before this app
+        return list(set(self.config.applications + list(self.deps.keys())))
 
     # TODO is name enough unique?
     @property
@@ -75,7 +75,7 @@ class Package:
         return {'name': self.config.name,
                 'url': self.url,
                 'vsn': self.vsn,
-                'deps': [dep.export() for _, dep in self.dep_packages.items()]}
+                'deps': [dep.export() for _, dep in self.deps.items()]}
 
     def generate_package(self):
         pack_dir = self.config.path
@@ -97,14 +97,14 @@ class Package:
         tar(pack_dir, dirs_to_add, package_dst)
 
     def list_deps(self) -> list():
-        return self.dep_packages.values()
+        return self.deps.values()
 
     def __fill_deps(self):
         self._deps = {}
         if self.config:
             for name, dep in self.config.read_config().items():
                 print(name + ' ' + str(dep))
-                self.dep_packages[name] = Package.from_deps(name, dep)
+                self.deps[name] = Package.from_deps(name, dep)
 
 
 def add_if_exist(src_dir, dir_to_add, dirs):

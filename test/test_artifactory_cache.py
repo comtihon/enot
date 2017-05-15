@@ -3,7 +3,6 @@ from os.path import join
 
 import os
 from artifactory import ArtifactoryPath
-from coon.packages.config.config_factory import upgrade_conf
 from mock import patch
 
 from coon.__main__ import create, package

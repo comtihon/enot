@@ -69,14 +69,14 @@ class CacheMan:
     def add_fetched(self, cache: Cache, package: Package):
         cache.unpackage(package)
         res = True
-        if package.config.has_nifs:   # TODO test me
+        if package.config.has_nifs:  # TODO test me
             res = CCompiler(package).compile()
         self.local_cache.add_package(package)
         return res
 
     # Fetch all deps (if they are not already fetched to local cache)
     def __fetch_all_deps(self, cache, package: Package):  # TODO where to use it?
-        for name, dep in package.dep_packages.items():
+        for name, dep in package.deps.items():
             if not self.local_cache.exists(dep):
                 if cache.exists(dep) and cache.fetch_package(dep):
                     self.add_fetched(cache, dep)  # TODO dep is now has full config, which is not needed
@@ -87,14 +87,14 @@ class CacheMan:
 
     # Check if all deps exist in local cache
     def __check_all_deps(self, package: Package):
-        for name, dep in package.dep_packages.items():
+        for name, dep in package.deps.items():
             if not self.local_cache.exists(dep):
                 raise RuntimeError('Dep ' + dep.name + ' not found in local cache. Rerun package.')
             self.__check_all_deps(dep)
 
     # Add all deps to cache
     def __add_all_deps(self, cache: Cache, package: Package):
-        for name, dep in package.dep_packages.items():
+        for name, dep in package.deps.items():
             if not cache.exists(dep):
                 # set dep's path - path to package in local cache
                 dep.config.path = join(self.local_cache.path, self.local_cache.get_package_path(dep))

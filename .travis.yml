@@ -8,6 +8,13 @@ python:
   - "3.6"
 before_install:
   - sudo apt-get -y install erlang
+  - bash install_deps.sh
 install: "python setup.py install"
+addons:
+cache:
+  directories:
+  - $HOME/artifactory
 script:
+  - $HOME/artifactory/artifactory/bin/artifactory.sh &
+  - sleep 120
   - make tests

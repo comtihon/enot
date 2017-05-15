@@ -11,22 +11,22 @@ from coon.packages.package_builder import Builder
 from test.abs_test_class import TestClass
 
 
-# TODO make this testcase run only if artifactory is available locally
+# Artifactory should be available locally on path
 class ArtifactoryTests(TestClass):
     def __init__(self, method_name):
         super().__init__('artifactory_tests', method_name)
 
     @property
     def path(self):
-        return 'http://localhost:8081/artifactory/generic-local'
+        return 'http://localhost:8081/artifactory/example-repo-local'
 
     @property
     def username(self):
-        return 'publisher'
+        return 'admin'
 
     @property
-    def password(self):  # TODO change password before push!!!
-        return 'ytjnlfvgfc'
+    def password(self):
+        return 'password'
 
     @property
     def global_config(self):

@@ -30,5 +30,10 @@ Erlang advanced project manager
     
 ### Testing
     
-    sudo pip install pytest mock
+    python setup.py install
+All:
+
     make tests
+Single Testcase:
+
+    py.test -q -s test/test_module.py::TestClass

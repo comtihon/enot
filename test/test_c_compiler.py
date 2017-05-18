@@ -47,9 +47,8 @@ class CCompileTests(TestClass):
             
             ERL_NIF_INIT(niftest,nif_funcs,NULL,NULL,NULL,NULL)
             ''')
-        config = CoonConfig(self.test_dir)
-        config.init_from_dict({'name': 'proper', 'has_nifs': True})  # TODO Get rid of has_nifs.
-        package = Package(config=config)
+        config = CoonConfig({'name': 'proper'})
+        package = Package(self.test_dir, config, None)
         compiler = CCompiler(package)
         self.assertEqual(True, compiler.compile())
         self.assertEqual(True, os.path.exists(join(self.output_dir, self.test_name + '.so')))
@@ -74,9 +73,8 @@ class CCompileTests(TestClass):
             
             ERL_NIF_INIT(niftest,nif_funcs,NULL,NULL,NULL,NULL)
             ''')
-        config = CoonConfig(self.test_dir)
-        config.init_from_dict({'name': 'proper', 'has_nifs': True})  # TODO Get rid of has_nifs.
-        package = Package(config=config)
+        config = CoonConfig({'name': 'proper'})
+        package = Package(self.test_dir, config, None)
         compiler = CCompiler(package)
         self.assertEqual(False, compiler.compile())
         self.assertEqual(False, os.path.exists(join(self.output_dir, self.test_name + '.so')))

@@ -5,13 +5,25 @@ import os
 from coon.utils.file_utils import read_file
 
 
-def parse_app_config(path: str, suffix: str) -> (str, str or None, list or None):
+# read application config file. Return application name, version, applications and if it contains jinja2 templates
+def parse_app_config(path: str, suffix='.app.src') -> (str, str or None, list or None, bool):
     file = find_app_file(path, suffix)
     content = read_file(join(path, file))
+    return parse_app_config_content(content)
+
+
+def parse_app_config_content(content: str) -> (str, str or None, list or None, bool):
     name = find_app_name(content)
     vsn = find_app_vsn(content)
     apps = find_apps(content)
-    return name, vsn, apps
+    return name, vsn, apps, '{{' in content
+
+
+def contains_app_file(path: str, suffix='.app.src') -> bool:
+    if not os.path.exists(path):
+        return False
+    res = [f for f in os.listdir(path) if join(path, f).endswith(suffix)]
+    return res != []
 
 
 # Will work only for comma last keys, without spaces between key and comma
@@ -44,7 +56,7 @@ def find_app_file(path, suffix):
 
 
 def find_app_name(content: str) -> str:
-    return get_value('application', 0, content, 1)
+    return get_value('application', 0, content, 1).replace("'", '')
 
 
 def find_app_vsn(content: str) -> str or None:

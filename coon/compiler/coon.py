@@ -18,7 +18,7 @@ def is_erlang_source(file):
 class CoonCompiler(AbstractCompiler):
     @property
     def deps_path(self) -> str:
-        return join(self.config.path, 'deps')
+        return join(self.package.path, 'deps')
 
     def compile(self) -> bool:
         print('build ' + self.project_name)
@@ -26,7 +26,7 @@ class CoonCompiler(AbstractCompiler):
         filenames, all_files = self.__get_all_files(self.src_path)
         print('ensure ' + self.output_path)
         ensure_dir(self.output_path)
-        if self.config.has_nifs:
+        if self.package.has_nifs:
             if CCompiler(self.package).compile():
                 return self.__do_compile(filenames, all_files)
         else:
@@ -34,7 +34,7 @@ class CoonCompiler(AbstractCompiler):
         return False
 
     def __run_prebuild(self):
-        for action in self.config.prebuild:
+        for action in self.package.config.prebuild:
             action.run(self.root_path)
 
     def __do_compile(self, filenames, files):
@@ -75,7 +75,7 @@ class CoonCompiler(AbstractCompiler):
                 cmd += ['-D' + var]  # just standalone variable
 
     def __write_app_file(self, all_files):
-        if self.config.compose_app_file:
+        if self.package.app_config.compose_app_file:  # TODO move me to app_config?
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
             app_path = join(self.output_path, self.project_name + '.app')
             with open(app_path, 'w') as f:

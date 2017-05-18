@@ -17,12 +17,12 @@ class RelxCompiler(AbstractCompiler):
         super().__init__(package, executable)
 
     def compile(self):
-        ensure_dir(join(self.config.path, 'rel'))
+        ensure_dir(join(self.package.path, 'rel'))
         resave_relconf, relconf_path, relconf = self.__modify_resource('relx.config')
         resave_vmargs, vmargs_path, vmargs = self.__modify_resource('vm.args', 'rel')
         resave_sysconf, sysconf_path, sysconf = self.__modify_resource('sys.config', 'rel')
         try:
-            p = subprocess.Popen(self.executable, stdout=PIPE, stderr=PIPE, cwd=self.config.path)
+            p = subprocess.Popen(self.executable, stdout=PIPE, stderr=PIPE, cwd=self.package.path)
             if p.wait() != 0:
                 print(self.package.name + ' release failed: ')
                 print(p.stderr.read().decode('utf8'))
@@ -48,7 +48,7 @@ class RelxCompiler(AbstractCompiler):
         return False, resource_path, resource
 
     def __ensure_resource(self, resource, path):
-        resource_path = join(self.config.path, path, resource)
+        resource_path = join(self.package.path, path, resource)
         if not os.path.isfile(resource_path):
             resource = resource_filename(Requirement.parse(coon.APPNAME), join('coon/resources', resource))
             print('copy ' + resource + ' to ' + resource_path)

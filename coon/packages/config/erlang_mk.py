@@ -4,6 +4,7 @@ from os.path import join
 
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
+from coon.packages.dep import Dep
 from coon.utils.file_utils import read_file_lines
 
 
@@ -39,37 +40,28 @@ def get_dep(line):
 
 
 class ErlangMkConfig(ConfigFile):
-    def __init__(self, path, has_nif):
-        super().__init__(path)
+    def __init__(self, path: str, vsn: str):
+        super().__init__(vsn=vsn)
         self._path = path
-        self._has_nifs = has_nif
-
-    def read_config(self) -> dict:
-        super().read_app_primary_params()
-        makefile = join(self.path, 'Makefile')
+        makefile = join(path, 'Makefile')
         content = parse_makefile(makefile)
         self.__conf_init(content)
         self.__parse_erl_opts(makefile, content)
-        return self.__parse_deps(content)
+        self.__parse_deps(content)
 
     def get_compiler(self):
         return Compiler.ERLANG_MK
 
     def __parse_deps(self, content: dict):
-        return_deps = {}
         if 'DEPS' in content:
             deps = content['DEPS'].split(' ')
             for dep in deps:
                 depname = 'dep_' + dep
                 if depname in content:
                     url, tag = get_dep(content[depname])
-                    if dep in deps and dep in self.applications:
-                        return_deps[dep] = (url, tag)
-                    else:  # TODO should we drop unused here? (same as coon.__parse_deps/2)
-                        print('Drop unused dep ' + dep)
+                    self.deps[dep] = Dep(dep, url, tag)
                 else:
                     print('Dep ' + depname + ' not specified')
-        return return_deps
 
     def __conf_init(self, content: dict):
         self.__conf_vsn = content.get('PROJECT_VERSION', None)

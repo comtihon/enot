@@ -37,9 +37,13 @@ class TestClass(unittest.TestCase):
         return join(os.getcwd(), self.test_dir, 'global_config.json')
 
     @property
+    def compiler(self) -> str:
+        return 'coon'
+
+    @property
     def global_config(self):
         return {'temp_dir': self.tmp_dir,
-                'compiler': 'rebar',
+                'compiler': self.compiler,
                 'cache': [
                     {
                         'name': 'local_cache',

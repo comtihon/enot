@@ -3,6 +3,7 @@ from os.path import join
 from artifactory import ArtifactoryPath
 
 from coon.pac_cache.cache import Cache
+from coon.packages.cachable import Cachable
 from coon.packages.package import Package
 
 
@@ -35,12 +36,12 @@ class ArtifactoryCache(Cache):
     def ssl(self) -> bool:
         return self._ssl
 
-    def exists(self, package: Package):
+    def exists(self, package: Cachable):
         path = ArtifactoryPath(join(self.path, self.get_package_path(package)),
                                auth=(self.username, self.password))
         return path.exists()
 
-    def get_package_path(self, package: Package):
+    def get_package_path(self, package: Cachable):
         return join(self.username, package.name, package.vsn, self.erlang_version)
 
     def add_package(self, package: Package, rewrite=True) -> bool:
@@ -50,14 +51,15 @@ class ArtifactoryCache(Cache):
         path = ArtifactoryPath(join(self.path, self.get_package_path(package)),
                                auth=(self.username, self.password))
         path.mkdir(exist_ok=True)
-        coon_package = join(package.config.path, package.name + '.cp')
+        coon_package = join(package.path, package.name + '.cp')
         path.deploy_file(coon_package)
         return True
 
-    def fetch_package(self, package: Package) -> bool:
-        path = ArtifactoryPath(join(self.path, self.get_package_path(package), package.name + '.cp'),
+    def fetch_package(self, dep: Cachable) -> Package:
+        path = ArtifactoryPath(join(self.path, self.get_package_path(dep), dep.name + '.cp'),
                                auth=(self.username, self.password))
+        write_path = join(self.temp_dir, dep.name + '.cp')
         with path.open() as fd:
-            with open(join(self.temp_dir, package.name + '.cp'), 'wb') as out:
+            with open(write_path, 'wb') as out:
                 out.write(fd.read())
-        return True
+        return Package.from_package(write_path, dep.url)

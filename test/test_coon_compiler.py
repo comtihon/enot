@@ -43,9 +43,8 @@ class CompileTests(TestClass):
             test() -> do_smth(1).
             do_smth(A) -> A + 1.
             ''')
-        config = CoonConfig(self.test_dir)
-        config.init_from_dict({'name': 'test'})
-        package = Package(config=config)
+        config = CoonConfig({'name': 'test'})
+        package = Package(self.test_dir, config, None)
         compiler = CoonCompiler(package)
         self.assertEqual(True, compiler.compile())
         self.assertEqual(True, os.path.exists(join(self.ebin_dir, 'proper.beam')))
@@ -64,9 +63,8 @@ class CompileTests(TestClass):
             test() -> syntax error here.
             do_smth(A) -> A + 1.
             ''')
-        config = CoonConfig(self.test_dir)
-        config.init_from_dict({'name': 'test'})
-        package = Package(config=config)
+        config = CoonConfig({'name': 'test'})
+        package = Package(self.test_dir, config, None)
         compiler = CoonCompiler(package)
         self.assertEqual(False, compiler.compile())
         self.assertEqual(False, os.path.exists(join(self.ebin_dir, 'improper.beam')))
@@ -110,7 +108,7 @@ class CompileTests(TestClass):
         self.assertEqual(True, 'proper.beam' in ls)
         self.assertEqual(True, 'proper.app' in ls)
         self.assertEqual(2, len(ls))
-        (name, vsn, deps) = parse_app_config(self.ebin_dir, '.app')
+        (name, vsn, deps, _) = parse_app_config(self.ebin_dir, '.app')
         self.assertEqual('proper', name)
         self.assertEqual('1.0.0', vsn)
         self.assertEqual(deps, ['kernel', 'stdlib', 'test_dep'])

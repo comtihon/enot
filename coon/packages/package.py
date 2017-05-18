@@ -3,27 +3,49 @@ import tarfile
 from os.path import join
 
 import os
-from coon.packages.config import config_factory
 
+from coon.packages.application_config import AppConfig
+from coon.packages.cachable import Cachable
+from coon.packages.config import config_factory
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig
-from coon.packages.config.stub_config import StubConfig
 from coon.utils.file_utils import tar
 
 
-class Package:
-    def __init__(self, config=None, url=None):
-        self._url = url
+class Package(Cachable):
+    def __init__(self, path: str, config: ConfigFile, app_config: AppConfig or None, url=None):
+        self._url = url  # TODO should take url from local repo if None. (Should do it only if adding to local cache).
         self._config = config
-        self.__fill_deps()
+        self._app_config = app_config
+        self._path = path
+        self._has_nifs = (os.path.exists(join(path, 'c_src')) or
+                          os.path.isfile(join(path, 'priv', self.name + '.so')))
 
     @property
+    def name(self) -> str:
+        if self.app_config:
+            return self.app_config.name
+        return self.config.name
+
+    @property  # TODO may be move url to config or app_config. In case of coon project?
     def url(self) -> str:  # git url
         return self._url
 
     @property
     def vsn(self) -> str:  # package version from configuration.
-        return self.config.vsn
+        return self.config.conf_vsn
+
+    @property
+    def path(self) -> str:  # packages path
+        return self._path
+
+    @path.setter
+    def path(self, path):
+        self._path = path
+
+    @property
+    def app_config(self) -> AppConfig or None:  # .app.src or .app
+        return self._app_config
 
     @property
     def config(self) -> ConfigFile:  # ConfigFile
@@ -31,7 +53,7 @@ class Package:
 
     @property
     def deps(self) -> dict:  # package's deps.
-        return self._deps
+        return self.config.deps
 
     @property
     def std_apps(self) -> list:  # standard erlang apps. Used in app.src templates
@@ -39,46 +61,54 @@ class Package:
 
     @property
     def apps(self) -> list:  # appliations, which should be run before this app
-        return list(set(self.config.applications + list(self.deps.keys())))
+        apps = list(self.deps.keys())
+        if self.app_config:
+            apps += self.app_config.applications
+        return list(set(apps))
 
-    # TODO is name enough unique?
+    # package path contains c_src folder or priv/<project_name>.so (in case of local cache without c_src)
     @property
-    def name(self):
-        return self.config.name
+    def has_nifs(self) -> bool:
+        return self._has_nifs
 
-    def fill_from_path(self, path):
-        self._config = config_factory.upgrade_conf(path, self.config)
-        self.__fill_deps()
-
-    @classmethod
+    @classmethod  # TODO url is not set here! (is set only when Dep -> Package during fetch)
     def from_path(cls, path: str):
         config = config_factory.read_project(path)
-        return cls(config=config)
+        app_config = AppConfig.from_path(path)
+        return cls(path, config, app_config)
 
+    # is called when dep is fetch by cache.
     @classmethod
-    def from_package(cls, path: str):
-        package_name = path.split('/')[-1:]
+    def from_cache(cls, path: str, dep: Cachable):
+        config = config_factory.read_project(path, vsn=dep.vsn)
+        app_config = AppConfig.from_path(path)
+        return cls(path, config, app_config, url=dep.url)
+
+    @classmethod  # TODO url is not set here!
+    def from_package(cls, path: str, url=None):
+        [package_name] = path.split('/')[-1:]
         with tarfile.open(path) as pack:
-            config = CoonConfig(path)
-            f = pack.extractfile(package_name)
-            conf_json = f.read()
-            config.init_from_json(conf_json)
-        return cls(config=config)
-
-    @classmethod
-    def from_deps(cls, name, dep):
-        (url, vsn) = dep
-        config = StubConfig(name, vsn)
-        return cls(url=url, config=config)
+            config = CoonConfig.from_package(pack)
+            names = pack.getnames()
+            conf_app_src = package_name + '.app.src'
+            conf_app = package_name + '.app'
+            if conf_app_src in names:
+                app_config = AppConfig.from_package(conf_app_src, pack)
+            elif conf_app in names:
+                app_config = AppConfig.from_package(conf_app, pack, compose=False)
+            else:
+                app_config = None
+            # TODO get has_nifs from tar (because in constructor has nifs will be False)
+        return cls(path, config, app_config, url=url)
 
     def export(self):
-        return {'name': self.config.name,
+        return {'name': self.name,
                 'url': self.url,
                 'vsn': self.vsn,
                 'deps': [dep.export() for _, dep in self.deps.items()]}
 
     def generate_package(self):
-        pack_dir = self.config.path
+        pack_dir = self.path
         exported = self.export()
         config = join(pack_dir, 'coonfig.json')
         if not os.path.isfile(config):
@@ -98,13 +128,6 @@ class Package:
 
     def list_deps(self) -> list():
         return self.deps.values()
-
-    def __fill_deps(self):
-        self._deps = {}
-        if self.config:
-            for name, dep in self.config.read_config().items():
-                print(name + ' ' + str(dep))
-                self.deps[name] = Package.from_deps(name, dep)
 
 
 def add_if_exist(src_dir, dir_to_add, dirs):

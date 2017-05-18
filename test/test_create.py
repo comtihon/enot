@@ -20,29 +20,16 @@ class CreateTests(TestClass):
     def __init__(self, method_name):
         super().__init__('create_tests', method_name)
 
-    @property
-    def global_config(self):
-        return {'temp_dir': self.tmp_dir,
-                'compiler': 'coon',
-                'cache': [
-                    {
-                        'name': 'local_cache',
-                        'type': 'local',
-                        'url': 'file://' + self.cache_dir
-                    }]}
-
     def test_create(self):
         coon.__main__.create(self.test_dir, {'<name>': 'test_project'})
         project_dir = join(self.test_dir, 'test_project')
         src_dir = join(project_dir, 'src')
         self.assertEqual(True, os.path.exists(project_dir))  # project dir was created
         self.assertEqual(True, os.path.exists(src_dir))  # src dir was created
-        with open(join(project_dir, 'coonfig.json')) as config:
-            file = config.read()
-        config = CoonConfig(project_dir)
-        self.assertEqual({}, config.init_from_json(file))  # no deps
+        config = CoonConfig.from_path(project_dir)
+        self.assertEqual({}, config.deps)  # no deps
         self.assertEqual('test_project', config.name)  # name was set and parsed properly
-        self.assertEqual('0.0.1', config.vsn)  # version was set and parsed properly
+        self.assertEqual('0.0.1', config.conf_vsn)  # version was set and parsed properly
 
     @patch('coon.global_properties.ensure_conf_file')
     def test_compile_created(self, mock_conf):

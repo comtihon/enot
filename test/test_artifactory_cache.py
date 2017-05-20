@@ -8,6 +8,7 @@ from mock import patch
 from coon.__main__ import create, package
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
+from coon.packages.dep import Dep
 from test.abs_test_class import TestClass
 
 
@@ -31,7 +32,7 @@ class ArtifactoryTests(TestClass):
     @property
     def global_config(self):
         return {'temp_dir': self.tmp_dir,
-                'compiler': 'coon',
+                'compiler': self.compiler,
                 'cache': [
                     {
                         'name': 'local_cache',
@@ -59,7 +60,7 @@ class ArtifactoryTests(TestClass):
         package(pack_path)
         builder = Builder.init_from_path(pack_path)
         builder.system_config.cache.add_package(pack, 'artifactory-local', False, False)
-        exists = ArtifactoryTests.check_exists(builder.system_config.cache.caches, pack)
+        exists = ArtifactoryTests.check_exists(builder.system_config.cache.remote_caches, pack)
         self.assertEqual(True, exists)
 
     # check if not exists, add package, check if exists
@@ -69,12 +70,12 @@ class ArtifactoryTests(TestClass):
         pack_path = join(self.test_dir, 'test_project')
         pack = Package.from_path(pack_path)
         builder = Builder.init_from_path(pack_path)
-        exists = ArtifactoryTests.check_exists(builder.system_config.cache.caches, pack)
+        exists = ArtifactoryTests.check_exists(builder.system_config.cache.remote_caches, pack)
         self.assertEqual(False, exists)
         package(pack_path)
         self.assertEqual(True, os.path.isfile(join(pack_path, 'test_project.cp')))
         builder.system_config.cache.add_package(pack, 'artifactory-local', False, False)
-        exists = ArtifactoryTests.check_exists(builder.system_config.cache.caches, pack)
+        exists = ArtifactoryTests.check_exists(builder.system_config.cache.remote_caches, pack)
         self.assertEqual(True, exists)
 
     # download package from remote cache, add to local
@@ -82,13 +83,12 @@ class ArtifactoryTests(TestClass):
     def test_simple_downloading(self, mock_conf):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_project')
-        pack = Package.from_deps('test_project', ('git://github.com/comtihon/test_project', '0.0.1'))
-        pack.fill_from_path(pack_path)
+        pack = Package.from_cache(pack_path, Dep('test_project', '0.0.1', 'git://github.com/comtihon/test_project'))
         package(pack_path)
         builder = Builder.init_from_path(pack_path)
         builder.system_config.cache.add_package(pack, 'artifactory-local', False, False)
         self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack))
-        artifactory_cache = builder.system_config.cache.caches['artifactory-local']
+        artifactory_cache = builder.system_config.cache.remote_caches['artifactory-local']
         artifactory_cache.fetch_package(pack)
         self.assertEqual(True, os.path.isfile(join(self.tmp_dir, 'test_project.cp')))
         builder.system_config.cache.add_fetched(artifactory_cache, pack)
@@ -107,9 +107,9 @@ class ArtifactoryTests(TestClass):
             path.rmdir()
 
     @staticmethod
-    def check_exists(caches: dict, package: Package):
+    def check_exists(caches: dict, pack: Package):
         for cache in caches.values():
-            if cache.exists(package):
+            if cache.exists(pack):
                 return True
         return False
 

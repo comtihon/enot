@@ -17,23 +17,23 @@ class CCompiler(AbstractCompiler):
 
     @property
     def output_path(self) -> str:
-        return join(self.config.path, 'priv')
+        return join(self.package.path, 'priv')
 
     @property
     def src_path(self) -> str:
-        return join(self.config.path, 'c_src')
+        return join(self.package.path, 'c_src')
 
     def compile(self) -> bool:
         ensure_dir(self.output_path)
         ensure_makefile(self.src_path)
         env_vars = dict(os.environ)
-        for var in self.config.c_build_vars:
+        for var in self.package.config.c_build_vars:
             for k, v in var.items():
                 env_vars[k] = v
         p = subprocess.Popen([self.executable, '-C', 'c_src'],
                              stdout=PIPE,
                              stderr=PIPE,
-                             cwd=self.config.path,
+                             cwd=self.package.path,
                              env=env_vars)
         if p.wait() != 0:
             print(self.project_name + ' compilation failed: ')

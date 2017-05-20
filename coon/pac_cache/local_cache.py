@@ -2,12 +2,13 @@ import shutil
 import stat
 from os.path import join
 
-import coon
 import os
 from git import Repo
 from pkg_resources import Requirement, resource_filename
 
+import coon
 from coon.pac_cache.cache import Cache
+from coon.packages.cachable import Cachable
 from coon.packages.package import Package
 from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file, list_dir
 from coon.utils.file_utils import remove_dir
@@ -27,7 +28,7 @@ class LocalCache(Cache):
     def tool_dir(self):
         return join(self.path, 'tool')
 
-    def exists(self, package: Package) -> bool:
+    def exists(self, package: Cachable) -> bool:
         print('check ' + self.path + ' ' + self.get_package_path(package))
         return if_dir_exists(self.path, self.get_package_path(package)) is not None
 
@@ -35,34 +36,32 @@ class LocalCache(Cache):
         return os.path.exists(join(self.tool_dir, toolname))
 
     # clone git repo to tmp, make package to scan and update it's config
-    def fetch_package(self, package: Package) -> str:
-        temp_path = join(self.temp_dir, package.name)
+    def fetch_package(self, dep: Cachable) -> Package:
+        temp_path = join(self.temp_dir, dep.name)
         print('fetch ' + temp_path)
         remove_dir(temp_path)
-        repo = Repo.clone_from(package.url, temp_path)
+        repo = Repo.clone_from(dep.url, temp_path)
         if repo.bare:
-            raise RuntimeError('Empty repo ' + package.url)
+            raise RuntimeError('Empty repo ' + dep.url)
         git = repo.git
-        git.checkout(package.vsn)
-        repo.create_head(package.vsn)
-        package.fill_from_path(temp_path)
-        return temp_path
+        git.checkout(dep.vsn)
+        repo.create_head(dep.vsn)
+        return Package.from_cache(temp_path, dep)
 
-    # add built package to local cache
+    # add built package to local cache, update its path
     # TODO rebar3 built packages output in _build/...
     def add_package(self, package: Package, rewrite=False) -> bool:
         full_dir = join(self.path, self.get_package_path(package))
         ensure_dir(full_dir)
         print('add ' + package.name)
-        path = package.config.path
+        path = package.path
         LocalCache.__copy_data(rewrite, full_dir, path, 'ebin')
         LocalCache.__copy_include(rewrite, full_dir, path)
         if package.config.with_source:
             LocalCache.__copy_data(rewrite, full_dir, path, 'src')
-        if package.config.with_source and package.config.has_nifs:
+        if package.config.with_source and package.has_nifs:
             LocalCache.__copy_data(rewrite, full_dir, path, 'c_src')
-        # TODO config from cache always have has_nifs false.
-        if package.config.has_nifs:
+        if package.has_nifs:
             LocalCache.__copy_data(rewrite, full_dir, path, 'priv')
         coon_package = join(path, package.name + '.cp')
         if not os.path.isfile(coon_package):
@@ -73,6 +72,7 @@ class LocalCache(Cache):
         resource = resource_filename(Requirement.parse(coon.APPNAME), 'coon/resources/EmptyMakefile')
         print('copy ' + resource + ' to ' + join(full_dir, 'Makefile'))
         copy_file(resource, join(full_dir, 'Makefile'))
+        package.path = full_dir  # update package's dir to point to cache
         return True
 
     def add_tool(self, toolname: str, toolpath: str):
@@ -83,7 +83,7 @@ class LocalCache(Cache):
         os.chmod(tool_dst, st.st_mode | stat.S_IEXEC)
 
     # link package from local cache to project
-    def link_package(self, package: Package, dest_path: str):
+    def link_package(self, package: Cachable, dest_path: str):
         if not dest_path:
             dest_path = os.getcwd()
         cache_path = join(self.path, self.get_package_path(package))
@@ -96,7 +96,7 @@ class LocalCache(Cache):
 
     def link_tool(self, package: Package, toolname: str):
         cache_path = join(self.tool_dir, toolname)
-        link_if_needed(cache_path, join(package.config.path, toolname))
+        link_if_needed(cache_path, join(package.path, toolname))
 
     # TODO relinking deps on vsn switching
     @staticmethod

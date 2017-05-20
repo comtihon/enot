@@ -6,8 +6,9 @@ from os.path import join
 
 from enum import Enum
 
-from coon.packages.package import Package
+from coon.packages.cachable import Cachable
 from coon.utils.file_utils import ensure_empty, copy_file
+from coon.packages.package import Package
 
 
 class CacheType(Enum):
@@ -40,27 +41,30 @@ class Cache(metaclass=ABCMeta):
         return self._erlang_version
 
     @abstractmethod
-    def exists(self, package: Package) -> bool:
+    def exists(self, package: Cachable) -> bool:
         pass
 
     @abstractmethod
-    def fetch_package(self, package: Package) -> bool:  # fetch package to system temp dir
+    def fetch_package(self, package: Cachable) -> Package:  # fetch package to system temp dir
         pass
 
     @abstractmethod
     def add_package(self, package: Package, rewrite=True) -> bool:  # add package to cache
         pass
 
-    def unpackage(self, package: Package):
-        pack_dir = join(self.temp_dir, package.name)
-        coonpack = pack_dir + '.cp'
+    # Take cp package archived file from package, extract it to temp dir
+    #  and update package's path to point to extracted dir
+    def unpackage(self, package: Package):  # TODO move me to package? use current dir + <something> instead of temp
+        unpack_dir = join(self.temp_dir, package.name)
+        coonpack = join(package.path, package.name + '.cp')
         ensure_empty(join(self.temp_dir, package.name))
+        print('search ' + coonpack)
         with tarfile.open(coonpack) as pack:
-            pack.extractall(pack_dir)
-        copy_file(coonpack, join(pack_dir, package.name + '.cp'))
-        package.fill_from_path(pack_dir)
+            pack.extractall(unpack_dir)
+        package.path = unpack_dir  # update path pointer
+        copy_file(coonpack, join(unpack_dir, package.name + '.cp'))
 
-    def get_package_path(self, package: Package):
+    def get_package_path(self, package: Cachable):
         namespace = package.url.split('/')[-2]
         return join(namespace, package.name, package.vsn, self.erlang_version)
 

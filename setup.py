@@ -15,6 +15,9 @@ def get_requirements() -> list:
         if dep == 'enum34':  # drop enum34 if on python 3.4+
             if sys.version_info[0] == 3 and sys.version_info[1] > 4:
                 continue
+        if dep == 'pathlib':  # drop pathlib if on python 3.4+
+            if sys.version_info[0] == 3 and sys.version_info[1] > 4:
+                continue
         result.append(dep)
     return result
 

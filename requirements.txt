@@ -9,3 +9,4 @@ mock
 pytest
 enum34
 artifactory
+pathlib

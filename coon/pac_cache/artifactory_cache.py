@@ -50,7 +50,8 @@ class ArtifactoryCache(Cache):
         print('Add ' + package.name + ' to ' + self.name)
         path = ArtifactoryPath(join(self.path, self.get_package_path(package)),
                                auth=(self.username, self.password))
-        path.mkdir(exist_ok=True)
+        if not path.exists():
+            path.mkdir()  # exist_ok doesn't work there on python3.2-3.5
         coon_package = join(package.path, package.name + '.cp')
         path.deploy_file(coon_package)
         return True

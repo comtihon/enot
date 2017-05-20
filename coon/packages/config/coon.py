@@ -30,7 +30,7 @@ class CoonConfig(ConfigFile):
     def from_package(cls, package: TarFile, vsn=None) -> 'CoonConfig':
         f = package.extractfile('coonfig.json')
         content = f.read()
-        return cls(json.loads(content), vsn)
+        return cls(json.loads(content.decode('utf-8')), vsn)
 
     @property
     def url(self):

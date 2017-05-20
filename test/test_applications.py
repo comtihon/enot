@@ -74,8 +74,14 @@ class ApplicationsTests(TestClass):
                                        'url': "test_url",
                                        'vsn': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
-        self.assertEqual(['test_dep1', 'test_dep3'], list(package.deps.keys()))
-        self.assertEqual(['test_dep1', 'test_dep2'], package.app_config.applications)
+        package_deps = list(package.deps.keys())
+        self.assertEqual(2, len(package_deps))
+        self.assertEqual(True, 'test_dep1' in package_deps)
+        self.assertEqual(True, 'test_dep3' in package_deps)
+        applications = package.app_config.applications
+        self.assertEqual(2, len(package_deps))
+        self.assertEqual(True, 'test_dep1' in applications)
+        self.assertEqual(True, 'test_dep2' in applications)
         apps = package.apps
         self.assertEqual(3, len(apps))  # test_dep1, test_dep2, test_dep3
         self.assertEqual(True, 'test_dep1' in apps)

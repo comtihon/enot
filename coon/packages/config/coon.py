@@ -16,6 +16,7 @@ class CoonConfig(ConfigFile):
         self._drop_unknown = config.get('drop_unknown_deps', True)
         self._with_source = config.get('with_source', True)
         self._conf_vsn = config.get('version', None)
+        self._url = config.get('url', None)
         self.__parse_prebuild(config)
         self.__parse_build_vars(config)
         self.__parse_deps(config.get('deps', {}))
@@ -23,14 +24,17 @@ class CoonConfig(ConfigFile):
     @classmethod
     def from_path(cls, path: str, vsn=None) -> 'CoonConfig':
         content = read_file(join(path, 'coonfig.json'))
-        return cls(content, vsn)
+        return cls(json.loads(content), vsn)
 
     @classmethod
     def from_package(cls, package: TarFile, vsn=None) -> 'CoonConfig':
         f = package.extractfile('coonfig.json')
         content = f.read()
-        parsed = json.loads(content)
-        return cls(parsed, vsn)
+        return cls(json.loads(content), vsn)
+
+    @property
+    def url(self):
+        return self._url
 
     def need_coonsify(self):
         return False

@@ -14,7 +14,7 @@ from coon.utils.file_utils import tar
 
 class Package(Cachable):
     def __init__(self, path: str, config: ConfigFile, app_config: AppConfig or None, url=None):
-        self._url = url  # TODO should take url from local repo if None. (Should do it only if adding to local cache).
+        self.__set_url(config, url)
         self._config = config
         self._app_config = app_config
         self._path = path
@@ -72,10 +72,10 @@ class Package(Cachable):
         return self._has_nifs
 
     @classmethod  # TODO url is not set here! (is set only when Dep -> Package during fetch)
-    def from_path(cls, path: str):
+    def from_path(cls, path: str, url=None):
         config = config_factory.read_project(path)
         app_config = AppConfig.from_path(path)
-        return cls(path, config, app_config)
+        return cls(path, config, app_config, url)
 
     # is called when dep is fetch by cache.
     @classmethod
@@ -86,7 +86,9 @@ class Package(Cachable):
 
     @classmethod  # TODO url is not set here!
     def from_package(cls, path: str, url=None):
-        [package_name] = path.split('/')[-1:]
+        paths = path.split('/')
+        package_name = paths[len(paths) - 1]
+        project_path = '/'.join(paths[:-1])
         with tarfile.open(path) as pack:
             config = CoonConfig.from_package(pack)
             names = pack.getnames()
@@ -98,14 +100,17 @@ class Package(Cachable):
                 app_config = AppConfig.from_package(conf_app, pack, compose=False)
             else:
                 app_config = None
-            # TODO get has_nifs from tar (because in constructor has nifs will be False)
-        return cls(path, config, app_config, url=url)
+                # TODO get has_nifs from tar (because in constructor has nifs will be False)
+        return cls(project_path, config, app_config, url=url)
 
-    def export(self):
-        return {'name': self.name,
-                'url': self.url,
-                'vsn': self.vsn,
-                'deps': [dep.export() for _, dep in self.deps.items()]}
+    def export(self) -> dict:
+        export = {'name': self.name,
+                  'deps': [dep.export() for _, dep in self.deps.items()]}
+        if self.url is not None:
+            export['url'] = self.url
+        if self.vsn is not None:
+            export['version'] = self.vsn
+        return export
 
     def generate_package(self):
         pack_dir = self.path
@@ -128,6 +133,13 @@ class Package(Cachable):
 
     def list_deps(self) -> list():
         return self.deps.values()
+
+    # TODO should take url from local repo if None. (Should do it only if adding to local cache).
+    def __set_url(self, config: ConfigFile, url: str or None):
+        if url is not None:
+            self._url = url
+        elif isinstance(config, CoonConfig):
+            self._url = config.url
 
 
 def add_if_exist(src_dir, dir_to_add, dirs):

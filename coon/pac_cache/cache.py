@@ -52,14 +52,17 @@ class Cache(metaclass=ABCMeta):
     def add_package(self, package: Package, rewrite=True) -> bool:  # add package to cache
         pass
 
-    def unpackage(self, package: Cachable) -> Package:
-        pack_dir = join(self.temp_dir, package.name)
-        coonpack = pack_dir + '.cp'
+    # Take cp package archived file from package, extract it to temp dir
+    #  and update package's path to point to extracted dir
+    def unpackage(self, package: Package):  # TODO move me to package? use current dir + <something> instead of temp
+        unpack_dir = join(self.temp_dir, package.name)
+        coonpack = join(package.path, package.name + '.cp')
         ensure_empty(join(self.temp_dir, package.name))
+        print('search ' + coonpack)
         with tarfile.open(coonpack) as pack:
-            pack.extractall(pack_dir)
-        copy_file(coonpack, join(pack_dir, package.name + '.cp'))
-        return Package.from_cache(pack_dir, package)
+            pack.extractall(unpack_dir)
+        package.path = unpack_dir  # update path pointer
+        copy_file(coonpack, join(unpack_dir, package.name + '.cp'))
 
     def get_package_path(self, package: Cachable):
         namespace = package.url.split('/')[-2]

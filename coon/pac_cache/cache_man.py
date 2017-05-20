@@ -4,8 +4,8 @@ from coon.compiler.c_compiler import CCompiler
 from coon.pac_cache import cache_factory
 from coon.pac_cache.cache import CacheType, Cache
 from coon.pac_cache.local_cache import LocalCache
+from coon.packages.cachable import Cachable
 from coon.packages.package import Package
-from packages.cachable import Cachable
 
 
 class CacheMan:
@@ -39,9 +39,10 @@ class CacheMan:
             path = join(self.local_cache.path, self.local_cache.get_package_path(dep))
             return Package.from_cache(path, dep)
         for cache in self.remote_caches.values():
-            if cache.exists(dep):   # remote cache has this package
-                package = cache.fetch_package(dep)
-                return self.add_fetched(cache, package)
+            if cache.exists(dep):  # remote cache has this package
+                package = cache.fetch_package(dep)  # dep -> package
+                self.add_fetched(cache, package)
+                return package
         package = self.local_cache.fetch_package(dep)
         return package
 
@@ -71,7 +72,8 @@ class CacheMan:
                 self.__check_all_deps(package)
             result = self.remote_caches[remote].add_package(package, rewrite)
             if recurse and result:
-                self.__add_all_deps(self.remote_caches[remote], package)  # TODO no package in local cache. Need to create it
+                self.__add_all_deps(self.remote_caches[remote],
+                                    package)  # TODO no package in local cache. Need to create it
             return result
         else:
             raise RuntimeError('Cache not found: ' + remote)
@@ -83,7 +85,6 @@ class CacheMan:
             if not CCompiler(package).compile():
                 raise RuntimeError(package.name + ' native compilation error.')
         self.local_cache.add_package(package)
-        return package
 
     # Fetch all deps (if they are not already fetched to local cache)
     def __fetch_all_deps(self, cache, package: Package):  # TODO where to use it?

@@ -2,17 +2,17 @@ from abc import ABCMeta, abstractmethod
 
 
 class Cachable(metaclass=ABCMeta):
-    @abstractmethod
     @property
+    @abstractmethod
     def name(self):
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def url(self):
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def vsn(self):
         pass

@@ -9,7 +9,7 @@ from coon.tool.rebar3 import Rebar3Tool
 from coon.tool.relxtool import RelxTool
 from coon.tool.tool import AbstractTool
 from coon.utils.file_utils import get_cmd
-from packages.cachable import Cachable
+from coon.packages.cachable import Cachable
 
 
 class Builder:

@@ -5,7 +5,7 @@ from erl_terms.erl_terms_core import decode
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
 from coon.utils.file_utils import read_file
-from packages.dep import Dep
+from coon.packages.dep import Dep
 
 
 class RebarConfig(ConfigFile):

@@ -27,9 +27,7 @@ class CCompileTests(TestClass):
     def output_dir(self):
         return join(self.test_dir, 'priv')
 
-    @patch.object(CoonConfig, 'read_config')
-    def test_proper_compilation(self, mock_config):
-        mock_config.return_value = {}
+    def test_proper_compilation(self):
         ensure_dir(self.src_dir)
         with open(join(self.src_dir, 'proper.c'), 'w') as w:
             w.write('''
@@ -53,9 +51,7 @@ class CCompileTests(TestClass):
         self.assertEqual(True, compiler.compile())
         self.assertEqual(True, os.path.exists(join(self.output_dir, self.test_name + '.so')))
 
-    @patch.object(CoonConfig, 'read_config')
-    def test_error_compilation(self, mock_config):
-        mock_config.return_value = {}
+    def test_error_compilation(self):
         ensure_dir(self.src_dir)
         with open(join(self.src_dir, 'proper.c'), 'w') as w:
             w.write('''

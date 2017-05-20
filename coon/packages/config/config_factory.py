@@ -1,4 +1,4 @@
-from os.path import isfile
+from os.path import isfile, join
 
 from os import listdir
 
@@ -21,4 +21,4 @@ def read_project(path: str, vsn=None) -> ConfigFile:
 
 def get_files(path: str) -> list:
     all_objects = listdir(path)
-    return [d for d in all_objects if isfile(d)]
+    return [d for d in all_objects if isfile(join(path, d))]

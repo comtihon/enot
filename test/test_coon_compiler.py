@@ -31,9 +31,7 @@ class CompileTests(TestClass):
 
     # Proper erlang file is compiled
     @patch.object(CoonCompiler, '_CoonCompiler__write_app_file')
-    @patch.object(CoonConfig, 'read_config')
-    def test_proper_compilation(self, mock_config, mock_compiler):
-        mock_config.return_value = {}
+    def test_proper_compilation(self, mock_compiler):
         mock_compiler.return_value = True
         ensure_dir(self.src_dir)
         with open(join(self.src_dir, 'proper.erl'), 'w') as w:
@@ -51,9 +49,7 @@ class CompileTests(TestClass):
 
     # Erlang file with syntax error is not compiled
     @patch.object(CoonCompiler, '_CoonCompiler__write_app_file')
-    @patch.object(CoonConfig, 'read_config')
-    def test_error_compilation(self, mock_config, mock_compiler):
-        mock_config.return_value = {}
+    def test_error_compilation(self, mock_compiler):
         mock_compiler.return_value = True
         ensure_dir(self.src_dir)
         with open(join(self.src_dir, 'improper.erl'), 'w') as w:

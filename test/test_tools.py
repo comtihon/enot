@@ -45,7 +45,7 @@ class ToolsTests(TestClass):
         coon.__main__.create(self.test_dir, {'<name>': 'test'})
         project_dir = join(self.test_dir, 'test')
         builder = Builder.init_from_path(project_dir)
-        self.assertEqual(True, os.path.islink(join(self.test_dir, 'rebar')))  # linked to current project
+        self.assertEqual(True, os.path.islink(join(project_dir, 'rebar')))  # linked to current project
         self.assertEqual(True, builder.system_config.cache.local_cache.tool_exists('rebar'))  # and available in cache
 
     # There is no tool in the system, so it will be downloaded, added to cache and linked to current project
@@ -62,7 +62,7 @@ class ToolsTests(TestClass):
         builder = Builder.init_from_path(project_dir)
         self.assertEqual(True, os.path.exists(join(self.tmp_dir, 'rebar')))  # tool should be downloaded to tempdir
         self.assertEqual(True, os.path.exists(join(self.cache_dir, 'tool', 'rebar')))  # added to cache
-        self.assertEqual(True, os.path.islink(join(self.test_dir, 'rebar')))  # linked to current project
+        self.assertEqual(True, os.path.islink(join(project_dir, 'rebar')))  # linked to current project
         self.assertEqual(True, builder.system_config.cache.local_cache.tool_exists('rebar'))  # and available in cache
 
 

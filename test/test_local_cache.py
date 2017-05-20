@@ -1,4 +1,6 @@
+import json
 import unittest
+from os import listdir
 from os.path import join
 
 from mock import patch
@@ -24,8 +26,8 @@ class LocalCacheTests(TestClass):
     def test_package_exists(self, mock_conf):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
-        config = config_factory.read_project(pack_path)
-        pack = Package(pack_path, config, None, url='https://github.com/comtihon/test_app')
+        set_url(pack_path, 'https://github.com/comtihon/test_app')
+        pack = Package.from_path(pack_path)
         builder = Builder.init_from_path(pack_path)
         self.assertEqual(False, builder.system_config.cache.exists_local(pack))
         self.assertEqual(True, builder.build())
@@ -37,8 +39,7 @@ class LocalCacheTests(TestClass):
     def test_add_from_package(self, mock_conf):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
-        config = config_factory.read_project(pack_path)
-        pack = Package(pack_path, config, None, url='https://github.com/comtihon/test_app')
+        set_url(pack_path, 'https://github.com/comtihon/test_app')
         builder = Builder.init_from_path(pack_path)
         self.assertEqual(True, builder.build())
         builder.package()
@@ -50,12 +51,20 @@ class LocalCacheTests(TestClass):
         self.assertEqual(False, builder.system_config.cache.exists_local(package))
         # local cache is used here to determine tmp dir
         local_cache = builder.system_config.cache.local_cache
-        self.assertEqual(True, builder.system_config.cache.add_fetched(local_cache, package))
+        builder.system_config.cache.add_fetched(local_cache, package)
         self.assertEqual(True, builder.system_config.cache.exists_local(package))
 
     # Test if test_app can be added to local cache
-    def test_add_from_path(self):
-        self.assertEqual(True, True)
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_add_from_path(self, mock_conf):
+        mock_conf.return_value = self.conf_file
+        pack_path = join(self.test_dir, 'test_app')
+        set_url(pack_path, 'https://github.com/comtihon/test_app')
+        builder = Builder.init_from_path(pack_path)
+        self.assertEqual(True, builder.build())
+        self.assertEqual(False, builder.system_config.cache.exists_local(builder.project))
+        builder.system_config.cache.add_package_local(builder.project)
+        self.assertEqual(True, builder.system_config.cache.exists_local(builder.project))
 
     # Test if test_app can be fetched, compiled and added to local cache
     def test_compile_and_add(self):
@@ -65,6 +74,14 @@ class LocalCacheTests(TestClass):
     def test_add_with_deps(self):
         self.assertEqual(True, True)
 
+
+def set_url(path: str, url: str):
+    fullpath = join(path, 'coonfig.json')
+    with open(fullpath, 'r') as file:
+        conf = json.load(file)
+    conf['url'] = url
+    with open(fullpath, 'w') as file:
+        json.dump(conf, file)
 
 if __name__ == '__main__':
     unittest.main()

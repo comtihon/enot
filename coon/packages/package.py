@@ -3,23 +3,22 @@ import tarfile
 from os.path import join
 
 import os
+from coon.packages.config import config_factory
 
 from coon.packages.application_config import AppConfig
-from coon.packages.cachable import Cachable
-from coon.packages.config import config_factory
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig
+from coon.packages.config.dep_config import DepConfig
 from coon.utils.file_utils import tar
 
 
-class Package(Cachable):
-    def __init__(self, path: str, config: ConfigFile, app_config: AppConfig or None, url=None):
-        self.__set_url(config, url)
+class Package:
+    def __init__(self, path: str, config: ConfigFile or None, app_config: AppConfig or None, has_nifs=False):
         self._config = config
         self._app_config = app_config
         self._path = path
-        self._has_nifs = (os.path.exists(join(path, 'c_src')) or
-                          os.path.isfile(join(path, 'priv', self.name + '.so')))
+        self._has_nifs = has_nifs
+        self.__set_deps(config)
 
     @property
     def name(self) -> str:
@@ -27,13 +26,15 @@ class Package(Cachable):
             return self.app_config.name
         return self.config.name
 
-    @property  # TODO may be move url to config or app_config. In case of coon project?
-    def url(self) -> str:  # git url
-        return self._url
+    @property
+    def url(self) -> str or None:  # git url
+        return self.config.url
 
     @property
-    def vsn(self) -> str:  # package version from configuration.
-        return self.config.conf_vsn
+    def vsn(self) -> str:  # package dependency version
+        if self.config.conf_vsn:  # TODO refactor versions!
+            return self.config.conf_vsn
+        return self.config.dep_vsn
 
     @property
     def path(self) -> str:  # packages path
@@ -52,8 +53,8 @@ class Package(Cachable):
         return self._config
 
     @property
-    def deps(self) -> dict:  # package's deps.
-        return self.config.deps
+    def deps(self) -> list:  # package's deps.
+        return self._deps
 
     @property
     def std_apps(self) -> list:  # standard erlang apps. Used in app.src templates
@@ -61,7 +62,7 @@ class Package(Cachable):
 
     @property
     def apps(self) -> list:  # appliations, which should be run before this app
-        apps = list(self.deps.keys())
+        apps = [dep.name for dep in self.deps]
         if self.app_config:
             apps += self.app_config.applications
         return list(set(apps))
@@ -71,41 +72,51 @@ class Package(Cachable):
     def has_nifs(self) -> bool:
         return self._has_nifs
 
-    @classmethod  # TODO url is not set here! (is set only when Dep -> Package during fetch)
+    @classmethod  # TODO url is not set here!
     def from_path(cls, path: str, url=None):
-        config = config_factory.read_project(path)
+        config = config_factory.read_project(path, url=url)
         app_config = AppConfig.from_path(path)
-        return cls(path, config, app_config, url)
-
-    # is called when dep is fetch by cache.
-    @classmethod
-    def from_cache(cls, path: str, dep: Cachable):
-        config = config_factory.read_project(path, vsn=dep.vsn)
-        app_config = AppConfig.from_path(path)
-        return cls(path, config, app_config, url=dep.url)
+        has_nifs = os.path.exists(join(path, 'c_src'))  # TODO search for .so files in priv?
+        return cls(path, config, app_config, has_nifs)
 
     @classmethod  # TODO url is not set here!
     def from_package(cls, path: str, url=None):
+        package = cls(path, None, None)  # TODO error can be here
+        package.update_from_package(path, url)
+        return package
+
+    @classmethod
+    def from_dep(cls, name, dep):
+        (url, vsn) = dep
+        return cls(None, DepConfig(name, vsn, url), None, False)
+
+    # is called when dep is fetch by cache.
+    def update_from_cache(self, path: str):
+        self._config = config_factory.read_project(path, url=self.url, vsn=self.vsn)  # TODO unify versions!
+        self._app_config = AppConfig.from_path(path)
+        self._path = path
+
+    def update_from_package(self, path: str, url):
         paths = path.split('/')
         package_name = paths[len(paths) - 1]
         project_path = '/'.join(paths[:-1])
         with tarfile.open(path) as pack:
-            config = CoonConfig.from_package(pack)
+            self._config = CoonConfig.from_package(pack, url)
             names = pack.getnames()
             conf_app_src = package_name + '.app.src'
             conf_app = package_name + '.app'
             if conf_app_src in names:
-                app_config = AppConfig.from_package(conf_app_src, pack)
+                self._app_config = AppConfig.from_package(conf_app_src, pack)
             elif conf_app in names:
-                app_config = AppConfig.from_package(conf_app, pack, compose=False)
+                self._app_config = AppConfig.from_package(conf_app, pack, compose=False)
             else:
-                app_config = None
-                # TODO get has_nifs from tar (because in constructor has nifs will be False)
-        return cls(project_path, config, app_config, url=url)
+                self._app_config = None
+            self._has_nifs = 'c_src' in names  # TODO test_me
+        self.path = project_path
 
     def export(self) -> dict:
         export = {'name': self.name,
-                  'deps': [dep.export() for _, dep in self.deps.items()]}
+                  'deps': [dep.export() for dep in self.deps]}
         if self.url is not None:
             export['url'] = self.url
         if self.vsn is not None:
@@ -131,15 +142,12 @@ class Package(Cachable):
         print('create package ' + package_dst)
         tar(pack_dir, dirs_to_add, package_dst)
 
-    def list_deps(self) -> list():
-        return self.deps.values()
-
-    # TODO should take url from local repo if None. (Should do it only if adding to local cache).
-    def __set_url(self, config: ConfigFile, url: str or None):
-        if url is not None:
-            self._url = url
-        elif isinstance(config, CoonConfig):
-            self._url = config.url
+    def __set_deps(self, config: ConfigFile or None):
+        print(config.deps.items())
+        self._deps = []
+        if config:
+            for name, dep in config.deps.items():
+                self._deps.append(Package.from_dep(name, dep))
 
 
 def add_if_exist(src_dir, dir_to_add, dirs):

@@ -14,6 +14,7 @@ def read_file(path: str) -> str:
 
 
 def copy_file(src: str, dst: str):
+    print('copy ' + src + ' to ' + dst)
     copyfile(src, dst)
 
 

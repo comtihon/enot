@@ -31,7 +31,8 @@ class ApplicationsTests(TestClass):
                                        'url': "test_url",
                                        'vsn': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
-        self.assertEqual(['test_dep'], list(package.deps.keys()))  # test_dep in package deps (from package conf)
+        # test_dep in package deps (from package conf)
+        self.assertEqual(['test_dep'], [dep.name for dep in package.deps])
         self.assertEqual(['test_dep'], package.apps)  # test_dep in applications to be inserted in app (from deps)
         self.assertEqual([], package.app_config.applications)  # no applications in app.src
 
@@ -42,7 +43,7 @@ class ApplicationsTests(TestClass):
         with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
             w.write(get_package_conf([]))
         package = Package.from_path(self.test_dir)
-        self.assertEqual([], list(package.deps.keys()))  # no package deps
+        self.assertEqual([], package.deps)  # no package deps
         self.assertEqual(['mnesia'], package.apps)  # mnesia in applications to be inserted in app (from apps)
         self.assertEqual(['mnesia'], package.app_config.applications)  # mnesia in package apps (from app.src conf)
 
@@ -55,7 +56,8 @@ class ApplicationsTests(TestClass):
                                        'url': "test_url",
                                        'vsn': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
-        self.assertEqual(['test_dep'], list(package.deps.keys()))  # test_dep in package deps (from package conf)
+        # test_dep in package deps (from package conf)
+        self.assertEqual(['test_dep'], [dep.name for dep in package.deps])
         self.assertEqual(['mnesia'], package.app_config.applications)  # mnesia in package apps (from app.src conf)
         apps = package.apps
         self.assertEqual(2, len(apps))  # mnesia and test_dep will go to app file
@@ -74,7 +76,7 @@ class ApplicationsTests(TestClass):
                                        'url': "test_url",
                                        'vsn': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
-        package_deps = list(package.deps.keys())
+        package_deps = [dep.name for dep in package.deps]
         self.assertEqual(2, len(package_deps))
         self.assertEqual(True, 'test_dep1' in package_deps)
         self.assertEqual(True, 'test_dep3' in package_deps)

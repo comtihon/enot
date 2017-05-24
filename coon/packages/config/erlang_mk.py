@@ -4,7 +4,6 @@ from os.path import join
 
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
-from coon.packages.dep import Dep
 from coon.utils.file_utils import read_file_lines
 
 
@@ -40,8 +39,8 @@ def get_dep(line):
 
 
 class ErlangMkConfig(ConfigFile):
-    def __init__(self, path: str, vsn: str):
-        super().__init__(vsn=vsn)
+    def __init__(self, path: str, vsn=None, url=None):
+        super().__init__(vsn=vsn, url=url)
         self._path = path
         makefile = join(path, 'Makefile')
         content = parse_makefile(makefile)
@@ -59,7 +58,7 @@ class ErlangMkConfig(ConfigFile):
                 depname = 'dep_' + dep
                 if depname in content:
                     url, tag = get_dep(content[depname])
-                    self.deps[dep] = Dep(dep, url, tag)
+                    self.deps[dep] = (url, tag)
                 else:
                     print('Dep ' + depname + ' not specified')
 

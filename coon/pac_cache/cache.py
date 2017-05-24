@@ -6,7 +6,6 @@ from os.path import join
 
 from enum import Enum
 
-from coon.packages.cachable import Cachable
 from coon.utils.file_utils import ensure_empty, copy_file
 from coon.packages.package import Package
 
@@ -41,11 +40,11 @@ class Cache(metaclass=ABCMeta):
         return self._erlang_version
 
     @abstractmethod
-    def exists(self, package: Cachable) -> bool:
+    def exists(self, package: Package) -> bool:
         pass
 
     @abstractmethod
-    def fetch_package(self, package: Cachable) -> Package:  # fetch package to system temp dir
+    def fetch_package(self, package: Package):  # fetch package to system temp dir
         pass
 
     @abstractmethod
@@ -64,7 +63,7 @@ class Cache(metaclass=ABCMeta):
         package.path = unpack_dir  # update path pointer
         copy_file(coonpack, join(unpack_dir, package.name + '.cp'))
 
-    def get_package_path(self, package: Cachable):
+    def get_package_path(self, package: Package):
         namespace = package.url.split('/')[-2]
         return join(namespace, package.name, package.vsn, self.erlang_version)
 

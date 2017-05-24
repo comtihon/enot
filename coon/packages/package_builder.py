@@ -9,7 +9,6 @@ from coon.tool.rebar3 import Rebar3Tool
 from coon.tool.relxtool import RelxTool
 from coon.tool.tool import AbstractTool
 from coon.utils.file_utils import get_cmd
-from coon.packages.cachable import Cachable
 
 
 class Builder:
@@ -58,7 +57,7 @@ class Builder:
 
     # Parse package config, download missing deps to /tmp
     def populate(self):
-        self.__populate_deps(self.project.deps.values())
+        self.__populate_deps(self.project.deps)
 
     def add_package(self, remote: str, rewrite: bool, recurse: bool) -> bool:
         return self.system_config.cache.add_package(self.project, remote, rewrite, recurse)
@@ -76,20 +75,18 @@ class Builder:
     # TODO testme
     # Build all deps, add to cache and link to project
     def __build_deps(self, package: Package, is_subpackage=True):
-        print('check ' + package.name)
+        print('build deps for ' + package.name)
         if is_subpackage and self.system_config.cache.exists_local(package):
             return True
-        for dep in package.list_deps():
-            dep_package = self.__get_package(dep, is_subpackage)
-            if not self.system_config.cache.exists_local(dep_package):
+        for dep in package.deps:
+            if not self.system_config.cache.exists_local(dep):
                 # if package not in cache - build and add to cache
-                if not self.__build_tree(dep_package):
-                    raise RuntimeError('Can\'t built dep ' + dep_package.name)
-                self.system_config.cache.add_package_local(dep_package)
-            self.system_config.cache.link_package(dep_package, package.path)
-            self.__build_deps(dep_package)  # link all dep's deps (build them and add to cache if necessary)
+                if not self.__build_tree(dep):
+                    raise RuntimeError('Can\'t built dep ' + dep.name)
+            self.system_config.cache.link_package(dep, package.path)
+            self.__build_deps(dep)  # link all dep's deps (build them and add to cache if necessary)
 
-    # Build package and it's deps
+    # Build package and it's deps, then add built package to local cache
     def __build_tree(self, package: Package, is_subpackage=True):
         self.__build_deps(package, is_subpackage)  # TODO add an ability to compile deps in parallel
         compiler = get_compiler(self.system_config, package)
@@ -98,14 +95,6 @@ class Builder:
             self.system_config.cache.add_package_local(package)
         return res
 
-    def __get_package(self, dep: Cachable or Package, is_subpackage) -> Package:
-        if not is_subpackage:
-            return dep
-        else:
-            if dep.name in self.packages:
-                return self.packages[dep.name]
-            raise RuntimeError('Loose ' + dep.name + ' while building.')  # This should never happen
-
     # TODO testme
     # TODO lock deps after fetched.
     def __populate_deps(self, level):  # TODO add an ability to operate with deps in parallel
@@ -113,9 +102,9 @@ class Builder:
         for dep in level:
             if dep.name not in self.packages:
                 print('new dep: ' + dep.name)
-                dep_package = self.system_config.cache.populate(dep)  # populated dep becomes package
-                self.packages[dep.name] = dep_package
-                next_level += dep_package.deps.values()
+                self.system_config.cache.populate(dep)  # populated dep becomes package
+                self.packages[dep.name] = dep
+                next_level += dep.deps
             else:
                 pkg_vsn = self.packages[dep.name].vsn
                 if dep.vsn != pkg_vsn:  # Warn only if it is not the same dep

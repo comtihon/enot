@@ -8,7 +8,6 @@ from pkg_resources import Requirement, resource_filename
 
 import coon
 from coon.pac_cache.cache import Cache
-from coon.packages.cachable import Cachable
 from coon.packages.package import Package
 from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file, list_dir
 from coon.utils.file_utils import remove_dir
@@ -28,7 +27,7 @@ class LocalCache(Cache):
     def tool_dir(self):
         return join(self.path, 'tool')
 
-    def exists(self, package: Cachable) -> bool:
+    def exists(self, package: Package) -> bool:
         print('check ' + self.path + ' ' + self.get_package_path(package))
         return if_dir_exists(self.path, self.get_package_path(package)) is not None
 
@@ -36,7 +35,7 @@ class LocalCache(Cache):
         return os.path.exists(join(self.tool_dir, toolname))
 
     # clone git repo to tmp, make package to scan and update it's config
-    def fetch_package(self, dep: Cachable) -> Package:
+    def fetch_package(self, dep: Package):
         temp_path = join(self.temp_dir, dep.name)
         print('fetch ' + temp_path)
         remove_dir(temp_path)
@@ -46,7 +45,7 @@ class LocalCache(Cache):
         git = repo.git
         git.checkout(dep.vsn)
         repo.create_head(dep.vsn)
-        return Package.from_cache(temp_path, dep)
+        dep.update_from_cache(temp_path)
 
     # add built package to local cache, update its path
     # TODO rebar3 built packages output in _build/...
@@ -66,7 +65,7 @@ class LocalCache(Cache):
         coon_package = join(path, package.name + '.cp')
         if not os.path.isfile(coon_package):
             print('generate missing package')
-            package.generate_package()  # TODO package.config.path should be fulldir?
+            package.generate_package()
         copy_file(join(path, 'coonfig.json'), join(full_dir, 'coonfig.json'))
         copy_file(coon_package, join(full_dir, package.name + '.cp'))
         resource = resource_filename(Requirement.parse(coon.APPNAME), 'coon/resources/EmptyMakefile')
@@ -83,7 +82,7 @@ class LocalCache(Cache):
         os.chmod(tool_dst, st.st_mode | stat.S_IEXEC)
 
     # link package from local cache to project
-    def link_package(self, package: Cachable, dest_path: str):
+    def link_package(self, package: Package, dest_path: str):
         if not dest_path:
             dest_path = os.getcwd()
         cache_path = join(self.path, self.get_package_path(package))

@@ -1,10 +1,10 @@
 from os.path import join
 
-from coon.compiler.c_compiler import CCompiler
 from coon.pac_cache import cache_factory
+
+from coon.compiler.c_compiler import CCompiler
 from coon.pac_cache.cache import CacheType, Cache
 from coon.pac_cache.local_cache import LocalCache
-from coon.packages.cachable import Cachable
 from coon.packages.package import Package
 
 
@@ -34,20 +34,20 @@ class CacheMan:
 
     # Populate dep to become a package.
     # Try to find it in local cache, then in remote, finally fetch from git.
-    def populate(self, dep: Cachable) -> Package:
+    def populate(self, dep: Package):
         if dep.url is not None and self.local_cache.exists(dep):  # local cache has this package
             path = join(self.local_cache.path, self.local_cache.get_package_path(dep))
-            return Package.from_cache(path, dep)
+            dep.update_from_cache(path)
+            return
         for cache in self.remote_caches.values():
             if cache.exists(dep):  # remote cache has this package
                 package = cache.fetch_package(dep)  # dep -> package
                 self.add_fetched(cache, package)
-                return package
-        package = self.local_cache.fetch_package(dep)
-        return package
+                return
+        self.local_cache.fetch_package(dep)
 
     # check if local cache contains this dep
-    def exists_local(self, package: Cachable) -> bool:
+    def exists_local(self, package: Package) -> bool:
         if package.url is not None and self.local_cache.exists(package):  # local cache has this package
             return True
         return False
@@ -60,9 +60,9 @@ class CacheMan:
         if self.local_cache:
             self.local_cache.add_package(package)
 
-    def fetch_package(self, package: Cachable) -> Package:
+    def fetch_package(self, package: Package):
         if self.local_cache:
-            return self.local_cache.fetch_package(package)
+            self.local_cache.fetch_package(package)
 
     # Add package to remote cache. If recurse - add all package's deps to remote cache (if they are not there)
     # Package's deps should exist in local cache. It is guaranteed by calling `coon package`
@@ -88,7 +88,7 @@ class CacheMan:
 
     # Fetch all deps (if they are not already fetched to local cache)
     def __fetch_all_deps(self, cache, package: Package):  # TODO where to use it?
-        for name, dep in package.deps.items():
+        for dep in package.deps:
             if not self.local_cache.exists(dep):
                 if cache.exists(dep) and cache.fetch_package(dep):
                     self.add_fetched(cache, dep)
@@ -99,14 +99,14 @@ class CacheMan:
 
     # Check if all deps exist in local cache
     def __check_all_deps(self, package: Package):
-        for name, dep in package.deps.items():
+        for dep in package.deps:
             if not self.local_cache.exists(dep):
                 raise RuntimeError('Dep ' + dep.name + ' not found in local cache. Rerun package.')
             self.__check_all_deps(dep)
 
     # Add all deps to cache
     def __add_all_deps(self, cache: Cache, package: Package):
-        for name, dep in package.deps.items():
+        for dep in package.deps:
             if not cache.exists(dep):
                 # set dep's path - path to package in local cache
                 dep.path = join(self.local_cache.path, self.local_cache.get_package_path(dep))

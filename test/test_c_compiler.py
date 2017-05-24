@@ -4,7 +4,6 @@ from os.path import join
 from subprocess import PIPE
 
 import os
-from mock import patch
 
 from coon.__main__ import create
 from coon.compiler.c_compiler import CCompiler

@@ -14,7 +14,7 @@ def write_coonfig(path, package_config):
 
 
 class ConfigFile(metaclass=ABCMeta):
-    def __init__(self, vsn=None):
+    def __init__(self, vsn=None, url=None):
         self._prebuild = []
         self._build_vars = []
         self._c_build_vars = []
@@ -24,6 +24,7 @@ class ConfigFile(metaclass=ABCMeta):
         self._with_source = True
         self._drop_unknown = True
         self._name = ''
+        self.__set_url(url)
 
     @property
     def name(self) -> str:  # project's name
@@ -42,7 +43,7 @@ class ConfigFile(metaclass=ABCMeta):
         return self._with_source
 
     @property
-    def conf_vsn(self) -> str or None:  # version from config
+    def conf_vsn(self) -> str or None:  # version from config  # TODO move me to application config?
         return self._conf_vsn
 
     @property
@@ -50,7 +51,7 @@ class ConfigFile(metaclass=ABCMeta):
         return self._dep_vsn
 
     @property
-    def deps(self) -> dict:  # deps from config file. Dict of Deps, where keys are their names
+    def deps(self) -> dict:  # deps from config file. Dict of (url, vsn), where keys are their names
         return self._deps
 
     @property
@@ -65,12 +66,20 @@ class ConfigFile(metaclass=ABCMeta):
     def c_build_vars(self) -> list:  # c build vars. list of kv tuples
         return self._c_build_vars
 
+    @property
+    def url(self) -> str:
+        return self._url
+
     @abstractmethod
     def get_compiler(self) -> Compiler:
         pass
 
     def need_coonsify(self):
         return True
+
+    # TODO should take url from local repo if None. (Should do it only if adding to local cache).
+    def __set_url(self, url: str or None):
+        self._url = url
 
     def export(self):
         return {'name': self.name,

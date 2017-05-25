@@ -18,7 +18,7 @@ class Package:
         self._app_config = app_config
         self._path = path
         self._has_nifs = has_nifs
-        self.__set_deps(config)
+        self.__set_deps()
 
     @property
     def name(self) -> str:
@@ -81,9 +81,8 @@ class Package:
 
     @classmethod  # TODO url is not set here!
     def from_package(cls, path: str, url=None):
-        package = cls(path, None, None)  # TODO error can be here
-        package.update_from_package(path, url)
-        return package
+        project_path, has_nifs, config, app_config = do_update_from_package(path, url)
+        return cls(project_path, config, app_config, has_nifs)
 
     @classmethod
     def from_dep(cls, name, dep):
@@ -95,24 +94,14 @@ class Package:
         self._config = config_factory.read_project(path, url=self.url, vsn=self.vsn)  # TODO unify versions!
         self._app_config = AppConfig.from_path(path)
         self._path = path
+        self.__set_deps()
 
     def update_from_package(self, path: str, url):
-        paths = path.split('/')
-        package_name = paths[len(paths) - 1]
-        project_path = '/'.join(paths[:-1])
-        with tarfile.open(path) as pack:
-            self._config = CoonConfig.from_package(pack, url)
-            names = pack.getnames()
-            conf_app_src = package_name + '.app.src'
-            conf_app = package_name + '.app'
-            if conf_app_src in names:
-                self._app_config = AppConfig.from_package(conf_app_src, pack)
-            elif conf_app in names:
-                self._app_config = AppConfig.from_package(conf_app, pack, compose=False)
-            else:
-                self._app_config = None
-            self._has_nifs = 'c_src' in names  # TODO test_me
+        project_path, has_nifs, config, app_config = do_update_from_package(path, url)
         self.path = project_path
+        self._config = config
+        self._app_config = app_config
+        self._has_nifs = has_nifs
 
     def export(self) -> dict:
         export = {'name': self.name,
@@ -142,14 +131,32 @@ class Package:
         print('create package ' + package_dst)
         tar(pack_dir, dirs_to_add, package_dst)
 
-    def __set_deps(self, config: ConfigFile or None):
-        print(config.deps.items())
+    def __set_deps(self):
         self._deps = []
-        if config:
-            for name, dep in config.deps.items():
+        if self.config:
+            for name, dep in self.config.deps.items():
                 self._deps.append(Package.from_dep(name, dep))
 
 
 def add_if_exist(src_dir, dir_to_add, dirs):
     if os.path.exists(join(src_dir, dir_to_add)):
         dirs.append(dir_to_add)
+
+
+def do_update_from_package(path: str, url: str or None) -> (str, bool, ConfigFile, AppConfig or None):
+    paths = path.split('/')
+    package_name = paths[len(paths) - 1]
+    project_path = '/'.join(paths[:-1])
+    with tarfile.open(path) as pack:
+        config = CoonConfig.from_package(pack, url)
+        names = pack.getnames()
+        conf_app_src = package_name + '.app.src'
+        conf_app = package_name + '.app'
+        if conf_app_src in names:
+            app_config = AppConfig.from_package(conf_app_src, pack)
+        elif conf_app in names:
+            app_config = AppConfig.from_package(conf_app, pack, compose=False)
+        else:
+            app_config = None
+        has_nifs = 'c_src' in names
+    return project_path, has_nifs, config, app_config

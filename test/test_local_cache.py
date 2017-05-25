@@ -1,7 +1,6 @@
 import json
 import test
 import unittest
-from os import listdir
 from os.path import join
 
 import os
@@ -16,9 +15,11 @@ from test.abs_test_class import TestClass
 
 
 def mock_fetch_package(dep: Package):
+    print(dep.deps)
     test_dir = test.get_test_dir('local_cache_tests')
     tmp_path = join(os.getcwd(), test_dir, 'tmp')
     dep.update_from_cache(join(tmp_path, dep.name))
+    print(dep.deps)
 
 
 class LocalCacheTests(TestClass):

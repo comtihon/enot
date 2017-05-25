@@ -95,9 +95,8 @@ class Builder:
             self.system_config.cache.add_package_local(package)
         return res
 
-    # TODO testme
     # TODO lock deps after fetched.
-    def __populate_deps(self, level):  # TODO add an ability to operate with deps in parallel
+    def __populate_deps(self, level):  # TODO add an ability to fetc deps in parallel
         next_level = []
         for dep in level:
             if dep.name not in self.packages:

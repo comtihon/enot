@@ -32,7 +32,7 @@ class ArtifactoryCache(Cache):
             return self._api_key
 
     @property
-    def ssl(self) -> bool:
+    def ssl(self) -> bool:  # TODO where does it used?
         return self._ssl
 
     def exists(self, package: Package):

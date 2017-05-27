@@ -154,7 +154,7 @@ class Package:
 
     def __set_deps(self):
         self._deps = []
-        if self.config:
+        if self.config:  # TODO check config.drop_unknown (if not a template)
             for name, dep in self.config.deps.items():
                 self._deps.append(Package.from_dep(name, dep))
 

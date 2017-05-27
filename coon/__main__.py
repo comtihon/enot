@@ -96,7 +96,7 @@ def version(path):
 # Build a release. Will use current rel dir with config or create new, if none is found
 def release(path):
     builder = Builder.init_from_path(path)
-    if not do_build(builder):
+    if not do_build(builder):  # TODO check if project was already built
         return False
     builder.release()
     return True

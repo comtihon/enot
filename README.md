@@ -1,8 +1,8 @@
 # Coon 
 [![Build Status](https://travis-ci.org/comtihon/coon.svg?branch=master)](https://travis-ci.org/comtihon/coon)
-[![PyPI](https://img.shields.io/pypi/v/nine.svg)](https://pypi.python.org/pypi/coon)
-[![PyPI](https://img.shields.io/pypi/pyversions/Django.svg)](https://pypi.python.org/pypi/coon)
-[![PyPI](https://img.shields.io/pypi/wheel/Django.svg)](https://pypi.python.org/pypi/coon)  
+[![PyPI](https://img.shields.io/pypi/v/coon.svg)](https://pypi.python.org/pypi/coon)
+[![PyPI](https://img.shields.io/pypi/pyversions/coon.svg)](https://pypi.python.org/pypi/coon)
+[![PyPI](https://img.shields.io/pypi/wheel/coon.svg)](https://pypi.python.org/pypi/coon)  
 Erlang advanced project manager.  
 _Why coon?_  
 TODO really, why?

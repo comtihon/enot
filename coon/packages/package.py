@@ -4,6 +4,7 @@ from os.path import join
 
 import os
 from coon.packages.config import config_factory
+from git import Repo, InvalidGitRepositoryError
 
 from coon.packages.application_config import AppConfig
 from coon.packages.config.config import ConfigFile
@@ -19,6 +20,8 @@ class Package:
         self._path = path
         self._has_nifs = has_nifs
         self.__set_deps()
+        self.__set_url_from_git()
+        self.__set_git_vsn()
 
     @property
     def name(self) -> str:
@@ -31,10 +34,14 @@ class Package:
         return self.config.url
 
     @property
-    def vsn(self) -> str:  # package dependency version
-        if self.config.conf_vsn:  # TODO refactor versions!
+    def git_vsn(self) -> str:  # version from git (tag or branch).
+        return self.config.git_vsn
+
+    @property
+    def vsn(self) -> str:  # package version from app.src or from config (preferred)
+        if self.config.conf_vsn:
             return self.config.conf_vsn
-        return self.config.dep_vsn
+        return self.app_config.vsn
 
     @property
     def path(self) -> str:  # packages path
@@ -73,52 +80,66 @@ class Package:
         return self._has_nifs
 
     @classmethod  # TODO url is not set here!
+    # Package is created from path on local system. Usually when opening project
     def from_path(cls, path: str, url=None):
         config = config_factory.read_project(path, url=url)
         app_config = AppConfig.from_path(path)
         has_nifs = os.path.exists(join(path, 'c_src'))  # TODO search for .so files in priv?
         return cls(path, config, app_config, has_nifs)
 
-    @classmethod  # TODO url is not set here!
-    def from_package(cls, path: str, url=None):
+    @classmethod
+    # Package is created from coon package archive.
+    # Usually when downloading cp file from remote cache or manually uploading a package
+    def from_package(cls, path: str, url=None):  # TODO url is not set here!
         project_path, has_nifs, config, app_config = do_update_from_package(path, url)
         return cls(project_path, config, app_config, has_nifs)
 
     @classmethod
-    def from_dep(cls, name, dep):
+    # Package is created from dependency name, (url, vsn), got from config file deps
+    # Usually when populating package's deps
+    def from_dep(cls, name: str, dep: tuple):
         (url, vsn) = dep
         return cls(None, DepConfig(name, vsn, url), None, False)
 
-    # is called when dep is fetch by cache.
+    # Update Package, created by from_dep classmethod.
+    # Is called, when dep was fetched by local to some path and need to be fully filled
     def update_from_cache(self, path: str):
-        self._config = config_factory.read_project(path, url=self.url, vsn=self.vsn)  # TODO unify versions!
+        git_vsn = self.git_vsn
+        self._config = config_factory.read_project(path, url=self.url)
+        self._config.git_vsn = git_vsn
         self._app_config = AppConfig.from_path(path)
         self._path = path
         self.__set_deps()
 
-    def update_from_package(self, path: str, url):
-        project_path, has_nifs, config, app_config = do_update_from_package(path, url)
+    # Update Package, created by from_dep classmethod.
+    # Is called, when dep coon package was fetched by remote cache and need to be fully filled
+    def update_from_package(self, path: str):
+        git_vsn = self.git_vsn
+        project_path, has_nifs, config, app_config = do_update_from_package(path, self.url)
         self.path = project_path
         self._config = config
         self._app_config = app_config
         self._has_nifs = has_nifs
+        self.config.git_vsn = git_vsn
 
     def export(self) -> dict:
-        export = {'name': self.name,
-                  'deps': [dep.export() for dep in self.deps]}
+        export = self.config.export()
+        export['name'] = self.name
+        export['deps'] = [dep.export() for dep in self.deps]
         if self.url is not None:
             export['url'] = self.url
         if self.vsn is not None:
-            export['version'] = self.vsn
+            export['app_vsn'] = self.vsn
+        if self.git_vsn is not None:
+            export['tag'] = self.git_vsn
         return export
 
     def generate_package(self):
         pack_dir = self.path
         exported = self.export()
         config = join(pack_dir, 'coonfig.json')
-        if not os.path.isfile(config):
-            with open(join(pack_dir, 'coonfig.json'), 'w') as outfile:
-                json.dump(exported, outfile, sort_keys=True, indent=4)
+        with open(config, 'w') as outfile:
+            json.dump(exported, outfile, sort_keys=True, indent=4)
         dirs_to_add = []
         add_if_exist(pack_dir, 'ebin', dirs_to_add)
         add_if_exist(pack_dir, 'priv', dirs_to_add)
@@ -136,6 +157,29 @@ class Package:
         if self.config:
             for name, dep in self.config.deps.items():
                 self._deps.append(Package.from_dep(name, dep))
+
+    def __set_url_from_git(self):
+        if not self.url:
+            try:
+                repo = Repo(self.path)
+                self.config.url = repo.remotes.origin.url  # TODO remove .git ending?
+            except InvalidGitRepositoryError:
+                return
+
+    def __set_git_vsn(self):
+        if not self.git_vsn:
+            try:
+                repo = Repo(self.path)  # TODO if there is no tags should take active branch name
+                tag_name = None
+                for tag in repo.tags:
+                    if tag.commit == repo.head.commit:
+                        tag_name = tag.path
+                if tag_name:
+                    paths = tag_name.split('/')
+                    [tag] = paths[-1:]
+                    self.config.git_vsn = tag
+            except InvalidGitRepositoryError:
+                return
 
 
 def add_if_exist(src_dir, dir_to_add, dirs):

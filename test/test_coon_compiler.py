@@ -91,10 +91,10 @@ class CompileTests(TestClass):
         with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
             w.write('''{
             \"name\":\"proper\",
-            \"version\":\"1.0.0\",
+            \"app_vsn\":\"1.0.0\",
             \"deps\": [{\"name\": \"test_dep\",
                         \"url\": \"test_url\",
-                        \"vsn\": \"test_vsn\"}]
+                        \"tag\": \"test_vsn\"}]
             }''')
         package = Package.from_path(self.test_dir)
         compiler = CoonCompiler(package)

@@ -65,7 +65,7 @@ class Cache(metaclass=ABCMeta):
 
     def get_package_path(self, package: Package):
         namespace = package.url.split('/')[-2]
-        return join(namespace, package.name, package.vsn, self.erlang_version)
+        return join(namespace, package.name, package.git_vsn, self.erlang_version)
 
     @staticmethod
     def get_erlang_version():

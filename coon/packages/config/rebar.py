@@ -8,11 +8,12 @@ from coon.utils.file_utils import read_file
 
 
 class RebarConfig(ConfigFile):
-    def __init__(self, path: str, vsn=None, url=None):
-        super().__init__(vsn=vsn, url=url)
+    def __init__(self, path: str, url=None):
+        super().__init__()
         self._path = path
         self._platform_defines = []
         rebarconfig = decode(read_file(join(path, 'rebar.config')))
+        self.set_url(url)
         self.__parse_config(rebarconfig)
 
     @property

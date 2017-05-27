@@ -14,17 +14,17 @@ def write_coonfig(path, package_config):
 
 
 class ConfigFile(metaclass=ABCMeta):
-    def __init__(self, vsn=None, url=None):
+    def __init__(self):
         self._prebuild = []
         self._build_vars = []
         self._c_build_vars = []
         self._deps = {}
-        self._conf_vsn = None
-        self._dep_vsn = vsn  # dep's version, when dep becomes package (after cache's fetch)
         self._with_source = True
         self._drop_unknown = True
         self._name = ''
-        self.__set_url(url)
+        self._conf_vsn = None
+        self._git_vsn = None
+        self._url = None
 
     @property
     def name(self) -> str:  # project's name
@@ -47,8 +47,12 @@ class ConfigFile(metaclass=ABCMeta):
         return self._conf_vsn
 
     @property
-    def dep_vsn(self) -> str or None:  # version from git (can be None in most cases)
-        return self._dep_vsn
+    def git_vsn(self) -> str or None:  # version from git (can be None in most cases)
+        return self._git_vsn
+
+    @git_vsn.setter
+    def git_vsn(self, vsn):
+        self._git_vsn = vsn
 
     @property
     def deps(self) -> dict:  # deps from config file. Dict of (url, vsn), where keys are their names
@@ -70,6 +74,10 @@ class ConfigFile(metaclass=ABCMeta):
     def url(self) -> str:
         return self._url
 
+    @url.setter
+    def url(self, url):
+        self._url = url
+
     @abstractmethod
     def get_compiler(self) -> Compiler:
         pass
@@ -77,12 +85,13 @@ class ConfigFile(metaclass=ABCMeta):
     def need_coonsify(self):
         return True
 
-    # TODO should take url from local repo if None. (Should do it only if adding to local cache).
-    def __set_url(self, url: str or None):
+    def set_url(self, url: str):
         self._url = url
 
-    def export(self):
-        return {'name': self.name,
-                'with_source': self.with_source,
-                'drop_unknown_deps': self.drop_unknown
+    def export(self) -> dict:
+        return {'with_source': self.with_source,
+                'drop_unknown_deps': self.drop_unknown,
+                'build_vars': self.build_vars,  # TODO skip if empty
+                'c_build_vars': self.c_build_vars,
+                'prebuild': self.prebuild
                 }

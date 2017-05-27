@@ -86,10 +86,10 @@ def do_build(builder):
     return builder.build()
 
 
-# Print project's version. Prefer coonfing.json vsn, but if none - use app.src version.
+# Print project's application version. Prefer coonfig.json vsn, but if none - use app.src version.
 def version(path):
     builder = Builder.init_from_path(path)
-    print(builder.project.vsn)
+    print(builder.project.vsn)  # TODO return vsn?
     return True
 
 

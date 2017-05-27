@@ -10,20 +10,22 @@ from coon.utils.file_utils import read_file
 
 
 class CoonConfig(ConfigFile):
-    def __init__(self, config: dict, vsn=None, url=None):
-        super().__init__(vsn=vsn, url=config.get('url', url))
+    def __init__(self, config: dict, url=None):
+        super().__init__()
         self._name = config['name']
         self._drop_unknown = config.get('drop_unknown_deps', True)
         self._with_source = config.get('with_source', True)
-        self._conf_vsn = config.get('version', None)
         self.__parse_prebuild(config)
         self.__parse_build_vars(config)
         self.__parse_deps(config.get('deps', {}))
+        self._conf_vsn = config.get('app_vsn', None)
+        self._git_vsn = config.get('tag', None)
+        self.set_url(config.get('url', url))
 
     @classmethod
-    def from_path(cls, path: str, url=None, vsn=None) -> 'CoonConfig':
+    def from_path(cls, path: str, url=None) -> 'CoonConfig':
         content = read_file(join(path, 'coonfig.json'))
-        return cls(json.loads(content), url=url, vsn=vsn)
+        return cls(json.loads(content), url=url)
 
     @classmethod
     def from_package(cls, package: TarFile, url: str) -> 'CoonConfig':
@@ -37,10 +39,10 @@ class CoonConfig(ConfigFile):
     def get_compiler(self):
         return Compiler.COON
 
-    def __parse_deps(self, deps):
+    def __parse_deps(self, deps: list):
         for dep in deps:
             name = dep['name']
-            self.deps[name] = (dep['url'], dep['vsn'])  # TODO need to create package here with DepConfig
+            self.deps[name] = (dep['url'], dep['tag'])
 
     def __parse_prebuild(self, parsed):
         for step in parsed.get('prebuild', []):

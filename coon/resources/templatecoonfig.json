@@ -1,6 +1,6 @@
 {
   "name": "{{ name }}",
-  "version": "0.0.1",
+  "app_vsn": "0.0.1",
   "drop_unknown_deps": true,
   "with_source": true,
   "deps": [],

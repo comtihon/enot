@@ -6,14 +6,14 @@ Erlang advanced project manager
 
     {
         "name" : AppName,
-        "version" : AppVsn,
+        "app_vsn" : AppVsn,
         "drop_unknown_deps" : Boolean,
         "with_source" : Boolean,
         "deps" : [
             {
                 "name" : DepName,
                 "url" : DepUrl,
-                "vsn" : DepVsn
+                "tag" : GitTag
             }
         ],
         "prebuild" : [

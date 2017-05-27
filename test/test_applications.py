@@ -29,7 +29,7 @@ class ApplicationsTests(TestClass):
         with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep',
                                        'url': "test_url",
-                                       'vsn': "test_vsn"}]))
+                                       'tag': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
         # test_dep in package deps (from package conf)
         self.assertEqual(['test_dep'], [dep.name for dep in package.deps])
@@ -54,7 +54,7 @@ class ApplicationsTests(TestClass):
         with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep',
                                        'url': "test_url",
-                                       'vsn': "test_vsn"}]))
+                                       'tag': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
         # test_dep in package deps (from package conf)
         self.assertEqual(['test_dep'], [dep.name for dep in package.deps])
@@ -71,10 +71,10 @@ class ApplicationsTests(TestClass):
         with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep1',
                                        'url': "test_url",
-                                       'vsn': "test_vsn"},
+                                       'tag': "test_vsn"},
                                       {'name': 'test_dep3',
                                        'url': "test_url",
-                                       'vsn': "test_vsn"}]))
+                                       'tag': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
         package_deps = [dep.name for dep in package.deps]
         self.assertEqual(2, len(package_deps))

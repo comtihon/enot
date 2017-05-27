@@ -1,11 +1,11 @@
 import json
+import test
 import unittest
+from os import listdir
 from os.path import join
 
 import os
-
-import test
-
+from git import Repo
 
 from coon.utils.file_utils import ensure_empty, remove_dir
 
@@ -59,3 +59,25 @@ class TestClass(unittest.TestCase):
 
     def tearDown(self):
         remove_dir(test.get_test_dir(self.test_name))
+
+
+def set_deps(path: str, deps: list):
+    fullpath = join(path, 'coonfig.json')
+    with open(fullpath, 'r') as file:
+        conf = json.load(file)
+    conf['deps'] = deps
+    with open(fullpath, 'w') as file:
+        json.dump(conf, file)
+
+
+def set_git_url(path: str, url: str):
+    repo = Repo.init(path)
+    repo.index.add(listdir(path))
+    repo.index.commit("First commit")
+    repo.create_head('master')
+    repo.create_remote('origin', url=url + '.git')
+
+
+def set_git_tag(path: str, tag: str):
+    repo = Repo(path)
+    repo.create_tag(tag, message='new tag')

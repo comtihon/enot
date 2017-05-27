@@ -41,7 +41,7 @@ class ArtifactoryCache(Cache):
         return path.exists()
 
     def get_package_path(self, package: Package):
-        return join(self.username, package.name, package.vsn, self.erlang_version)
+        return join(self.username, package.name, package.git_vsn, self.erlang_version)
 
     def add_package(self, package: Package, rewrite=True) -> bool:
         if not rewrite and self.exists(package):
@@ -62,4 +62,4 @@ class ArtifactoryCache(Cache):
         with path.open() as fd:
             with open(write_path, 'wb') as out:
                 out.write(fd.read())
-        dep.update_from_package(write_path, dep.url)  # TODO refactor me
+        dep.update_from_package(write_path)

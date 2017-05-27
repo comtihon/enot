@@ -39,11 +39,12 @@ def get_dep(line):
 
 
 class ErlangMkConfig(ConfigFile):
-    def __init__(self, path: str, vsn=None, url=None):
-        super().__init__(vsn=vsn, url=url)
+    def __init__(self, path: str, url=None):
+        super().__init__()
         self._path = path
         makefile = join(path, 'Makefile')
         content = parse_makefile(makefile)
+        self.set_url(url)
         self.__conf_init(content)
         self.__parse_erl_opts(makefile, content)
         self.__parse_deps(content)

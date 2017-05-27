@@ -43,8 +43,8 @@ class LocalCache(Cache):
         if repo.bare:
             raise RuntimeError('Empty repo ' + dep.url)
         git = repo.git
-        git.checkout(dep.vsn)
-        repo.create_head(dep.vsn)
+        git.checkout(dep.git_vsn)
+        repo.create_head(dep.git_vsn)
         dep.update_from_cache(temp_path)
 
     # add built package to local cache, update its path

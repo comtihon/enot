@@ -25,6 +25,8 @@ class ConfigFile(metaclass=ABCMeta):
         self._conf_vsn = None
         self._git_vsn = None
         self._url = None
+        self._link_all = True
+        self._rescan_deps = True
 
     @property
     def name(self) -> str:  # project's name
@@ -69,6 +71,14 @@ class ConfigFile(metaclass=ABCMeta):
     @property
     def c_build_vars(self) -> list:  # c build vars. list of kv tuples
         return self._c_build_vars
+
+    @property
+    def link_all(self) -> bool:  # link dep's deps to primary project
+        return self._link_all
+
+    @property
+    def rescan_deps(self) -> bool:  # rescan dep tree on dep update detected
+        return self._rescan_deps
 
     @property
     def url(self) -> str:

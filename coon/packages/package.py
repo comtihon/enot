@@ -70,7 +70,7 @@ class Package:
     @property
     def apps(self) -> list:  # appliations, which should be run before this app
         apps = [dep.name for dep in self.deps]
-        if self.app_config:
+        if self.app_config and self.app_config.applications:
             apps += self.app_config.applications
         return list(set(apps))
 

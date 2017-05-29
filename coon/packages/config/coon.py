@@ -20,6 +20,8 @@ class CoonConfig(ConfigFile):
         self.__parse_deps(config.get('deps', {}))
         self._conf_vsn = config.get('app_vsn', None)
         self._git_vsn = config.get('tag', None)
+        self._link_all = config.get('link_all', self.link_all)
+        self._rescan_deps = config.get('rescan_deps', self.rescan_deps)
         self.set_url(config.get('url', url))
 
     @classmethod

@@ -1,25 +1,23 @@
-import json
-import test
 import unittest
 from os.path import join
 
 import os
 from mock import patch
 
+import test
 from coon.__main__ import create
+from coon.pac_cache.cache import Cache
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
 from coon.utils.file_utils import remove_dir, copy_file
-from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag
+from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag, set_link_policy
 
 
 def mock_fetch_package(dep: Package):
-    print(dep.deps)
     test_dir = test.get_test_dir('local_cache_tests')
     tmp_path = join(os.getcwd(), test_dir, 'tmp')
     dep.update_from_cache(join(tmp_path, dep.name))
-    print(dep.deps)
 
 
 class LocalCacheTests(TestClass):
@@ -78,9 +76,59 @@ class LocalCacheTests(TestClass):
         builder.system_config.cache.add_package_local(builder.project)
         self.assertEqual(True, builder.system_config.cache.exists_local(builder.project))
 
-    # Test if test_app can be fetched, compiled and added to local cache
-    def test_compile_and_add(self):
-        self.assertEqual(True, True)
+    # Test if dep is fetched, compiled and linked to the project
+    @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_link_dep(self, mock_conf, _):
+        mock_conf.return_value = self.conf_file
+        pack_path = join(self.test_dir, 'test_app')
+        set_deps(pack_path,
+                 [
+                     {'name': 'dep',
+                      'url': 'https://github.com/comtihon/dep',
+                      'tag': '1.0.0'}
+                 ])
+        create(self.tmp_dir, {'<name>': 'dep'})
+        builder = Builder.init_from_path(pack_path)
+        builder.populate()
+        self.assertEqual(True, builder.build())
+        dep_tmp_path = join(self.tmp_dir, 'dep')
+        # dep was added to cache
+        self.assertEqual(True, builder.system_config.cache.exists_local(Package.from_path(dep_tmp_path)))
+        dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
+        self.assertEqual(True, os.path.islink(dep_link_ebin))
+        erl = Cache.get_erlang_version()
+        real_dep = join(self.cache_dir, 'comtihon', 'dep', '1.0.0', erl, 'ebin')
+        self.assertEqual(real_dep, os.readlink(dep_link_ebin))
+
+    # Test if dep exists in local cache and is linked to project
+    @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_link_existing_dep(self, mock_conf, _):
+        mock_conf.return_value = self.conf_file
+        pack_path = join(self.test_dir, 'test_app')
+        set_deps(pack_path,
+                 [
+                     {'name': 'dep',
+                      'url': 'https://github.com/comtihon/dep',
+                      'tag': '1.0.0'}
+                 ])
+        create(self.tmp_dir, {'<name>': 'dep'})
+        dep_path = join(self.tmp_dir, 'dep')
+        set_git_url(dep_path, 'https://github/comtihon/dep')
+        set_git_tag(dep_path, '1.0.0')
+        dep_builder = Builder.init_from_path(dep_path)
+        self.assertEqual(True, dep_builder.build())
+        dep_builder.system_config.cache.add_package_local(dep_builder.project)
+        self.assertEqual(True, dep_builder.system_config.cache.exists_local(dep_builder.project))
+        builder = Builder.init_from_path(pack_path)
+        builder.populate()
+        self.assertEqual(True, builder.build())
+        dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
+        self.assertEqual(True, os.path.islink(dep_link_ebin))
+        erl = Cache.get_erlang_version()
+        real_dep = join(self.cache_dir, 'comtihon', 'dep', '1.0.0', erl, 'ebin')
+        self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
     # Test if test_app has several deps, all will be fetched, compiled and added to local cache
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
@@ -89,8 +137,6 @@ class LocalCacheTests(TestClass):
         mock_conf.return_value = self.conf_file
         # Create test_app with deps: A and B
         pack_path = join(self.test_dir, 'test_app')
-        set_git_url(pack_path, 'http://github/comtihon/test_app')
-        set_git_tag(pack_path, '1.0.0')
         set_deps(pack_path,
                  [
                      {'name': 'a_with_dep_a2',
@@ -122,6 +168,56 @@ class LocalCacheTests(TestClass):
         self.assertEqual(True, builder.system_config.cache.exists_local(Package.from_path(dep_a1_path)))
         self.assertEqual(True, builder.system_config.cache.exists_local(Package.from_path(dep_b_path)))
         self.assertEqual(True, builder.system_config.cache.exists_local(Package.from_path(dep_a2_path)))
+
+    # Test if dep exists in local cache and is linked to project
+    @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_link_with_deps(self, mock_conf, _):
+        mock_conf.return_value = self.conf_file
+        pack_path = join(self.test_dir, 'test_app')
+        set_deps(pack_path,
+                 [
+                     {'name': 'dep_with_dep',
+                      'url': 'https://github.com/comtihon/dep_with_dep',
+                      'tag': '1.0.0'}
+                 ])
+        # Create, build and add dep.
+        create(self.tmp_dir, {'<name>': 'dep'})
+        dep_dep_path = join(self.tmp_dir, 'dep')
+        set_git_url(dep_dep_path, 'https://github/comtihon/dep')
+        set_git_tag(dep_dep_path, '1.0.0')
+        dep_builder = Builder.init_from_path(dep_dep_path)
+        # Build dep of dep and add to cache
+        dep_builder.populate()
+        self.assertEqual(True, dep_builder.build())
+        dep_builder.system_config.cache.add_package_local(dep_builder.project)
+        self.assertEqual(True, dep_builder.system_config.cache.exists_local(dep_builder.project))
+        # Create, build and add dep with dep: dep
+        create(self.tmp_dir, {'<name>': 'dep_with_dep'})
+        dep_path = join(self.tmp_dir, 'dep_with_dep')
+        set_git_url(dep_path, 'https://github/comtihon/dep_with_dep')
+        set_git_tag(dep_path, '1.0.0')
+        set_deps(dep_path,
+                 [
+                     {'name': 'dep',
+                      'url': 'https://github.com/comtihon/dep',
+                      'tag': '1.0.0'}
+                 ])
+        dep_builder = Builder.init_from_path(dep_path)
+        dep_builder.populate()
+        self.assertEqual(True, dep_builder.build())
+        dep_builder.system_config.cache.add_package_local(dep_builder.project)
+        self.assertEqual(True, dep_builder.system_config.cache.exists_local(dep_builder.project))
+        builder = Builder.init_from_path(pack_path)
+        builder.populate()
+        self.assertEqual(True, builder.build())
+        for dep in ['dep_with_dep', 'dep']:  # Dep and dep's dep are linked to the project
+            print('Check ' + dep)
+            dep_link_ebin = join(pack_path, 'deps', dep, 'ebin')
+            self.assertEqual(True, os.path.islink(dep_link_ebin))
+            erl = Cache.get_erlang_version()
+            real_dep = join(self.cache_dir, 'comtihon', dep, '1.0.0', erl, 'ebin')
+            self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
 
 if __name__ == '__main__':

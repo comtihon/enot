@@ -1,3 +1,7 @@
+from os import listdir
+
+from os.path import join
+
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.compiler_type import Compiler
 from coon.compiler.relx import RelxCompiler
@@ -18,6 +22,7 @@ class Builder:
         self._path = path
         self._packages = {}
         self._project = package
+        self._rescan_deps = False
         if self.system_config.compiler == Compiler.REBAR3:  # TODO refactor me somehow
             self.__ensure_rebar3()
         elif self.system_config.compiler == Compiler.REBAR:
@@ -38,6 +43,15 @@ class Builder:
     @property
     def path(self) -> str:  # path in system of building project
         return self._path
+
+    @property
+    def rescan_deps(self) -> bool:  # rescan deps if it is not prohibited
+        return self.project.config.rescan_deps and self._rescan_deps
+
+    @rescan_deps.setter
+    def rescan_deps(self, rescan):  # mark rescan deps if not already set
+        if not self.rescan_deps:
+            self._rescan_deps = rescan
 
     @property
     def system_config(self) -> GlobalProperties:  # system configuration
@@ -63,27 +77,38 @@ class Builder:
         return self.system_config.cache.add_package(self.project, remote, rewrite, recurse)
 
     def build(self):
-        return self.__build_tree(self.project, is_subpackage=False)
+        build_res = self.__build_tree(self.project, is_subpackage=False)
+        if self.rescan_deps:
+            self.__rescan_deps()
+        return build_res
 
     def deps(self):
         self.__build_deps(self.project, is_subpackage=False)
+        if self.rescan_deps:
+            self.__rescan_deps()
 
     def release(self):
         relx_path = self.__ensure_relx()
         return RelxCompiler(self.project, relx_path).compile()
 
-    # TODO testme
     # Build all deps, add to cache and link to project
     def __build_deps(self, package: Package, is_subpackage=True):
         print('build deps for ' + package.name)
-        if is_subpackage and self.system_config.cache.exists_local(package):
-            return True
+        is_first_line = package is not self.project
+        if (is_subpackage and
+                not self.project.config.link_all and
+                self.system_config.cache.exists_local(package)):
+            return True  # skip building dep's dep if not link all and dep was already built
         for dep in package.deps:
             if not self.system_config.cache.exists_local(dep):
                 # if package not in cache - build and add to cache
                 if not self.__build_tree(dep):
                     raise RuntimeError('Can\'t built dep ' + dep.name)
-            self.system_config.cache.link_package(dep, package.path)
+            if self.project.config.link_all and is_first_line:  # link dep's of deps if allowed
+                upd = self.system_config.cache.link_package(dep, self.project.path)
+                self.rescan_deps = upd
+            upd = self.system_config.cache.link_package(dep, package.path)
+            self.rescan_deps = upd
             self.__build_deps(dep)  # link all dep's deps (build them and add to cache if necessary)
 
     # Build package and it's deps, then add built package to local cache
@@ -110,6 +135,10 @@ class Builder:
                     print('Skip ' + dep.name + ' (' + dep.vsn + '). Use ' + pkg_vsn)
         if next_level:
             self.__populate_deps(next_level)
+
+    def __rescan_deps(self):
+        deps = listdir(join(self.project.path, 'deps'))
+        # TODO for all listed deps not in self.packages - remove.
 
     def __ensure_relx(self):
         return self.__ensure_tool(RelxTool())

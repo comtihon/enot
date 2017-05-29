@@ -52,9 +52,10 @@ class CacheMan:
             return True
         return False
 
-    def link_package(self, package: Package, dest_path: str):
+    # link package, return True if version changed (link updated)
+    def link_package(self, package: Package, dest_path: str) -> bool:
         if self.local_cache:
-            self.local_cache.link_package(package, dest_path)
+            return self.local_cache.link_package(package, dest_path)
 
     def add_package_local(self, package: Package):
         if self.local_cache:

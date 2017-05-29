@@ -1,5 +1,6 @@
 import shutil
 import stat
+from os import listdir
 from os.path import join
 
 import os
@@ -9,7 +10,7 @@ from pkg_resources import Requirement, resource_filename
 import coon
 from coon.pac_cache.cache import Cache
 from coon.packages.package import Package
-from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file, list_dir
+from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file
 from coon.utils.file_utils import remove_dir
 
 
@@ -82,27 +83,29 @@ class LocalCache(Cache):
         os.chmod(tool_dst, st.st_mode | stat.S_IEXEC)
 
     # link package from local cache to project
-    def link_package(self, package: Package, dest_path: str):
+    # return true if link was changed (dep was updated)
+    def link_package(self, package: Package, dest_path: str) -> bool:
         if not dest_path:
             dest_path = os.getcwd()
         cache_path = join(self.path, self.get_package_path(package))
         dep_dir = join(dest_path, 'deps', package.name)
         ensure_dir(dep_dir)
         print('link ' + package.name)
-        for file in list_dir(cache_path):
+        changed = []
+        for file in listdir(cache_path):
             if file != package.name + '.cp':
-                LocalCache.link(cache_path, dest_path, package.name, file)
+                changed.append(LocalCache.link(cache_path, dest_path, package.name, file))
+        return all(changed)  # if all links were changed - it is a new version
 
     def link_tool(self, package: Package, toolname: str):
         cache_path = join(self.tool_dir, toolname)
         link_if_needed(cache_path, join(package.path, toolname))
 
-    # TODO relinking deps on vsn switching
     @staticmethod
-    def link(cache_path, package_path, name, dir_to_link):
+    def link(cache_path: str, package_path: str, name: str, dir_to_link: str) -> bool:
         include_src = join(cache_path, dir_to_link)
         include_dst = join(package_path, 'deps', name, dir_to_link)
-        link_if_needed(include_src, include_dst)
+        return link_if_needed(include_src, include_dst)
 
     @staticmethod
     def __copy_include(rewrite, full_dir, path):

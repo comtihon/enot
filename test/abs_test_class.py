@@ -1,5 +1,4 @@
 import json
-import test
 import unittest
 from os import listdir
 from os.path import join
@@ -7,6 +6,7 @@ from os.path import join
 import os
 from git import Repo
 
+import test
 from coon.utils.file_utils import ensure_empty, remove_dir
 
 
@@ -66,6 +66,15 @@ def set_deps(path: str, deps: list):
     with open(fullpath, 'r') as file:
         conf = json.load(file)
     conf['deps'] = deps
+    with open(fullpath, 'w') as file:
+        json.dump(conf, file)
+
+
+def set_link_policy(path: str, policy: bool):
+    fullpath = join(path, 'coonfig.json')
+    with open(fullpath, 'r') as file:
+        conf = json.load(file)
+    conf['link_all'] = policy
     with open(fullpath, 'w') as file:
         json.dump(conf, file)
 

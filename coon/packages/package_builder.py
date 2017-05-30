@@ -132,8 +132,8 @@ class Builder:
                 next_level += dep.deps
             else:
                 pkg_vsn = self.packages[dep.name].vsn
-                if dep.git_vsn != pkg_vsn:  # Warn only if it is not the same dep
-                    print('Skip ' + dep.name + ' (' + dep.git_vsn + '). Use ' + pkg_vsn)
+                if dep.git_tag != pkg_vsn:  # Warn only if it is not the same dep
+                    print('Skip ' + dep.name + ' (' + dep.git_tag + '). Use ' + pkg_vsn)
                 dep.update_from_duplicate(self.packages[dep.name])
         if next_level:
             self.__populate_deps(next_level)

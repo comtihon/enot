@@ -10,7 +10,7 @@ from coon.pac_cache.cache import Cache
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
-from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag
+from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag, switch_branch
 
 
 def mock_fetch_package(dep: Package):
@@ -84,7 +84,7 @@ class UpgradeTests(TestClass):
         create(self.tmp_dir, {'<name>': 'dep_with_no_deps'})
         dep_dir = join(self.tmp_dir, 'dep_with_no_deps')
         set_git_url(dep_dir, 'http://github/comtihon/dep_with_no_deps')
-        set_git_tag(dep_dir, '1.0.0')  # This is not needed but pretend we really fetch it from git
+        set_git_tag(dep_dir, '1.0.0')
         builder = Builder.init_from_path(pack_path)
         builder.populate()
         self.assertEqual(True, builder.build())
@@ -109,6 +109,8 @@ class UpgradeTests(TestClass):
                  ])
         create(self.tmp_dir, {'<name>': 'new_dep'})
         new_dep_dir = join(self.tmp_dir, 'new_dep')
+        set_git_url(new_dep_dir, 'http://github/comtihon/new_dep')
+        set_git_tag(new_dep_dir, '1.0.0')
         builder = Builder.init_from_path(pack_path)
         builder.populate()
         self.assertEqual(True, builder.build())
@@ -337,8 +339,42 @@ class UpgradeTests(TestClass):
         self.assertNotEqual(erl, erl2)
 
     # If branch was changed - should fetch, build and link new branch.
-    def test_change_branch(self):
-        True
+    @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_change_branch(self, mock_conf, _):
+        mock_conf.return_value = self.conf_file
+        pack_path = join(self.test_dir, 'test_app')
+        set_deps(pack_path,
+                 [
+                     {'name': 'dep',
+                      'url': 'https://github.com/comtihon/dep',
+                      'branch': 'master'}
+                 ])
+        create(self.tmp_dir, {'<name>': 'dep'})
+        dep_dir = join(self.tmp_dir, 'dep')
+        set_git_url(dep_dir, 'http://github/comtihon/dep')
+        builder = Builder.init_from_path(pack_path)
+        builder.populate()
+        self.assertEqual(True, builder.build())
+        dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
+        self.assertEqual(True, os.path.islink(dep_link_ebin))
+        erl = Cache.get_erlang_version()
+        real_dep = join(self.cache_dir, 'comtihon', 'dep', 'master', erl, 'ebin')
+        self.assertEqual(real_dep, os.readlink(dep_link_ebin))
+        # change dep's branch
+        set_deps(pack_path,
+                 [
+                     {'name': 'dep',
+                      'url': 'https://github.com/comtihon/dep',
+                      'branch': 'develop'}
+                 ])
+        switch_branch(dep_dir, 'develop')  # pretend new branch was fetched
+        builder = Builder.init_from_path(pack_path)
+        builder.populate()
+        self.assertEqual(True, builder.build())
+        self.assertEqual(True, os.path.islink(dep_link_ebin))
+        real_dep = join(self.cache_dir, 'comtihon', 'dep', 'develop', erl, 'ebin')
+        self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
     # If branch gets new commit - it should be updated and relinked
     def test_update_branch(self):

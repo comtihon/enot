@@ -8,6 +8,7 @@ from mock import patch
 from coon.__main__ import create, package
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
+from coon.packages.dep import Dep
 from test.abs_test_class import TestClass, set_git_url, set_git_tag
 
 
@@ -86,7 +87,7 @@ class ArtifactoryTests(TestClass):
     def test_simple_downloading(self, mock_conf):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_project')
-        pack = Package.from_dep('test_project', ('git://github.com/comtihon/test_project', '0.0.1'))
+        pack = Package.from_dep('test_project', Dep('git://github.com/comtihon/test_project', 'master', tag='0.0.1'))
         pack.update_from_cache(pack_path)
         package(pack_path)
         builder = Builder.init_from_path(pack_path)

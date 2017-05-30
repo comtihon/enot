@@ -90,3 +90,9 @@ def set_git_url(path: str, url: str):
 def set_git_tag(path: str, tag: str):
     repo = Repo(path)
     repo.create_tag(tag, message='new tag')
+
+
+def switch_branch(path: str, branch: str):
+    repo = Repo(path)
+    repo.create_head(branch)
+    repo.git.checkout(branch)

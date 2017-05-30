@@ -23,7 +23,8 @@ class ConfigFile(metaclass=ABCMeta):
         self._drop_unknown = True
         self._name = ''
         self._conf_vsn = None
-        self._git_vsn = None
+        self._git_tag = None
+        self._git_branch = None
         self._url = None
         self._link_all = True
         self._rescan_deps = True
@@ -49,15 +50,23 @@ class ConfigFile(metaclass=ABCMeta):
         return self._conf_vsn
 
     @property
-    def git_vsn(self) -> str or None:  # version from git (can be None in most cases)
-        return self._git_vsn
+    def git_tag(self) -> str or None:  # git tag
+        return self._git_tag
 
-    @git_vsn.setter
-    def git_vsn(self, vsn):
-        self._git_vsn = vsn
+    @git_tag.setter
+    def git_tag(self, tag):
+        self._git_tag = tag
 
     @property
-    def deps(self) -> dict:  # deps from config file. Dict of (url, vsn), where keys are their names
+    def git_branch(self) -> str:
+        return self._git_branch
+
+    @git_branch.setter
+    def git_branch(self, branch: str):
+        self._git_branch = branch
+
+    @property
+    def deps(self) -> dict:  # deps from config file. Dict of Dep, where keys are their names
         return self._deps
 
     @property
@@ -94,9 +103,6 @@ class ConfigFile(metaclass=ABCMeta):
 
     def need_coonsify(self):
         return True
-
-    def set_url(self, url: str):
-        self._url = url
 
     def export(self) -> dict:
         return {'with_source': self.with_source,

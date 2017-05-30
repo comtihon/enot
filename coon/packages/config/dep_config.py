@@ -1,12 +1,14 @@
 from coon.packages.config.config import ConfigFile
+from coon.packages.dep import Dep
 
 
 class DepConfig(ConfigFile):
-    def __init__(self, name: str, vsn: str, url: str):
+    def __init__(self, name: str, dep: Dep):
         super().__init__()
         self._name = name
-        self.set_url(url)
-        self._git_vsn = vsn
+        self._url = dep.url
+        self._git_tag = dep.tag
+        self._git_branch = dep.branch
 
     def get_compiler(self):
         RuntimeError("Dep " + self.name + "can't be compiled")

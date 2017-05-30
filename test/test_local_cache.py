@@ -89,10 +89,12 @@ class LocalCacheTests(TestClass):
                       'tag': '1.0.0'}
                  ])
         create(self.tmp_dir, {'<name>': 'dep'})
+        dep_tmp_path = join(self.tmp_dir, 'dep')
+        set_git_url(dep_tmp_path, 'http://github/comtihon/dep')
+        set_git_tag(dep_tmp_path, '1.0.0')
         builder = Builder.init_from_path(pack_path)
         builder.populate()
         self.assertEqual(True, builder.build())
-        dep_tmp_path = join(self.tmp_dir, 'dep')
         # dep was added to cache
         self.assertEqual(True, builder.system_config.cache.exists_local(Package.from_path(dep_tmp_path)))
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
@@ -152,12 +154,18 @@ class LocalCacheTests(TestClass):
         set_deps(dep_a1_path, [{'name': 'a2_with_no_deps',
                                 'url': 'https://github.com/comtihon/a2_with_no_deps',
                                 'tag': '1.0.0'}])
+        set_git_url(dep_a1_path, 'http://github/comtihon/a2_with_no_deps')
+        set_git_tag(dep_a1_path, '1.0.0')
         # Create dep B (in tmp, as if we download them from git)
         create(self.tmp_dir, {'<name>': 'b_with_no_deps'})
         dep_b_path = join(self.tmp_dir, 'b_with_no_deps')
+        set_git_url(dep_b_path, 'http://github/comtihon/b_with_no_deps')
+        set_git_tag(dep_b_path, '1.0.0')
         # Create dep A2 (in tmp, as if we download them from git)
         create(self.tmp_dir, {'<name>': 'a2_with_no_deps'})
         dep_a2_path = join(self.tmp_dir, 'a2_with_no_deps')
+        set_git_url(dep_a2_path, 'http://github/comtihon/a2_with_no_deps')
+        set_git_tag(dep_a2_path, '1.0.0')
         # Compile test_project
         builder = Builder.init_from_path(pack_path)
         self.assertEqual(False, builder.system_config.cache.exists_local(Package.from_path(dep_a1_path)))

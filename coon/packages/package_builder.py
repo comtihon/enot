@@ -1,3 +1,4 @@
+import os
 from os import listdir
 
 from os.path import join
@@ -12,7 +13,7 @@ from coon.tool.rebar import RebarTool
 from coon.tool.rebar3 import Rebar3Tool
 from coon.tool.relxtool import RelxTool
 from coon.tool.tool import AbstractTool
-from coon.utils.file_utils import get_cmd
+from coon.utils.file_utils import get_cmd, remove_dir
 
 
 class Builder:
@@ -131,14 +132,26 @@ class Builder:
                 next_level += dep.deps
             else:
                 pkg_vsn = self.packages[dep.name].vsn
-                if dep.vsn != pkg_vsn:  # Warn only if it is not the same dep
-                    print('Skip ' + dep.name + ' (' + dep.vsn + '). Use ' + pkg_vsn)
+                if dep.git_vsn != pkg_vsn:  # Warn only if it is not the same dep
+                    print('Skip ' + dep.name + ' (' + dep.git_vsn + '). Use ' + pkg_vsn)
+                dep.update_from_duplicate(self.packages[dep.name])
         if next_level:
             self.__populate_deps(next_level)
 
+    # list deps directory and compare to packages, which should always be actual due to
+    # populate at the beginning of the build. If dep is in deps dir, but not in self.packages
+    # this dep is dead and should be unlinked.
     def __rescan_deps(self):
-        deps = listdir(join(self.project.path, 'deps'))
-        # TODO for all listed deps not in self.packages - remove.
+        deps_dir = join(self.project.path, 'deps')
+        deps = listdir(deps_dir)
+        for dep in deps:
+            if dep not in self.packages:
+                dep_path = join(deps_dir, dep)
+                print('Drop dead dep: ' + dep_path)
+                if os.path.islink(dep_path):
+                    os.remove(dep_path)
+                else:
+                    remove_dir(dep_path)
 
     def __ensure_relx(self):
         return self.__ensure_tool(RelxTool())

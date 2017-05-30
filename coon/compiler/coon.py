@@ -1,10 +1,11 @@
+import socket
 import subprocess
+from os import listdir
 from os.path import isfile, join, isdir
 from subprocess import PIPE
 
 import os
 from jinja2 import Template
-from os import listdir
 
 from coon.compiler.abstract import AbstractCompiler
 from coon.compiler.c_compiler import CCompiler
@@ -79,7 +80,7 @@ class CoonCompiler(AbstractCompiler):
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
             app_path = join(self.output_path, self.project_name + '.app')
             with open(app_path, 'w') as f:
-                f.write(Template(app_src).render(modules=all_files, app=self.package))
+                f.write(Template(app_src).render(modules=all_files, app=self.package, hostname=socket.gethostname()))
 
     def __get_all_files(self, path):
         abs_files = []

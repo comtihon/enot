@@ -3,10 +3,10 @@ import tarfile
 from os.path import join
 
 import os
-from coon.packages.config import config_factory
 from git import Repo, InvalidGitRepositoryError
 
 from coon.packages.application_config import AppConfig
+from coon.packages.config import config_factory
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig
 from coon.packages.config.dep_config import DepConfig
@@ -19,6 +19,7 @@ class Package:
         self._app_config = app_config
         self._path = path
         self._has_nifs = has_nifs
+        self._deps = []
         self.__set_deps()
         self.__set_url_from_git()
         self.__set_git_vsn()
@@ -122,6 +123,17 @@ class Package:
         self._has_nifs = has_nifs
         self.config.git_vsn = git_vsn
 
+    # If package has dep and this dep has already be populated
+    # becoming real package - update_from_duplicate should be called
+    # on duplicate to get values from populated dep, such as path,
+    # configs.
+    def update_from_duplicate(self, package: 'Package'):
+        self._config = package.config
+        self._app_config = package.app_config
+        self._path = package.path
+        self._deps = package.deps
+        self._has_nifs = package.has_nifs
+
     def export(self) -> dict:
         export = self.config.export()
         export['name'] = self.name
@@ -153,7 +165,6 @@ class Package:
         tar(pack_dir, dirs_to_add, package_dst)
 
     def __set_deps(self):
-        self._deps = []
         if self.config:  # TODO check config.drop_unknown (if not a template)
             for name, dep in self.config.deps.items():
                 self._deps.append(Package.from_dep(name, dep))

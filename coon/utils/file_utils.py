@@ -70,7 +70,7 @@ def link_if_needed(include_src: str, include_dst: str) -> bool:
             return False
         elif os.path.islink(include_dst):  # link outdated or broken
             print('update link: ' + include_src)
-            os.remove(include_dst)
+            os.remove(include_dst)  # TODO we can return False here if only erl version was changed.
             os.symlink(include_src, include_dst)
             return True
         elif not os.path.exists(include_dst):  # there was no link. Should add it but return false - there was no update

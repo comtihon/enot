@@ -195,7 +195,7 @@ class Package:
                 return
 
     def __set_git_vsn(self):
-        if not self.git_tag:
+        if not self.git_tag and self.path:
             try:
                 repo = Repo(self.path)
                 tag_name = None

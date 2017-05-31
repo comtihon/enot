@@ -9,6 +9,7 @@ _Why coon?_
 - built deps caching locally and remotely
 - json project configuration
 - Jinja2 templating
+- automatic files build order
 
 ### Installation
 Pypi:
@@ -119,7 +120,9 @@ __app.src__
         {env, []}
     ]}.
 Where `modules` are the list of all application's modules and `app` is the object of Package class from 
-`coon/packages/package.py` representing current project. You can use it's properties in templating. 
+`coon/packages/package.py` representing current project. You can use it's properties in templating.  
+In `app.src` you have also `hostname` available for templating.    
+
 TODO example or full doc here.  
 __relx.config__
 

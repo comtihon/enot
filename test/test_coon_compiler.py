@@ -6,6 +6,7 @@ from mock import patch
 from os import listdir
 
 import test
+from coon.__main__ import create
 from coon.compiler.coon import CoonCompiler
 from coon.packages.config.coon import CoonConfig
 from coon.packages.package import Package
@@ -109,6 +110,56 @@ class CompileTests(TestClass):
         self.assertEqual('1.0.0', vsn)
         self.assertEqual(deps, ['kernel', 'stdlib', 'test_dep'])
 
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_build_parse_transform_first(self, mock_conf):
+        mock_conf.return_value = self.conf_file
+        create(self.tmp_dir, {'<name>': 'project'})
+        project_dir = join(self.tmp_dir, 'project')
+        project_src = join(project_dir, 'src')
+        with open(join(project_src, 'p_trans.erl'), 'w') as w:
+            w.write('''
+            -module(p_trans).
+            -export([parse_transform/2]).
+            
+            -record(support, {add_fun = true, 
+                              export = true}).
+            
+            parse_transform(AST, _Options) ->
+              do_parse([], AST, #support{}).
+              
+            do_parse(AST, [], _) -> lists:reverse(AST);
+            do_parse(AST, [F = {function, N, _, _, _} | Others], Support = #support{add_fun = true}) ->
+              M = N - 1,
+              AddedFun =
+                {function, M, sum, 2,
+                  [{clause, M,
+                    [{var, M, 'A'}, {var, M, 'B'}],
+                    [],
+                    [{op, M, '+', {var, M, 'A'}, {var, M, 'B'}}]}]},
+              TurnedOff = Support#support{add_fun = false},
+              do_parse([F | [AddedFun | AST]], Others, TurnedOff);
+            do_parse(AST, [E = {attribute, N, export, _} | Others], Support = #support{export = true}) ->
+              Export = [E | AST],
+              Exported = {attribute, N + 1, export, [{sum, 2}]},
+              TurnedOff = Support#support{export = false},
+              do_parse([Exported | Export], Others, TurnedOff);
+            do_parse(AST, [H | Others], Support) ->
+              do_parse([H | AST], Others, Support).
+            ''')
+        with open(join(project_src, 'a_module.erl'), 'w') as w:
+            w.write('''
+            -module(a_module).
+            
+            -compile([{parse_transform, p_trans}]).
+            
+            -export([hello/0]).
+            
+            hello() -> hello.
+            ''')
+        package = Package.from_path(project_dir)
+        compiler = CoonCompiler(package)
+        self.assertEqual(True, compiler.compile())
+        self.assertEqual(True, os.path.exists(join(project_dir, 'ebin')))
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,6 +5,7 @@ from erl_terms.erl_terms_core import decode
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
 from coon.utils.file_utils import read_file
+from coon.packages.dep import Dep
 
 
 class RebarConfig(ConfigFile):
@@ -13,7 +14,7 @@ class RebarConfig(ConfigFile):
         self._path = path
         self._platform_defines = []
         rebarconfig = decode(read_file(join(path, 'rebar.config')))
-        self.set_url(url)
+        self._url = url
         self.__parse_config(rebarconfig)
 
     @property
@@ -31,10 +32,10 @@ class RebarConfig(ConfigFile):
                 self.__parse_erl_opts(value)
 
     def __parse_deps(self, deps):
-        for (name, _, addr) in deps:
+        for (name, _, addr) in deps:  # TODO distinguish tags and branches
             (_, url, vsn) = addr
             (_, vsn_value) = vsn
-            self.deps[name] = (url, vsn_value)
+            self.deps[name] = Dep(url, vsn_value)
 
     def __parse_erl_opts(self, value):
         for opt in value:

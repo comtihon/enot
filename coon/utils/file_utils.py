@@ -5,7 +5,6 @@ from os.path import join
 from shutil import copyfile
 
 import os
-from os import listdir
 
 
 def read_file(path: str) -> str:
@@ -21,10 +20,6 @@ def copy_file(src: str, dst: str):
 def copy_to(src: str, dst: str):
     if os.path.exists(src):
         shutil.copytree(src, join(dst, src))
-
-
-def list_dir(path: str) -> list:
-    return listdir(path)
 
 
 def tar(path: str, dirs: list, dst: str):
@@ -63,11 +58,30 @@ def if_dir_exists(path: str, dir_to_check: str) -> str or None:
         return full
 
 
-def link_if_needed(include_src, include_dst):  # TODO recheck if link really exists (sometimes error here)
-    # TODO recheck if link should be updated - if link exists, but points to old include_src
-    print('link ' + include_src + ' -> ' + include_dst)
-    if os.path.exists(include_src) and not os.path.exists(include_dst):
-        os.symlink(include_src, include_dst)
+# link include_src -> include_dst
+# if link exists and it is not as include_src - remove old link and place new one.
+# Return True in this case as possibly dep was updated
+# if there is a directory instead of link - remove it and set link.
+# Return True in this case also
+def link_if_needed(include_src: str, include_dst: str) -> bool:
+    if os.path.exists(include_src):
+        if os.path.islink(include_dst) and os.readlink(include_dst) == include_src:  # link up to date
+            print('already linked: ' + include_src)
+            return False
+        elif os.path.islink(include_dst):  # link outdated or broken
+            print('update link: ' + include_src)
+            os.remove(include_dst)  # TODO we can return False here if only erl version was changed.
+            os.symlink(include_src, include_dst)
+            return True
+        elif not os.path.exists(include_dst):  # there was no link. Should add it but return false - there was no update
+            print('link ' + include_src + ' -> ' + include_dst)
+            os.symlink(include_src, include_dst)
+            return False
+        else:  # not a link. May be file
+            print('overwrite ' + include_src + ' -> ' + include_dst)
+            remove_dir(include_dst)
+            os.symlink(include_src, include_dst)
+            return True
 
 
 def ensure_dir(path: str):

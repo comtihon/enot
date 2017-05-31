@@ -69,8 +69,10 @@ def find_app_vsn(content: str) -> str or None:
 
 def find_apps(content: str) -> list or None:
     [_, rest] = str.split(content, '{applications,')
+    if rest.strip().startswith('{{'):  # if jinja2 template (whole deps)
+        return None
     [_, start] = str.split(rest, '[', maxsplit=1)
     [apps, _] = str.split(start, ']', maxsplit=1)
-    if '{{' in apps:  # if jinja2 template
+    if '{{' in apps:  # if jinja2 template (
         return None
     return [dep.strip('\' \r\n') for dep in apps.split(',') if dep is not '']

@@ -6,6 +6,7 @@ from mock import patch
 from coon.__main__ import create
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
+from coon.packages.dep import Dep
 from test.abs_test_class import TestClass, set_git_url, set_git_tag
 
 
@@ -22,24 +23,25 @@ class PackageTests(TestClass):
         self.assertEqual('test_app', pack.name)
         self.assertEqual('0.0.1', pack.vsn)
         self.assertEqual('http://github/my_namespace/my_project.git', pack.url)
-        self.assertEqual('1.0.0', pack.git_vsn)
+        self.assertEqual('1.0.0', pack.git_tag)
+        self.assertEqual('master', pack.git_branch)
         self.assertEqual([], pack.deps)
 
     # Package can be created from dep. Usually when populating main project deps.
     def test_init_from_dep(self):
-        pack = Package.from_dep('test_app', ('some_url', '1.0.0'))
+        pack = Package.from_dep('test_app', Dep('some_url', 'master', tag='1.0.0'))
         self.assertEqual([], pack.deps)
         self.assertEqual('test_app', pack.name)
-        self.assertEqual('1.0.0', pack.git_vsn)
+        self.assertEqual('1.0.0', pack.git_tag)
 
     # Main project's dep can be fetched and filled.
     def test_update_from_cache(self):
-        pack = Package.from_dep('my_dep', ('some_url', '1.0.0'))
+        pack = Package.from_dep('my_dep', Dep('some_url', 'master', tag='1.0.0'))
         create(self.test_dir, {'<name>': 'my_dep'})
         pack.update_from_cache(join(self.test_dir, 'my_dep'))
         self.assertEqual('my_dep', pack.name)
         self.assertEqual('0.0.1', pack.vsn)
-        self.assertEqual('1.0.0', pack.git_vsn)
+        self.assertEqual('1.0.0', pack.git_tag)
         self.assertEqual('some_url', pack.url)
         self.assertEqual([], pack.deps)
 
@@ -66,11 +68,12 @@ class PackageTests(TestClass):
         builder = Builder.init_from_path(pack_path)
         self.assertEqual(True, builder.build())
         builder.package()
-        pack = Package.from_dep('my_dep', ('some_url', '1.0.0'))
+        pack = Package.from_dep('my_dep', Dep('some_url', 'master', tag='1.0.0'))
         pack.update_from_package(join(pack_path, 'my_dep.cp'))
         self.assertEqual('my_dep', pack.name)
         self.assertEqual('0.0.1', pack.vsn)
-        self.assertEqual('1.0.0', pack.git_vsn)
+        self.assertEqual('1.0.0', pack.git_tag)
+        self.assertEqual('master', pack.git_branch)
         self.assertEqual('some_url', pack.url)
         self.assertEqual([], pack.deps)
 

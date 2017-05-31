@@ -1,5 +1,4 @@
 import json
-import test
 import unittest
 from os import listdir
 from os.path import join
@@ -7,6 +6,7 @@ from os.path import join
 import os
 from git import Repo
 
+import test
 from coon.utils.file_utils import ensure_empty, remove_dir
 
 
@@ -70,6 +70,15 @@ def set_deps(path: str, deps: list):
         json.dump(conf, file)
 
 
+def set_link_policy(path: str, policy: bool):
+    fullpath = join(path, 'coonfig.json')
+    with open(fullpath, 'r') as file:
+        conf = json.load(file)
+    conf['link_all'] = policy
+    with open(fullpath, 'w') as file:
+        json.dump(conf, file)
+
+
 def set_git_url(path: str, url: str):
     repo = Repo.init(path)
     repo.index.add(listdir(path))
@@ -81,3 +90,9 @@ def set_git_url(path: str, url: str):
 def set_git_tag(path: str, tag: str):
     repo = Repo(path)
     repo.create_tag(tag, message='new tag')
+
+
+def switch_branch(path: str, branch: str):
+    repo = Repo(path)
+    repo.create_head(branch)
+    repo.git.checkout(branch)

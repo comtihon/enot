@@ -5,6 +5,7 @@ from os.path import join
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
 from coon.utils.file_utils import read_file_lines
+from coon.packages.dep import Dep
 
 
 def get_erl_opts(args: list, content: dict) -> list:
@@ -34,8 +35,8 @@ def check_var(var: str, content: dict):
 
 
 def get_dep(line):
-    [_, url, tag] = line.strip().split(" ")
-    return url, tag
+    [_, url, branch] = line.strip().split(" ")
+    return url, branch
 
 
 class ErlangMkConfig(ConfigFile):
@@ -44,7 +45,7 @@ class ErlangMkConfig(ConfigFile):
         self._path = path
         makefile = join(path, 'Makefile')
         content = parse_makefile(makefile)
-        self.set_url(url)
+        self._url = url
         self.__conf_init(content)
         self.__parse_erl_opts(makefile, content)
         self.__parse_deps(content)
@@ -58,8 +59,8 @@ class ErlangMkConfig(ConfigFile):
             for dep in deps:
                 depname = 'dep_' + dep
                 if depname in content:
-                    url, tag = get_dep(content[depname])
-                    self.deps[dep] = (url, tag)
+                    url, branch = get_dep(content[depname])
+                    self.deps[dep] = Dep(url, branch)
                 else:
                     print('Dep ' + depname + ' not specified')
 

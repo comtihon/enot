@@ -3,14 +3,15 @@ import tarfile
 from os.path import join
 
 import os
-from coon.packages.config import config_factory
 from git import Repo, InvalidGitRepositoryError
 
 from coon.packages.application_config import AppConfig
+from coon.packages.config import config_factory
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig
 from coon.packages.config.dep_config import DepConfig
 from coon.utils.file_utils import tar
+from coon.packages.dep import Dep
 
 
 class Package:
@@ -19,6 +20,7 @@ class Package:
         self._app_config = app_config
         self._path = path
         self._has_nifs = has_nifs
+        self._deps = []
         self.__set_deps()
         self.__set_url_from_git()
         self.__set_git_vsn()
@@ -34,8 +36,18 @@ class Package:
         return self.config.url
 
     @property
-    def git_vsn(self) -> str:  # version from git (tag or branch).
-        return self.config.git_vsn
+    def git_branch(self) -> str:  # git branch
+        return self.config.git_branch
+
+    @property
+    def git_tag(self) -> str:  # git tag
+        return self.config.git_tag
+
+    @property
+    def git_vsn(self) -> str:  # prefer tag, but if None - return branch name
+        if self.git_tag:
+            return self.git_tag
+        return self.git_branch
 
     @property
     def vsn(self) -> str:  # package version from app.src or from config (preferred)
@@ -70,7 +82,7 @@ class Package:
     @property
     def apps(self) -> list:  # appliations, which should be run before this app
         apps = [dep.name for dep in self.deps]
-        if self.app_config:
+        if self.app_config and self.app_config.applications:
             apps += self.app_config.applications
         return list(set(apps))
 
@@ -97,16 +109,18 @@ class Package:
     @classmethod
     # Package is created from dependency name, (url, vsn), got from config file deps
     # Usually when populating package's deps
-    def from_dep(cls, name: str, dep: tuple):
-        (url, vsn) = dep
-        return cls(None, DepConfig(name, vsn, url), None, False)
+    def from_dep(cls, name: str, dep: Dep):
+        print(dep.tag)
+        return cls(None, DepConfig(name, dep), None, False)
 
     # Update Package, created by from_dep classmethod.
     # Is called, when dep was fetched by local to some path and need to be fully filled
     def update_from_cache(self, path: str):
-        git_vsn = self.git_vsn
+        git_tag = self.git_tag
+        git_branch = self.git_branch
         self._config = config_factory.read_project(path, url=self.url)
-        self._config.git_vsn = git_vsn
+        self._config.git_tag = git_tag
+        self._config.git_branch = git_branch
         self._app_config = AppConfig.from_path(path)
         self._path = path
         self.__set_deps()
@@ -114,13 +128,26 @@ class Package:
     # Update Package, created by from_dep classmethod.
     # Is called, when dep coon package was fetched by remote cache and need to be fully filled
     def update_from_package(self, path: str):
-        git_vsn = self.git_vsn
+        git_tag = self.git_tag
+        git_branch = self.git_branch
         project_path, has_nifs, config, app_config = do_update_from_package(path, self.url)
         self.path = project_path
         self._config = config
         self._app_config = app_config
         self._has_nifs = has_nifs
-        self.config.git_vsn = git_vsn
+        self.config.git_tag = git_tag
+        self.config.git_branch = git_branch
+
+    # If package has dep and this dep has already be populated
+    # becoming real package - update_from_duplicate should be called
+    # on duplicate to get values from populated dep, such as path,
+    # configs.
+    def update_from_duplicate(self, package: 'Package'):
+        self._config = package.config
+        self._app_config = package.app_config
+        self._path = package.path
+        self._deps = package.deps
+        self._has_nifs = package.has_nifs
 
     def export(self) -> dict:
         export = self.config.export()
@@ -130,8 +157,10 @@ class Package:
             export['url'] = self.url
         if self.vsn is not None:
             export['app_vsn'] = self.vsn
-        if self.git_vsn is not None:
-            export['tag'] = self.git_vsn
+        if self.git_tag is not None:
+            export['tag'] = self.git_tag
+        if self.git_branch is not None:
+            export['branch'] = self.git_branch
         return export
 
     def generate_package(self):
@@ -153,7 +182,6 @@ class Package:
         tar(pack_dir, dirs_to_add, package_dst)
 
     def __set_deps(self):
-        self._deps = []
         if self.config:  # TODO check config.drop_unknown (if not a template)
             for name, dep in self.config.deps.items():
                 self._deps.append(Package.from_dep(name, dep))
@@ -167,9 +195,9 @@ class Package:
                 return
 
     def __set_git_vsn(self):
-        if not self.git_vsn:
+        if not self.git_tag and self.path:
             try:
-                repo = Repo(self.path)  # TODO if there is no tags should take active branch name
+                repo = Repo(self.path)
                 tag_name = None
                 for tag in repo.tags:
                     if tag.commit == repo.head.commit:
@@ -177,7 +205,8 @@ class Package:
                 if tag_name:
                     paths = tag_name.split('/')
                     [tag] = paths[-1:]
-                    self.config.git_vsn = tag
+                    self.config.git_tag = tag
+                self.config.git_branch = repo.active_branch.name
             except InvalidGitRepositoryError:
                 return
 

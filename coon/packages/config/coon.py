@@ -3,9 +3,9 @@ from os.path import join
 from tarfile import TarFile
 
 from coon.action.prebuild import action_factory
-
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
+from coon.packages.dep import Dep
 from coon.utils.file_utils import read_file
 
 
@@ -20,7 +20,10 @@ class CoonConfig(ConfigFile):
         self.__parse_deps(config.get('deps', {}))
         self._conf_vsn = config.get('app_vsn', None)
         self._git_vsn = config.get('tag', None)
-        self.set_url(config.get('url', url))
+        self._git_branch = config.get('branch', None)
+        self._link_all = config.get('link_all', self.link_all)
+        self._rescan_deps = config.get('rescan_deps', self.rescan_deps)
+        self._url = config.get('url', url)
 
     @classmethod
     def from_path(cls, path: str, url=None) -> 'CoonConfig':
@@ -42,7 +45,7 @@ class CoonConfig(ConfigFile):
     def __parse_deps(self, deps: list):
         for dep in deps:
             name = dep['name']
-            self.deps[name] = (dep['url'], dep['tag'])
+            self.deps[name] = Dep(dep['url'], dep.get('branch', None), tag=dep.get('tag', None))
 
     def __parse_prebuild(self, parsed):
         for step in parsed.get('prebuild', []):

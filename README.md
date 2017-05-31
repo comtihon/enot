@@ -5,7 +5,10 @@
 [![PyPI](https://img.shields.io/pypi/wheel/coon.svg)](https://pypi.python.org/pypi/coon)  
 Erlang advanced project manager.  
 _Why coon?_  
-TODO really, why?
+- deps auto removing
+- built deps caching locally and remotely
+- json project configuration
+- Jinja2 templating
 
 ### Installation
 Pypi:
@@ -51,11 +54,13 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
         "app_vsn" : AppVsn,
         "drop_unknown_deps" : Boolean,
         "with_source" : Boolean,
+        "link_all" : Boolean,
+        "rescan_deps" : Boolean,
         "deps" : [
             {
                 "name" : DepName,
                 "url" : DepUrl,
-                "tag" : GitTag
+                "tag" : GitTag / "branch" : BranchName
             }
         ],
         "prebuild" : [
@@ -75,8 +80,13 @@ Here:
 `drop_unknown_deps` if set to true - will drop all deps specified in deps but not mentioned in `.app`/`.app.src`. 
 Default is false. TODO this is not working now :/  
 `with_source` if set to true - will include source, when moving to local/remote cache and packaging. Default is true.  
-`deps` is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep and `dep.tag` is a 
-tag/branch of a dep. Only git deps are supported now.  
+`link_all` if set to true - all deps will be linked to main project (including deps of deps). Default is true. You can
+  set it to false, to reduce number of deps you are not using directly in your project, but keep in mind, that relx 
+  needs all dep tree for proper building. So if you use releases - switch to true.  
+`rescan_deps` if set to true (default is true) - will rescan all deps tree if dep update detected after build - and 
+remove dead deps from deps directory. You can set it to false if you prefer manual deps removing.  
+`deps` is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep, `dep.tag` is a 
+tag of a dep and `dep.branch` is a branch. Last two are mutually exclusive. Only git deps are supported now.  
 `prebuild` is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
 Only `shell` is supported now. `prebuild.Params` are the options to be passed to action. TODO example here.  
 `build_vars` is a list of erlang build vars, used when building a project. They can be either single or with value: 

@@ -1,0 +1,188 @@
+import unittest
+from os.path import join
+
+from coon.__main__ import create
+from coon.compiler.coon import CoonCompiler
+from coon.packages.package import Package
+from coon.utils.file_utils import ensure_dir
+from test.abs_test_class import TestClass
+
+
+# TODO find a way to parse output of eunit to understand how much tests really pass/fail
+# TODO parse test/logs for ct results
+class TestingTests(TestClass):
+    def __init__(self, method_name):
+        super().__init__('testing_tests', method_name)
+
+    def setUp(self):
+        super().setUp()
+        create(self.test_dir, {'<name>': 'test_app'})
+
+    # Test that unit files are collected properly
+    def test_collecting_units(self):
+        test_dir = join(self.test_dir, 'test_app', 'test')
+        ensure_dir(test_dir)
+        with open(join(test_dir, 'first.erl'), 'w') as test:
+            test.write('''
+            -module(first).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?_assert(true).''')
+        with open(join(test_dir, 'second.erl'), 'w') as test:
+            test.write('''
+            -module(second).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?_assert(true).''')
+        package = Package.from_path(join(self.test_dir, 'test_app'))
+        compiler = CoonCompiler(package)
+        files = compiler._CoonCompiler__get_all_files(compiler.test_path, 'erl')
+        self.assertEqual({'first': test_dir,
+                          'second': test_dir}, files)
+
+    # Test that unit files are collected properly in case of recurse
+    def test_collecting_units_recurse(self):
+        test_dir = join(self.test_dir, 'test_app', 'test')
+        ensure_dir(test_dir)
+        with open(join(test_dir, 'level1.erl'), 'w') as test:
+            test.write('''
+            -module(level1).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?_assert(true).''')
+        subdir = join(test_dir, 'sub')
+        ensure_dir(subdir)
+        with open(join(subdir, 'level2.erl'), 'w') as test:
+            test.write('''
+            -module(level2).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?_assert(true).''')
+        package = Package.from_path(join(self.test_dir, 'test_app'))
+        compiler = CoonCompiler(package)
+        files = compiler._CoonCompiler__get_all_files(compiler.test_path, 'erl')
+        self.assertEqual({'level1': test_dir,
+                          'level2': join(test_dir, 'sub')}, files)
+
+    # Test if unit test pass
+    def test_unit_test_ok(self):
+        test_dir = join(self.test_dir, 'test_app', 'test')
+        ensure_dir(test_dir)
+        with open(join(test_dir, 'simple.erl'), 'w') as test:
+            test.write('''
+            -module(simple).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?_assert(true).''')
+        package = Package.from_path(join(self.test_dir, 'test_app'))
+        compiler = CoonCompiler(package)
+        self.assertEqual(True, compiler.unit())
+
+    # Test if unit test fail
+    def test_unit_test_fail(self):
+        test_dir = join(self.test_dir, 'test_app', 'test')
+        ensure_dir(test_dir)
+        with open(join(test_dir, 'simple.erl'), 'w') as test:
+            test.write('''
+            -module(simple).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?assertEqual(true, false).''')
+        package = Package.from_path(join(self.test_dir, 'test_app'))
+        compiler = CoonCompiler(package)
+        self.assertEqual(False, compiler.unit())
+
+    # Test if several tests can pass
+    def test_unit_multiple_test_ok(self, ):
+        test_dir = join(self.test_dir, 'test_app', 'test')
+        ensure_dir(test_dir)
+        with open(join(test_dir, 'simple.erl'), 'w') as test:
+            test.write('''
+            -module(simple).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?_assert(true).''')
+        subdir = join(test_dir, 'sub')
+        ensure_dir(subdir)
+        with open(join(subdir, 'level2.erl'), 'w') as test:
+            test.write('''
+            -module(level2).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?_assert(true).''')
+        package = Package.from_path(join(self.test_dir, 'test_app'))
+        compiler = CoonCompiler(package)
+        self.assertEqual(True, compiler.unit())
+
+    # Test if one test can fail
+    def test_unit_multiple_test_fail(self):
+        test_dir = join(self.test_dir, 'test_app', 'test')
+        ensure_dir(test_dir)
+        with open(join(test_dir, 'simple.erl'), 'w') as test:
+            test.write('''
+            -module(simple).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?_assert(true).''')
+        subdir = join(test_dir, 'sub')
+        ensure_dir(subdir)
+        with open(join(subdir, 'level2.erl'), 'w') as test:
+            test.write('''
+            -module(level2).
+            -include_lib("eunit/include/eunit.hrl").
+
+           run_test() ->
+               ?assertEqual(true, false).''')
+        package = Package.from_path(join(self.test_dir, 'test_app'))
+        compiler = CoonCompiler(package)
+        self.assertEqual(False, compiler.unit())
+
+    # Test if common test pass
+    def test_common_test_ok(self):
+        test_dir = join(self.test_dir, 'test_app', 'test')
+        ensure_dir(test_dir)
+        with open(join(test_dir, 'common_SUITE.erl'), 'w') as test:
+            test.write('''
+            -module(common_SUITE).
+            -include_lib("common_test/include/ct.hrl").
+            -export([all/0]).
+            -export([test/1]).
+             
+            all() -> [test].
+             
+            test(_Config) ->
+                1 = 1.''')
+        package = Package.from_path(join(self.test_dir, 'test_app'))
+        compiler = CoonCompiler(package)
+        self.assertEqual(True, compiler.common('test/logs'))
+
+    # Test if common test fails
+    def test_common_test_fail(self):
+        test_dir = join(self.test_dir, 'test_app', 'test')
+        ensure_dir(test_dir)
+        with open(join(test_dir, 'common_SUITE.erl'), 'w') as test:
+            test.write('''
+            -module(common_SUITE).
+            -include_lib("common_test/include/ct.hrl").
+            -export([all/0]).
+            -export([test/1]).
+             
+            all() -> [test].
+             
+            test(_Config) ->
+                1 = 2.''')
+        package = Package.from_path(join(self.test_dir, 'test_app'))
+        compiler = CoonCompiler(package)
+        self.assertEqual(False, compiler.common('test/logs'))
+
+if __name__ == '__main__':
+    unittest.main()

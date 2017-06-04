@@ -4,6 +4,7 @@ from os import listdir
 from os.path import join
 
 import os
+from coon.utils import logger
 from git import Repo
 
 import test
@@ -15,6 +16,7 @@ class TestClass(unittest.TestCase):
         super().__init__(method_name)
         self._test_name = test_name
         self._test_dir = test.get_test_dir(test_name)
+        logger.configure('debug')
 
     @property
     def test_name(self):
@@ -22,19 +24,19 @@ class TestClass(unittest.TestCase):
 
     @property
     def test_dir(self):
-        return self._test_dir
+        return join(os.getcwd(), self._test_dir)
 
     @property
     def cache_dir(self):
-        return join(os.getcwd(), self.test_dir, 'cache')
+        return join(self.test_dir, 'cache')
 
     @property
     def tmp_dir(self):
-        return join(os.getcwd(), self.test_dir, 'tmp')
+        return join(self.test_dir, 'tmp')
 
     @property
     def conf_file(self):
-        return join(os.getcwd(), self.test_dir, 'global_config.json')
+        return join(self.test_dir, 'global_config.json')
 
     @property
     def compiler(self) -> str:

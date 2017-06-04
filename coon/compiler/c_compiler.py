@@ -1,14 +1,13 @@
-import subprocess
 from os.path import join
-from subprocess import PIPE
 
+import coon
 import os
 from pkg_resources import Requirement, resource_filename
 
-import coon
-from coon.compiler.abstract import AbstractCompiler
+from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.packages.package import Package
 from coon.utils.file_utils import copy_file, ensure_dir
+from coon.utils.logger import debug
 
 
 class CCompiler(AbstractCompiler):
@@ -23,6 +22,8 @@ class CCompiler(AbstractCompiler):
     def src_path(self) -> str:
         return join(self.package.path, 'c_src')
 
+    # TODO override unit to run cunit?
+
     def compile(self) -> bool:
         ensure_dir(self.output_path)
         ensure_makefile(self.src_path)
@@ -30,18 +31,10 @@ class CCompiler(AbstractCompiler):
         for var in self.package.config.c_build_vars:
             for k, v in var.items():
                 env_vars[k] = v
-        p = subprocess.Popen([self.executable, '-C', 'c_src'],
-                             stdout=PIPE,
-                             stderr=PIPE,
-                             cwd=self.package.path,
-                             env=env_vars)
-        if p.wait() != 0:
-            print(self.project_name + ' compilation failed: ')
-            print(p.stderr.read().decode('utf8'))
-            print(p.stdout.read().decode('utf8'))
-            return False
-        else:
-            return True
+        return run_cmd([self.executable, '-C', 'c_src'],
+                       self.project_name,
+                       self.root_path,
+                       env_vars)
 
 
 # copy makefile to c_src from templates, if no makefile presents
@@ -49,5 +42,5 @@ def ensure_makefile(src_path):
     mkfile = join(src_path, 'Makefile')
     if not os.path.isfile(mkfile):
         resource = resource_filename(Requirement.parse(coon.APPNAME), 'coon/resources/CMakefile')
-        print('copy ' + resource + ' to ' + mkfile)
+        debug('copy ' + resource + ' to ' + mkfile)
         copy_file(resource, mkfile)

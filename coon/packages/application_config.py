@@ -4,6 +4,9 @@ Application config .app.src or .app
 from os.path import join
 from tarfile import TarFile
 
+import logging
+
+import coon
 from coon.utils.erl_file_utils import parse_app_config, contains_app_file, parse_app_config_content
 
 
@@ -26,7 +29,7 @@ class AppConfig:
         if contains_app_file(ebin_path, suffix='.app'):
             name, vsn, apps, template = parse_app_config(ebin_path, suffix='.app')
             return cls(name, vsn, apps, template, False)
-        print('No app in path ' + path)
+        warning('No app in path ' + path)
         return None
 
     @classmethod

@@ -5,6 +5,6 @@ install: make
 	sudo pip install dist/coon-*
 
 tests:
-	python -m pytest
+	python -m pytest --capture=sys
 
 .PHONY: install

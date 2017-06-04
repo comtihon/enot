@@ -4,8 +4,8 @@ from os.path import join
 
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
-from coon.utils.file_utils import read_file_lines
 from coon.packages.dep import Dep
+from coon.utils.file_utils import read_file_lines
 
 
 def get_erl_opts(args: list, content: dict) -> list:
@@ -62,7 +62,7 @@ class ErlangMkConfig(ConfigFile):
                     url, branch = get_dep(content[depname])
                     self.deps[dep] = Dep(url, branch)
                 else:
-                    print('Dep ' + depname + ' not specified')
+                    warning('Dep ' + depname + ' not specified')
 
     def __conf_init(self, content: dict):
         self.__conf_vsn = content.get('PROJECT_VERSION', None)

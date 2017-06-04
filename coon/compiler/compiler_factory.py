@@ -17,8 +17,6 @@ def get_compiler(global_config: GlobalProperties, package: Package) -> AbstractC
         return select_compiler(global_config.compiler, package)
 
 
-# TODO ensure system has compilers installed (try to install them if not).
-# TODO ensure projects have compilers in case of using system non-coon. (obtain them + config, if don't).
 def select_compiler(compiler: Compiler, package: Package):
     if compiler == Compiler.COON:
         return CoonCompiler(package)

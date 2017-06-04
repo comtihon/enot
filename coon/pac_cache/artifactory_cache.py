@@ -46,7 +46,7 @@ class ArtifactoryCache(Cache):
     def add_package(self, package: Package, rewrite=True) -> bool:
         if not rewrite and self.exists(package):
             return True
-        print('Add ' + package.name + ' to ' + self.name)
+        info('Add ' + package.name + ' to ' + self.name)
         path = ArtifactoryPath(join(self.path, self.get_package_path(package)),
                                auth=(self.username, self.password))
         if not path.exists():

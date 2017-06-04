@@ -3,6 +3,7 @@ import tarfile
 from os.path import join
 
 import os
+from coon.utils.logger import info
 from git import Repo, InvalidGitRepositoryError
 
 from coon.packages.application_config import AppConfig
@@ -110,7 +111,6 @@ class Package:
     # Package is created from dependency name, (url, vsn), got from config file deps
     # Usually when populating package's deps
     def from_dep(cls, name: str, dep: Dep):
-        print(dep.tag)
         return cls(None, DepConfig(name, dep), None, False)
 
     # Update Package, created by from_dep classmethod.
@@ -178,7 +178,7 @@ class Package:
             add_if_exist(pack_dir, 'c_src', dirs_to_add)
         add_if_exist(pack_dir, 'coonfig.json', dirs_to_add)
         package_dst = join(pack_dir, self.name + '.cp')
-        print('create package ' + package_dst)
+        info('create package ' + package_dst)
         tar(pack_dir, dirs_to_add, package_dst)
 
     def __set_deps(self):

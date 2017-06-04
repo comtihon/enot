@@ -2,12 +2,12 @@ import shlex
 import subprocess
 import tarfile
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 from os.path import join
 
-from enum import Enum
-
-from coon.utils.file_utils import ensure_empty, copy_file
 from coon.packages.package import Package
+from coon.utils.file_utils import ensure_empty, copy_file
+from coon.utils.logger import info
 
 
 class CacheType(Enum):
@@ -57,7 +57,7 @@ class Cache(metaclass=ABCMeta):
         unpack_dir = join(self.temp_dir, package.name)
         coonpack = join(package.path, package.name + '.cp')
         ensure_empty(join(self.temp_dir, package.name))
-        print('search ' + coonpack)
+        info('Extract ' + coonpack)
         with tarfile.open(coonpack) as pack:
             pack.extractall(unpack_dir)
         package.path = unpack_dir  # update path pointer

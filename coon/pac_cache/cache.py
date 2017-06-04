@@ -2,8 +2,9 @@ import shlex
 import subprocess
 import tarfile
 from abc import ABCMeta, abstractmethod
-from enum import Enum
 from os.path import join
+
+from enum import Enum
 
 from coon.packages.package import Package
 from coon.utils.file_utils import ensure_empty, copy_file
@@ -69,6 +70,11 @@ class Cache(metaclass=ABCMeta):
 
     @staticmethod
     def get_erlang_version():
-        vsn = subprocess.check_output(  # TODO handle error
-            shlex.split("erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell"))
+        try:
+            vsn = subprocess.check_output(
+                shlex.split("erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell"))
+        except subprocess.CalledProcessError:  # Try to figure out vsn via cat as octocoon fails to get version via erl
+            with open('/usr/lib/erlang/releases/RELEASES', 'r') as rel:
+                file = rel.read()
+                return file.split(',')[2].strip('"')
         return vsn.decode('utf-8').strip("\n\r\"")

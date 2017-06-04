@@ -122,6 +122,7 @@ class Package:
         self._config.git_tag = git_tag
         self._config.git_branch = git_branch
         self._app_config = AppConfig.from_path(path)
+        self._has_nifs = os.path.exists(join(path, 'c_src'))
         self._path = path
         self.__set_deps()
 
@@ -207,7 +208,7 @@ class Package:
                     [tag] = paths[-1:]
                     self.config.git_tag = tag
                 self.config.git_branch = repo.active_branch.name
-            except InvalidGitRepositoryError:
+            except (InvalidGitRepositoryError, TypeError):
                 return
 
 

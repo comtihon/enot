@@ -1,9 +1,3 @@
-import subprocess
-
-import logging
-
-import coon
-from subprocess import PIPE
 from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.packages.package import Package
 

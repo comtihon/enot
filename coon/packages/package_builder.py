@@ -1,7 +1,7 @@
-import os
 from os import listdir
-
 from os.path import join
+
+import os
 
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.compiler_type import Compiler
@@ -14,6 +14,7 @@ from coon.tool.rebar3 import Rebar3Tool
 from coon.tool.relxtool import RelxTool
 from coon.tool.tool import AbstractTool
 from coon.utils.file_utils import get_cmd, remove_dir
+from coon.utils.logger import debug, info, warning
 
 
 class Builder:
@@ -70,6 +71,15 @@ class Builder:
     def package(self):
         self.project.generate_package()
 
+    # Run unit and common tests
+    def unit_test(self) -> bool:
+        compiler = get_compiler(self.system_config, self.project)
+        return compiler.unit()
+
+    def common_test(self, log_dir):
+        compiler = get_compiler(self.system_config, self.project)
+        return compiler.common(log_dir)
+
     # Parse package config, download missing deps to /tmp
     def populate(self):
         self.__populate_deps(self.project.deps)
@@ -94,7 +104,7 @@ class Builder:
 
     # Build all deps, add to cache and link to project
     def __build_deps(self, package: Package, is_subpackage=True):
-        print('build deps for ' + package.name)
+        info('build deps for ' + package.name)
         is_first_line = package is not self.project
         if (is_subpackage and
                 not self.project.config.link_all and
@@ -126,14 +136,14 @@ class Builder:
         next_level = []
         for dep in level:
             if dep.name not in self.packages:
-                print('new dep: ' + dep.name)
+                debug('new dep: ' + dep.name)
                 self.system_config.cache.populate(dep)  # populated dep becomes package
                 self.packages[dep.name] = dep
                 next_level += dep.deps
             else:
                 pkg_vsn = self.packages[dep.name].vsn
                 if dep.git_tag != pkg_vsn:  # Warn only if it is not the same dep
-                    print('Skip ' + dep.name + ' (' + dep.git_tag + '). Use ' + pkg_vsn)
+                    warning('Skip ' + dep.name + ' (' + dep.git_tag + '). Use ' + pkg_vsn)
                 dep.update_from_duplicate(self.packages[dep.name])
         if next_level:
             self.__populate_deps(next_level)
@@ -147,7 +157,7 @@ class Builder:
         for dep in deps:
             if dep not in self.packages:
                 dep_path = join(deps_dir, dep)
-                print('Drop dead dep: ' + dep_path)
+                info('Drop dead dep: ' + dep_path)
                 if os.path.islink(dep_path):
                     os.remove(dep_path)
                 else:

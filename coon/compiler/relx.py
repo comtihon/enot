@@ -1,15 +1,14 @@
-import subprocess
 from os.path import join
-from subprocess import PIPE
 
 import coon
 import os
-from coon.packages.package import Package
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
-from coon.compiler.abstract import AbstractCompiler
+from coon.compiler.abstract import AbstractCompiler, run_cmd
+from coon.packages.package import Package
 from coon.utils.file_utils import ensure_dir, write_file, read_file, copy_file
+from coon.utils.logger import debug
 
 
 class RelxCompiler(AbstractCompiler):
@@ -22,14 +21,7 @@ class RelxCompiler(AbstractCompiler):
         resave_vmargs, vmargs_path, vmargs = self.__modify_resource('vm.args', 'rel')
         resave_sysconf, sysconf_path, sysconf = self.__modify_resource('sys.config', 'rel')
         try:
-            p = subprocess.Popen(self.executable, stdout=PIPE, stderr=PIPE, cwd=self.package.path)
-            if p.wait() != 0:
-                print(self.package.name + ' release failed: ')
-                print(p.stderr.read().decode('utf8'))
-                print(p.stdout.read().decode('utf8'))
-                return False
-            else:
-                return True
+            return run_cmd(self.executable, self.project_name, self.root_path)
         finally:  # Return previous file values, if were changed.
             if resave_vmargs:
                 write_file(vmargs_path, vmargs)
@@ -51,6 +43,6 @@ class RelxCompiler(AbstractCompiler):
         resource_path = join(self.package.path, path, resource)
         if not os.path.isfile(resource_path):
             resource = resource_filename(Requirement.parse(coon.APPNAME), join('coon/resources', resource))
-            print('copy ' + resource + ' to ' + resource_path)
+            debug('copy ' + resource + ' to ' + resource_path)
             copy_file(resource, resource_path)
         return resource_path

@@ -1,13 +1,15 @@
 """Coon - package manager for Erlang
 
 Usage:
-  coon create <name>
-  coon build
-  coon package
-  coon add_package <repo> [-wp PACKAGE] [-r RECURSE]
-  coon release
-  coon deps
+  coon create <name> [-l LEVEL]
+  coon build [-l LEVEL]
+  coon package [-l LEVEL]
+  coon add_package <repo> [-wp PACKAGE] [-r RECURSE] [-l LEVEL]
+  coon release [-l LEVEL]
+  coon deps [-l LEVEL]
   coon version
+  coon eunit [-l LEVEL]
+  coon ct [--log-dir DIR] [-l LEVEL]
   coon -v | --version
   coon -h | --help
 
@@ -18,19 +20,22 @@ Options:
   -r RECURSE --recurse RECURSE       add package and all it's deps recursively [default: True]
   -h --help                          show this help message and exit
   -v --version                       print version and exit
+  -l LEVEL --log-level LEVEL         set log level. Options: debug, info, warning, error, critical [default: info]
+  --log-dir DIR                      common tests log dir [default: test/logs]
 """
 import sys
 from os.path import join
 
 import coon
 import os
-from coon import APPVSN
 from docopt import docopt, DocoptExit
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
+from coon import APPVSN
 from coon.packages.package_builder import Builder
 from coon.utils.file_utils import ensure_dir
+from coon.utils import logger
 
 
 def main(args=None):
@@ -40,6 +45,7 @@ def main(args=None):
         print(usage)
         sys.exit(1)
     path = os.getcwd()
+    logger.configure(arguments['--log-level'])
     result = False
     if arguments['create']:
         result = create(path, arguments)
@@ -55,6 +61,10 @@ def main(args=None):
         result = package(path)
     if arguments['add_package']:
         result = add_package(path, arguments)
+    if arguments['eunit']:
+        result = eunit(path)
+    if arguments['ct']:
+        result = ct(path, arguments)
     if result:
         sys.exit(0)
     else:
@@ -130,6 +140,22 @@ def add_package(path, arguments):
     else:
         builder = Builder.init_from_path(path)
     return builder.add_package(repo, rewrite, recurse)
+
+
+# Run tests
+def eunit(path):
+    builder = Builder.init_from_path(path)
+    if not do_build(builder):
+        return False
+    return builder.unit_test()
+
+
+def ct(path, arguments):
+    log_dir = arguments['--log-dir']
+    builder = Builder.init_from_path(path)
+    if not do_build(builder):
+        return False
+    return builder.common_test(log_dir)
 
 
 def __ensure_template(src_dir, name, suffix, overwrite_name=False):

@@ -1,14 +1,15 @@
 import json
 from os.path import join
 
+import coon
 from appdirs import *
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
-import coon
 from coon.compiler.compiler_type import Compiler
 from coon.pac_cache.cache_man import CacheMan
 from coon.utils.file_utils import read_file, ensure_dir
+from coon.utils.logger import info
 
 
 def temp_dir() -> str:  # TODO get system temp dir (os independent)
@@ -63,5 +64,5 @@ class GlobalProperties:
         try:
             self._compiler = Compiler(conf.get('compiler', 'coon'))
         except ValueError:
-            print('Unknown complier : ' + conf['compiler'] + ' will use ' + Compiler.COON.value)
+            info('Unknown complier : ' + conf['compiler'] + ' will use ' + Compiler.COON.value)
             self._compiler = Compiler.COON

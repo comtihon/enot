@@ -3,7 +3,27 @@ from abc import ABCMeta
 from os.path import join
 from subprocess import PIPE
 
+import os
+
 from coon.packages.package import Package
+from coon.utils.logger import critical, error, info, debug
+
+
+def run_cmd(cmd: str or list, project: str, path: str,
+            env_vars: dict or None = None, shell=False, output=False) -> bool:
+    debug(cmd)
+    if env_vars is None:
+        env_vars = dict(os.environ)
+    p = subprocess.Popen(cmd, stdout=PIPE, stderr=PIPE, cwd=path, env=env_vars, shell=shell)
+    if p.wait() != 0:
+        critical(project + ' failed.')
+        error(p.stderr.read().decode('utf8'))
+        error(p.stdout.read().decode('utf8'))
+        return False
+    else:
+        if output:
+            info(p.stdout.read().decode('utf8'))
+        return True
 
 
 class AbstractCompiler(metaclass=ABCMeta):
@@ -40,15 +60,18 @@ class AbstractCompiler(metaclass=ABCMeta):
         return join(self.package.path, 'ebin')
 
     @property
+    def test_path(self) -> str:
+        return join(self.package.path, 'test')
+
+    @property
     def build_vars(self) -> list:
         return self.package.config.build_vars
 
     def compile(self) -> bool:
-        p = subprocess.Popen(self.executable, stdout=PIPE, stderr=PIPE, cwd=self.root_path)
-        if p.wait() != 0:
-            print(self.project_name + ' compilation failed: ')
-            print(p.stderr.read().decode('utf8'))
-            print(p.stdout.read().decode('utf8'))
-            return False
-        else:
-            return True
+        return run_cmd(self.executable, self.project_name, self.root_path)
+
+    def unit(self) -> bool:
+        raise RuntimeError("Don't know how to run unit tests with " + self.executable)
+
+    def common(self, log_dir: str) -> bool:
+        raise RuntimeError("Don't know how to run common tests with " + self.executable)

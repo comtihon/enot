@@ -1,6 +1,12 @@
-from coon.compiler.abstract import AbstractCompiler
+from coon.compiler.rebar import RebarCompiler
 
 
-class Rebar3Compiler(AbstractCompiler):
+class Rebar3Compiler(RebarCompiler):
     def compile(self):
-        pass
+        super().compile()
+
+    def unit(self) -> bool:
+        return super().unit()
+
+    def common(self, log_dir: str) -> bool:
+        return super().common(log_dir)

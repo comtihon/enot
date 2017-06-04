@@ -6,14 +6,16 @@ from shutil import copyfile
 
 import os
 
+from coon.utils.logger import debug
+
 
 def read_file(path: str) -> str:
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         return f.read()
 
 
 def copy_file(src: str, dst: str):
-    print('copy ' + src + ' to ' + dst)
+    debug('copy ' + src + ' to ' + dst)
     copyfile(src, dst)
 
 
@@ -30,7 +32,7 @@ def tar(path: str, dirs: list, dst: str):
 
 # TODO catch read errors
 def read_file_lines(path: str) -> list:
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         return f.readlines()
 
 
@@ -66,19 +68,19 @@ def if_dir_exists(path: str, dir_to_check: str) -> str or None:
 def link_if_needed(include_src: str, include_dst: str) -> bool:
     if os.path.exists(include_src):
         if os.path.islink(include_dst) and os.readlink(include_dst) == include_src:  # link up to date
-            print('already linked: ' + include_src)
+            debug('already linked: ' + include_src)
             return False
         elif os.path.islink(include_dst):  # link outdated or broken
-            print('update link: ' + include_src)
+            debug('update link: ' + include_src)
             os.remove(include_dst)  # TODO we can return False here if only erl version was changed.
             os.symlink(include_src, include_dst)
             return True
         elif not os.path.exists(include_dst):  # there was no link. Should add it but return false - there was no update
-            print('link ' + include_src + ' -> ' + include_dst)
+            debug('link ' + include_src + ' -> ' + include_dst)
             os.symlink(include_src, include_dst)
             return False
         else:  # not a link. May be file
-            print('overwrite ' + include_src + ' -> ' + include_dst)
+            debug('overwrite ' + include_src + ' -> ' + include_dst)
             remove_dir(include_dst)
             os.symlink(include_src, include_dst)
             return True

@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/pyversions/coon.svg)](https://pypi.python.org/pypi/coon)
 [![PyPI](https://img.shields.io/pypi/wheel/coon.svg)](https://pypi.python.org/pypi/coon)  
 Erlang advanced project manager.  
-_Why coon?_  
+_Why Coon?_  
 - deps auto removing
 - built deps caching locally and remotely
 - json project configuration
@@ -35,7 +35,7 @@ Build a project (in project's dir):
 
     coon build
 This will build a project and put all `beam` files to `ebin` directory.  
-If you have `c_src` folder coon will compile them to `priv/project_name.so`.  
+If you have `c_src` folder Coon will compile them to `priv/project_name.so`.  
 If you have `deps` specified in you config file - they will be downloaded to `deps` and also build.  
 `.app` file is generated from `.app.src` with all templates fill in _(see Jinja2 templating)_
 
@@ -146,18 +146,18 @@ For example:
         "tag" : "v3.0.1"
     }
 Will be saved to `$HOME/.cache/coon/comtihon/mongodb-erlang/v3.0.1/20`, where path contains static path to cache 
-`$HOME/.cache/coon/` it can be specified in coon global config. Dynamic path - `Namespace/Project/Tag/Erlang_version`.  
+`$HOME/.cache/coon/` it can be specified in Coon global config. Dynamic path - `Namespace/Project/Tag/Erlang_version`.  
 Every time same version of Erlang and project will be used as dep in another project on this system - dep will be linked
  from cache to this project instead of downloading and compiling new.  
 There is also remote cache, where already built packages are kept. Coon searches packages in remote cache before cloning
-them from git and building. Remote cache can be set in coon global config.   
-Besides using official remote coon cache (TODO coon doesn't have official remote cache!) you can deploy your own remote 
-cache. Currently coon supports [Artifactory](https://www.jfrog.com/artifactory/) and [Amazon S3](https://aws.amazon.com/s3/)
+them from git and building. Remote cache can be set in Coon global config.   
+Besides using official remote Coon cache (TODO Coon doesn't have official remote cache!) you can deploy your own remote 
+cache. Currently Coon supports [Artifactory](https://www.jfrog.com/artifactory/) and [Amazon S3](https://aws.amazon.com/s3/)
 TODO s3 not supported :(  
 You can use multiple remote caches.
 
 ### Global Coon Configuration
-Coon global configuration is system wide coon configuration file. It is in JSON format also and stored in
+Coon global configuration is system wide Coon configuration file. It is in JSON format also and stored in
 `user_config_dir/coon`: `$HOME/.config/coon` for Linux.
 
     {
@@ -179,7 +179,7 @@ if there is `rebar.config` - will use `rebar`), `makefile` (just run `make`), `b
 `temp_dir` is the system temp dir. It is used for downloading deps when building the project, before adding them to 
 local cache.  
 `cache` is a list of caches. Each cache has its own configuration:  
-`cache.name` is a name of the cache, which should be unique. It is for coon only.  
+`cache.name` is a name of the cache, which should be unique. It is for Coon only.  
 `cache.type` is a type of the cache. Options are: `local`, `artifactory`, `s3`.  
 `cache.url` is a url of cache. Local caches use `file://` as a protocol.  
 In case of artifactory additional fields are:  
@@ -188,10 +188,17 @@ In case of artifactory additional fields are:
 In cace of S3 cache additional fields are:
 TODO
 
-### Testing 
-__(It is not what you are thinking about. It is for testing coon itself)__
-For artifactory tests artifactory service should be running locally on 8081 with `admin`:`password` credentials and 
-`example-repo-local` repo.
+### Unit testing
+Put your unit tests in `test` folder (Coon support subdirectories) and run `coon eunit`. Eunit output will be redirected
+to std output. In case of error Coon's return code will be 1.
+
+### Common  testing
+Put your common tests in `test` folder (Coon support subdirectories) and run `coon ct`. Common test's output will be
+redirected to std output. In case of error Coon's return code will be 1.  
+__--log-dir__ parameter can be specified to set up dir for `logs` where ct output is stored. Default if `test/logs`.
+
+### Coon Testing 
+To test Coon itself, clone this repo and run.
     
     python setup.py install
 All:
@@ -203,3 +210,5 @@ Single Testcase:
 Single Test
 
     py.test -q -s test/test_module.py::TestClass::test_fun
+For artifactory tests artifactory service should be running locally on 8081 with `admin`:`password` credentials and 
+`example-repo-local` repo.

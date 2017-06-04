@@ -1,6 +1,7 @@
 from os.path import join
 
 from artifactory import ArtifactoryPath
+from coon.utils.logger import info
 
 from coon.pac_cache.cache import Cache
 from coon.packages.package import Package

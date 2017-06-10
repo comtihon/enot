@@ -1,7 +1,7 @@
-from os import listdir
 from os.path import join
 
 import os
+from os import listdir
 
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.compiler_type import Compiler
@@ -132,7 +132,7 @@ class Builder:
         return res
 
     # TODO lock deps after fetched.
-    def __populate_deps(self, level):  # TODO add an ability to fetc deps in parallel
+    def __populate_deps(self, level):  # TODO add an ability to fetch deps in parallel
         next_level = []
         for dep in level:
             if dep.name not in self.packages:
@@ -141,12 +141,30 @@ class Builder:
                 self.packages[dep.name] = dep
                 next_level += dep.deps
             else:
-                pkg_vsn = self.packages[dep.name].vsn
-                if dep.git_tag != pkg_vsn:  # Warn only if it is not the same dep
-                    warning('Skip ' + dep.name + ' (' + dep.git_tag + '). Use ' + pkg_vsn)
-                dep.update_from_duplicate(self.packages[dep.name])
+                next_level += self.__compare_and_select(dep)
         if next_level:
             self.__populate_deps(next_level)
+
+    def __compare_and_select(self, dep: Package) -> list:
+        pkg_vsn = self.packages[dep.name].git_vsn
+        if dep.git_vsn != pkg_vsn:  # It is not the same dep
+            try:  # try to compare versions
+                [major1, minor1, bug1] = dep.git_vsn.split('.')
+                [major2, minor2, bug2] = pkg_vsn.split('.')
+                if major1 != major2:
+                    raise RuntimeError(
+                        'Deps ' + dep.name + ' has incompatible versions: ' + pkg_vsn + ' vs ' + dep.git_vsn)
+                if minor1 > minor2 or bug1 > bug2:  # dep is newer than selected - prefer it
+                    info('Prefer newer version for ' + dep.name + ', ' + pkg_vsn + ' -> ' + dep.git_vsn)
+                    self.packages[dep.name] = dep
+                    # TODO try use same repo to speed up new vsn fetch
+                    self.system_config.cache.populate(dep)
+                    dep.update_from_duplicate(self.packages[dep.name])
+                    return dep.deps
+            except ValueError:  # not m.m.b version (may be tag vs branch). Just replace.
+                warning('Skip ' + dep.name + ' (' + dep.git_vsn + '). Use ' + pkg_vsn)
+        dep.update_from_duplicate(self.packages[dep.name])
+        return []
 
     # list deps directory and compare to packages, which should always be actual due to
     # populate at the beginning of the build. If dep is in deps dir, but not in self.packages

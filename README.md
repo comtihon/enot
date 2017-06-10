@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/wheel/coon.svg)](https://pypi.python.org/pypi/coon)  
 Erlang advanced project manager.  
 _Why Coon?_  
-- deps auto removing
+- powerful dependency management
 - built deps caching locally and remotely
 - json project configuration
 - Jinja2 templating
@@ -106,6 +106,13 @@ it is simple, well known, and can be easily accessed by third-party tools:
 Although it is not recommended, but you can use [Erlang.mk](https://erlang.mk/) or `rebar.config` as a project config. 
 For now only version, name and deps can be used.
 
+### Dependency management
+* speficy deps in coonfig
+* deps update if tag changed in coonfig
+* deps auto update if newer dep presents in dependency tree
+* deps auto removing if dep is not used any more
+TODO link on article
+
 ### Jinja2 templating
 Coon allows you to use [Jinja2](http://jinja.pocoo.org/) template engine in your config files:  
 __app.src__
@@ -121,9 +128,9 @@ __app.src__
     ]}.
 Where `modules` are the list of all application's modules and `app` is the object of Package class from 
 `coon/packages/package.py` representing current project. You can use it's properties in templating.  
-In `app.src` you have also `hostname` available for templating.    
+In `app.src` you have also `hostname` available for templating. Read more in the full 
+[article](https://justtech.blog/2017/06/01/dynamic-configuration-erlang/).    
 
-TODO example or full doc here.  
 __relx.config__
 
     {release, {"{{ app.name }}", "{{ app.vsn }}"}, ["{{ app.name }}"]}.

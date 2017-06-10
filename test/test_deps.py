@@ -63,7 +63,7 @@ class DepsTests(TestClass):
         create(self.tmp_dir, {'<name>': 'dep3'})
         builder = Builder.init_from_path(pack_path)
         builder.populate()
-        self.assertEqual(['dep1', 'dep2', 'dep3'], list(builder.packages.keys()))
+        self.assertEqual(['dep1', 'dep2', 'dep3'].sort(), list(builder.packages.keys()).sort())
         self.assertEqual(mock_fetch.call_count, 3)
 
     # Test if some deps have same deps and they won't be fetched again
@@ -101,7 +101,7 @@ class DepsTests(TestClass):
         create(self.tmp_dir, {'<name>': 'dep3'})
         builder = Builder.init_from_path(pack_path)
         builder.populate()
-        self.assertEqual(['dep1', 'dep2', 'dep3'], list(builder.packages.keys()))
+        self.assertEqual(['dep1', 'dep2', 'dep3'].sort(), list(builder.packages.keys()).sort())
         self.assertEqual(mock_fetch.call_count, 3)  # dep3 was fetched only once
 
     # Test if some low level deps require up level deps
@@ -139,7 +139,7 @@ class DepsTests(TestClass):
                  ])
         builder = Builder.init_from_path(pack_path)
         builder.populate()
-        self.assertEqual(['dep1', 'dep2', 'dep3'], list(builder.packages.keys()))
+        self.assertEqual(['dep1', 'dep2', 'dep3'].sort(), list(builder.packages.keys()).sort())
         self.assertEqual(mock_fetch.call_count, 3)  # dep1 was fetched only once
 
     # Test if root has newer dep and it will be selected over old version (if they are not in conflict)
@@ -169,7 +169,7 @@ class DepsTests(TestClass):
         create(self.tmp_dir, {'<name>': 'dep3'})
         builder = Builder.init_from_path(pack_path)
         builder.populate()
-        self.assertEqual(['dep2', 'dep3'], list(builder.packages.keys()))
+        self.assertEqual(['dep2', 'dep3'].sort(), list(builder.packages.keys()).sort())
         self.assertEqual(mock_fetch.call_count, 2)
         self.assertEqual('1.0.0', builder.packages['dep2'].git_vsn)
         self.assertEqual('1.0.1', builder.packages['dep3'].git_vsn)
@@ -253,7 +253,7 @@ class DepsTests(TestClass):
         create(self.tmp_dir, {'<name>': 'dep4'})
         builder = Builder.init_from_path(pack_path)
         builder.populate()
-        self.assertEqual(['dep1', 'dep2', 'dep3', 'dep4'], list(builder.packages.keys()))
+        self.assertEqual(['dep1', 'dep2', 'dep3', 'dep4'].sort(), list(builder.packages.keys()).sort())
         self.assertEqual(mock_fetch.call_count, 6)  # root's deps were fetched, than 2 new deps were fetched
         self.assertEqual('1.0.0', builder.packages['dep1'].git_vsn)
         self.assertEqual('1.0.0', builder.packages['dep2'].git_vsn)
@@ -288,7 +288,7 @@ class DepsTests(TestClass):
         create(self.tmp_dir, {'<name>': 'dep3'})
         builder = Builder.init_from_path(pack_path)
         builder.populate()
-        self.assertEqual(['update_dep', 'dep2', 'dep3'], list(builder.packages.keys()))
+        self.assertEqual(['update_dep', 'dep2', 'dep3'].sort(), list(builder.packages.keys()).sort())
         self.assertEqual('1.0.0', builder.packages['dep2'].git_vsn)
         self.assertEqual('1.2.0', builder.packages['update_dep'].git_vsn)
         self.assertEqual('1.0.0', builder.packages['dep3'].git_vsn)

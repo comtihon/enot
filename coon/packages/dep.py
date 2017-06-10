@@ -15,3 +15,8 @@ class Dep:
     @property
     def branch(self) -> str:
         return self._branch
+
+    def __eq__(self, other):
+        if isinstance(other, Dep):
+            return self.url == other.url and self.tag == other.tag and self.branch == other.branch
+        return False

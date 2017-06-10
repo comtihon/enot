@@ -4,8 +4,28 @@ from erl_terms.erl_terms_core import decode
 
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
-from coon.utils.file_utils import read_file
 from coon.packages.dep import Dep
+from coon.utils.file_utils import read_file
+
+
+# TODO raw is not supported for now
+def parse_dep_body(body: tuple) -> Dep:
+    if body[0] != 'git':
+        raise RuntimeError('Unsupported dep type: ' + body[0] + ', only git is supported.')
+    if len(body) == 2:
+        return Dep(body[1], 'master')
+    if len(body) == 3:
+        rev = body[2]
+        if isinstance(rev, str):
+            if rev == '':
+                return Dep(body[1], 'HEAD')
+            else:
+                return Dep(body[1], rev)
+        if len(rev) == 2 and rev[0] == 'branch' or rev[0] == 'ref':
+            return Dep(body[1], rev[1])
+        if len(rev) == 2 and rev[0] == 'tag':
+            return Dep(body[1], 'master', rev[1])
+    raise RuntimeError('Unknown dep ' + str(body))
 
 
 class RebarConfig(ConfigFile):
@@ -32,10 +52,13 @@ class RebarConfig(ConfigFile):
                 self.__parse_erl_opts(value)
 
     def __parse_deps(self, deps):
-        for (name, _, addr) in deps:  # TODO distinguish tags and branches
-            (_, url, vsn) = addr
-            (_, vsn_value) = vsn
-            self.deps[name] = Dep(url, vsn_value)
+        for dep in deps:
+            name = dep[0]
+            if len(dep) == 2:  # {Dep, {git, Url, Rev}}
+                body = dep[1]
+            else:
+                body = dep[2]  # {Dep, VsnRegex, {git, Url, Rev}}
+            self.deps[name] = parse_dep_body(body)
 
     def __parse_erl_opts(self, value):
         for opt in value:

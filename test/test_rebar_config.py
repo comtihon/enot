@@ -62,7 +62,7 @@ class RebarConfigTests(TestClass):
                                              'email': 'comtihon@test.com'}],
                                  'name': 'hex_dep',
                                  'meta': {'maintainers': ['Test'],
-                                          'links': {'Github': 'https://github.com/comtihon/hex_dep'},
+                                          'links': {'GitHub': 'https://github.com/comtihon/hex_dep'},
                                           'licenses': ['Apache 2'],
                                           'description': 'Just test'},
                                  'inserted_at': '2015-03-01T22:27:54.000000Z',

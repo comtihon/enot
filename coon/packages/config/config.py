@@ -26,7 +26,7 @@ def get_dep_info_from_hex(name: str, tag: str) -> Dep:
     parsed = request_hex_info(name)
     meta = parsed['meta']
     links = meta['links']
-    url = links['Github']
+    url = links['GitHub']
     return Dep(url, None, tag=tag)
 
 

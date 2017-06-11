@@ -1,7 +1,11 @@
+import json
 from abc import ABCMeta, abstractmethod
 from os.path import join
 
+from urllib import request
+
 from coon.compiler.compiler_type import Compiler
+from coon.packages.dep import Dep
 from coon.utils.file_utils import write_file
 
 """
@@ -11,6 +15,19 @@ Project config file. Can be rebar.config (Rebar1-3), config in Makefile (erlang.
 
 def write_coonfig(path, package_config):
     write_file(join(path, 'coonfig.json'), package_config)
+
+
+def request_hex_info(name: str) -> dict:
+    package = request.urlopen('https://hex.pm/api/packages/' + name)
+    return json.loads(package.read())
+
+
+def get_dep_info_from_hex(name: str, tag: str) -> Dep:
+    parsed = request_hex_info(name)
+    meta = parsed['meta']
+    links = meta['links']
+    url = links['GitHub']
+    return Dep(url, None, tag=tag)
 
 
 class ConfigFile(metaclass=ABCMeta):

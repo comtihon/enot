@@ -86,8 +86,9 @@ Default is false. TODO this is not working now :/
   needs all dep tree for proper building. So if you use releases - switch to true.  
 `rescan_deps` if set to true (default is true) - will rescan all deps tree if dep update detected after build - and 
 remove dead deps from deps directory. You can set it to false if you prefer manual deps removing.  
-`deps` is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep, `dep.tag` is a 
-tag of a dep and `dep.branch` is a branch. Last two are mutually exclusive. Only git deps are supported now.  
+`deps` is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep. If it is not specified - 
+url will be fetched from [hex](https://hex.pm/), `dep.tag` is a tag of a dep and `dep.branch` is a branch. 
+Last two are mutually exclusive. Only git deps are supported now.  
 `prebuild` is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
 Only `shell` is supported now. `prebuild.Params` are the options to be passed to action. TODO example here.  
 `build_vars` is a list of erlang build vars, used when building a project. They can be either single or with value: 

@@ -3,8 +3,9 @@ from os.path import join
 from tarfile import TarFile
 
 from coon.action.prebuild import action_factory
+
 from coon.compiler.compiler_type import Compiler
-from coon.packages.config.config import ConfigFile
+from coon.packages.config.config import ConfigFile, get_dep_info_from_hex
 from coon.packages.dep import Dep
 from coon.utils.file_utils import read_file
 
@@ -45,7 +46,10 @@ class CoonConfig(ConfigFile):
     def __parse_deps(self, deps: list):
         for dep in deps:
             name = dep['name']
-            self.deps[name] = Dep(dep['url'], dep.get('branch', None), tag=dep.get('tag', None))
+            if 'url' not in dep:
+                self.deps[name] = get_dep_info_from_hex(name, dep['tag'])
+            else:
+                self.deps[name] = Dep(dep['url'], dep.get('branch', None), tag=dep.get('tag', None))
 
     def __parse_prebuild(self, parsed):
         for step in parsed.get('prebuild', []):

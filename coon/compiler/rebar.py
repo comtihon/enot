@@ -1,6 +1,5 @@
-from coon.packages.package import Package
-
 from coon.compiler.abstract import AbstractCompiler, run_cmd
+from coon.packages.package import Package
 
 
 class RebarCompiler(AbstractCompiler):

@@ -7,7 +7,7 @@ from pkg_resources import Requirement, resource_filename
 
 from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.packages.package import Package
-from coon.utils.file_utils import ensure_dir, write_file, read_file, copy_file
+from coon.utils.file_utils import ensure_dir, write_file, read_file, copy_file, ensure_empty
 from coon.utils.logger import debug
 
 
@@ -17,11 +17,12 @@ class RelxCompiler(AbstractCompiler):
 
     def compile(self):
         ensure_dir(join(self.package.path, 'rel'))
+        ensure_empty(join(self.package.path, '_rel'))
         resave_relconf, relconf_path, relconf = self.__modify_resource('relx.config')
         resave_vmargs, vmargs_path, vmargs = self.__modify_resource('vm.args', 'rel')
         resave_sysconf, sysconf_path, sysconf = self.__modify_resource('sys.config', 'rel')
         try:
-            return run_cmd(self.executable, self.project_name, self.root_path)
+            return run_cmd(self.executable, self.project_name, self.root_path, output=True)  # TODO sync output?
         finally:  # Return previous file values, if were changed.
             if resave_vmargs:
                 write_file(vmargs_path, vmargs)

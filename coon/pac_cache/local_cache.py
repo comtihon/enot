@@ -51,7 +51,6 @@ class LocalCache(Cache):
         dep.update_from_cache(temp_path)
 
     # add built package to local cache, update its path
-    # TODO rebar3 built packages output in _build/...
     def add_package(self, package: Package, rewrite=False) -> bool:
         full_dir = join(self.path, self.get_package_path(package))
         ensure_dir(full_dir)

@@ -3,7 +3,7 @@ from os.path import join
 from erl_terms.erl_terms_core import decode
 
 from coon.compiler.compiler_type import Compiler
-from coon.packages.config.config import ConfigFile
+from coon.packages.config.config import ConfigFile, get_dep_info_from_hex
 from coon.packages.dep import Dep
 from coon.utils.file_utils import read_file
 
@@ -58,7 +58,10 @@ class RebarConfig(ConfigFile):
                 body = dep[1]
             else:
                 body = dep[2]  # {Dep, VsnRegex, {git, Url, Rev}}
-            self.deps[name] = parse_dep_body(body)
+            if isinstance(body, str):
+                self.deps[name] = get_dep_info_from_hex(name, body)
+            else:
+                self.deps[name] = parse_dep_body(body)
 
     def __parse_erl_opts(self, value):
         for opt in value:

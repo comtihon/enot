@@ -92,7 +92,8 @@ class CoonCompiler(AbstractCompiler):
 
     def __do_common_test(self, log_dir: str) -> bool:
         cmd = self.__compose_ct_call(log_dir)
-        return run_cmd(cmd, self.project_name, self.root_path, output=True)
+        env_vars = self.__set_env_vars()
+        return run_cmd(cmd, self.project_name, self.root_path, env_vars, output=True)
 
     def __set_env_vars(self) -> dict:
         env_vars = dict(os.environ)

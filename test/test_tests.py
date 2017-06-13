@@ -5,7 +5,7 @@ from coon.__main__ import create
 from coon.compiler.coon import CoonCompiler
 from coon.packages.package import Package
 from coon.utils.file_utils import ensure_dir
-from test.abs_test_class import TestClass
+from test.abs_test_class import TestClass, set_deps
 
 
 # TODO find a way to parse output of eunit to understand how much tests really pass/fail
@@ -183,6 +183,45 @@ class TestingTests(TestClass):
         package = Package.from_path(join(self.test_dir, 'test_app'))
         compiler = CoonCompiler(package)
         self.assertEqual(False, compiler.common('test/logs'))
+
+    # Test if common test uses deps code
+    def test_common_test_with_deps(self):
+        app_dir = join(self.test_dir, 'test_app')
+        dep_dir = join(app_dir, 'deps')
+        set_deps(app_dir,  # root project depends on dep1
+                 [
+                     {'name': 'dep1',
+                      'url': 'https://github.com/comtihon/dep1',
+                      'tag': '1.0.0'}
+                 ])
+        create(dep_dir, {'<name>': 'dep1'})  # dep1 has dep_api:test/0
+        with open(join(dep_dir, 'dep1', 'src', 'dep_api.erl'), 'w') as test:
+            test.write('''
+            -module(dep_api).
+            -export([test/0]).
+                          
+            test() ->
+                true.''')
+        app_test_dir = join(app_dir, 'test')
+        ensure_dir(app_test_dir)
+        # dep_api:test/0 is used in common test of root project
+        with open(join(app_test_dir, 'common_SUITE.erl'), 'w') as test:
+            test.write('''
+            -module(common_SUITE).
+            -include_lib("common_test/include/ct.hrl").
+            -export([all/0]).
+            -export([test/1]).
+             
+            all() -> [test].
+             
+            test(_Config) ->
+                true == dep_api:test().''')
+        # Compile dep. I only do it in test, as in real life deps will be compiled and linked before running ct.
+        dep = Package.from_path(join(dep_dir, 'dep1'))
+        self.assertEqual(True, CoonCompiler(dep).compile())
+        package = Package.from_path(app_dir)
+        compiler = CoonCompiler(package)
+        self.assertEqual(True, compiler.common('test/logs'))
 
 if __name__ == '__main__':
     unittest.main()

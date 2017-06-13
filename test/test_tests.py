@@ -223,5 +223,40 @@ class TestingTests(TestClass):
         compiler = CoonCompiler(package)
         self.assertEqual(True, compiler.common('test/logs'))
 
+    # Test if unit test uses deps code
+    def test_unit_test_with_deps(self):
+        app_dir = join(self.test_dir, 'test_app')
+        dep_dir = join(app_dir, 'deps')
+        set_deps(app_dir,  # root project depends on dep1
+                 [
+                     {'name': 'dep1',
+                      'url': 'https://github.com/comtihon/dep1',
+                      'tag': '1.0.0'}
+                 ])
+        create(dep_dir, {'<name>': 'dep1'})  # dep1 has dep_api:test/0
+        with open(join(dep_dir, 'dep1', 'src', 'dep_api.erl'), 'w') as test:
+            test.write('''
+            -module(dep_api).
+            -export([test/0]).
+                          
+            test() ->
+                true.''')
+        app_test_dir = join(app_dir, 'test')
+        ensure_dir(app_test_dir)
+        # dep_api:test/0 is used in unit test of root project
+        with open(join(app_test_dir, 'common.erl'), 'w') as test:
+            test.write('''
+            -module(common).
+            -include_lib("eunit/include/eunit.hrl").
+
+            run_test() ->
+               ?assertEqual(true, dep_api:test()).''')
+        # Compile dep. I only do it in test, as in real life deps will be compiled and linked before running unit.
+        dep = Package.from_path(join(dep_dir, 'dep1'))
+        self.assertEqual(True, CoonCompiler(dep).compile())
+        package = Package.from_path(app_dir)
+        compiler = CoonCompiler(package)
+        self.assertEqual(True, compiler.unit())
+
 if __name__ == '__main__':
     unittest.main()

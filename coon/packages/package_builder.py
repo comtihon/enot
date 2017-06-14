@@ -1,7 +1,7 @@
+from os import listdir
 from os.path import join
 
 import os
-from os import listdir
 
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.compiler_type import Compiler
@@ -81,8 +81,11 @@ class Builder:
         return compiler.common(log_dir)
 
     # Parse package config, download missing deps to /tmp
-    def populate(self):
-        self.__populate_deps(self.project.deps)
+    def populate(self, include_test_deps=False):
+        deps = self.project.deps
+        if include_test_deps:
+            deps += self.project.test_deps
+        self.__populate_deps(deps)
 
     def add_package(self, remote: str, rewrite: bool, recurse: bool) -> bool:
         return self.system_config.cache.add_package(self.project, remote, rewrite, recurse)

@@ -34,8 +34,8 @@ from pkg_resources import Requirement, resource_filename
 
 from coon import APPVSN
 from coon.packages.package_builder import Builder
-from coon.utils.file_utils import ensure_dir
 from coon.utils import logger
+from coon.utils.file_utils import ensure_dir
 
 
 def main(args=None):
@@ -91,8 +91,8 @@ def build(path):
     return do_build(builder)
 
 
-def do_build(builder):
-    builder.populate()
+def do_build(builder: Builder, test=False):
+    builder.populate(test)
     return builder.build()
 
 
@@ -145,7 +145,7 @@ def add_package(path, arguments):
 # Run tests
 def eunit(path):
     builder = Builder.init_from_path(path)
-    if not do_build(builder):
+    if not do_build(builder, test=True):
         return False
     return builder.unit_test()
 
@@ -153,7 +153,7 @@ def eunit(path):
 def ct(path, arguments):
     log_dir = arguments['--log-dir']
     builder = Builder.init_from_path(path)
-    if not do_build(builder):
+    if not do_build(builder, test=True):
         return False
     return builder.common_test(log_dir)
 

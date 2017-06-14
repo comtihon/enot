@@ -215,8 +215,70 @@ class BuildTests(TestClass):
         self.assertEqual(True, builder.release())
         lib_dir = join(pack_path, '_rel', 'test_app', 'lib')
         self.assertEqual(True, os.path.exists(join(lib_dir, 'dep-0.0.1')))
-
         # TODO add test for real non otp apps with no src/ebin dir and custom makefile.
+
+    # If project has test_deps, they should not be fetched and built during normal build
+    @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_project_with_test_dep_normal_build(self, mock_conf, _):
+        mock_conf.return_value = self.conf_file
+        pack_path = join(self.test_dir, 'test_app')
+        set_deps(pack_path,
+                 [
+                     {'name': 'dep',
+                      'url': 'https://github.com/comtihon/dep',
+                      'tag': '1.0.0'}
+                 ])
+        set_deps(pack_path,
+                 [
+                     {'name': 'test_dep',
+                      'url': 'https://github.com/comtihon/test_dep',
+                      'tag': '1.0.0'}
+                 ],
+                 'test_deps')
+        create(self.tmp_dir, {'<name>': 'dep'})
+        builder = Builder.init_from_path(pack_path)
+        builder.populate()
+        self.assertEqual(True, builder.build())
+        dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
+        self.assertEqual(True, os.path.islink(dep_link_ebin))
+        erl = Cache.get_erlang_version()
+        real_dep = join(self.cache_dir, 'comtihon', 'dep', '1.0.0', erl, 'ebin')
+        self.assertEqual(real_dep, os.readlink(dep_link_ebin))
+        dep_link_ebin = join(pack_path, 'deps', 'test_dep', 'ebin')
+        self.assertEqual(False, os.path.islink(dep_link_ebin))
+
+    # If project has test_deps, they should be fetched, built and link during test build
+    @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_project_with_test_dep_test_build(self, mock_conf, _):
+        mock_conf.return_value = self.conf_file
+        pack_path = join(self.test_dir, 'test_app')
+        set_deps(pack_path,
+                 [
+                     {'name': 'dep',
+                      'url': 'https://github.com/comtihon/dep',
+                      'tag': '1.0.0'}
+                 ])
+        set_deps(pack_path,
+                 [
+                     {'name': 'test_dep',
+                      'url': 'https://github.com/comtihon/test_dep',
+                      'tag': '1.0.0'}
+                 ],
+                 'test_deps')
+        create(self.tmp_dir, {'<name>': 'dep'})
+        create(self.tmp_dir, {'<name>': 'test_dep'})
+        builder = Builder.init_from_path(pack_path)
+        builder.populate(include_test_deps=True)
+        self.assertEqual(True, builder.build())
+        for dep in ['dep', 'test_dep']:
+            print('Check ' + dep)
+            dep_link_ebin = join(pack_path, 'deps', dep, 'ebin')
+            self.assertEqual(True, os.path.islink(dep_link_ebin))
+            erl = Cache.get_erlang_version()
+            real_dep = join(self.cache_dir, 'comtihon', dep, '1.0.0', erl, 'ebin')
+            self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
 
 if __name__ == '__main__':

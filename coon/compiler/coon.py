@@ -65,7 +65,7 @@ class CoonCompiler(AbstractCompiler):
         all_src = self.__get_all_files(self.test_path, 'erl')
         ensure_dir(self.output_path)
         if self.__do_compile(all_src, output=self.test_path):
-            modules, test_dirs = self.__get_test_directories(all_src, '_SUITE')
+            modules, test_dirs = self.__get_test_directories(all_src, drop_extension='_SUITE')
             return self.__do_unit_test(modules, test_dirs)
         return False
 

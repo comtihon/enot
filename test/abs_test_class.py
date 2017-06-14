@@ -63,11 +63,11 @@ class TestClass(unittest.TestCase):
         remove_dir(test.get_test_dir(self.test_name))
 
 
-def set_deps(path: str, deps: list):
+def set_deps(path: str, deps: list, dep_type='deps'):
     fullpath = join(path, 'coonfig.json')
     with open(fullpath, 'r') as file:
         conf = json.load(file)
-    conf['deps'] = deps
+    conf[dep_type] = deps
     with open(fullpath, 'w') as file:
         json.dump(conf, file)
 

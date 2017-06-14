@@ -7,4 +7,7 @@ install: make
 tests:
 	python -m pytest --capture=sys
 
+deploy: make
+	twine upload dist/*
+
 .PHONY: install

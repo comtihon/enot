@@ -22,6 +22,7 @@ class Package:
         self._path = path
         self._has_nifs = has_nifs
         self._deps = []
+        self._test_deps = []
         self.__set_deps()
         self.__set_url_from_git()
         self.__set_git_vsn()
@@ -75,6 +76,10 @@ class Package:
     @property
     def deps(self) -> list:  # package's deps.
         return self._deps
+
+    @property
+    def test_deps(self) -> list:
+        return self._test_deps
 
     @property
     def std_apps(self) -> list:  # standard erlang apps. Used in app.src templates
@@ -186,6 +191,8 @@ class Package:
         if self.config:  # TODO check config.drop_unknown (if not a template)
             for name, dep in self.config.deps.items():
                 self._deps.append(Package.from_dep(name, dep))
+            for name, dep in self.config.test_deps.items():
+                self._test_deps.append(Package.from_dep(name, dep))
 
     def __set_url_from_git(self):
         if not self.url:

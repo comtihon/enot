@@ -36,6 +36,7 @@ class ConfigFile(metaclass=ABCMeta):
         self._build_vars = []
         self._c_build_vars = []
         self._deps = {}
+        self._test_deps = {}
         self._with_source = True
         self._drop_unknown = True
         self._name = ''
@@ -85,6 +86,10 @@ class ConfigFile(metaclass=ABCMeta):
     @property
     def deps(self) -> dict:  # deps from config file. Dict of Dep, where keys are their names
         return self._deps
+
+    @property
+    def test_deps(self) -> dict:
+        return self._test_deps
 
     @property
     def prebuild(self) -> list:  # actions to be run before the build

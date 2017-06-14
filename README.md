@@ -64,6 +64,13 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
                 "tag" : GitTag / "branch" : BranchName
             }
         ],
+        "test_deps" : [
+            {
+                "name" : DepName,
+                "url" : DepUrl,
+                "tag" : GitTag / "branch" : BranchName
+            }
+        ],
         "prebuild" : [
             {Action : Params}
         ],
@@ -89,6 +96,7 @@ remove dead deps from deps directory. You can set it to false if you prefer manu
 `deps` is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep. If it is not specified - 
 url will be fetched from [hex](https://hex.pm/), `dep.tag` is a tag of a dep and `dep.branch` is a branch. 
 Last two are mutually exclusive. Only git deps are supported now.  
+`test_deps` is the same, that `deps`, but are built, fetched and linked only for ct/eunit.  
 `prebuild` is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
 Only `shell` is supported now. `prebuild.Params` are the options to be passed to action. TODO example here.  
 `build_vars` is a list of erlang build vars, used when building a project. They can be either single or with value: 

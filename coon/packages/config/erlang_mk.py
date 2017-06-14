@@ -6,6 +6,7 @@ from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile
 from coon.packages.dep import Dep
 from coon.utils.file_utils import read_file_lines
+from coon.utils.logger import warning
 
 
 def get_erl_opts(args: list, content: dict) -> list:
@@ -39,6 +40,18 @@ def get_dep(line):
     return url, branch
 
 
+def parse_deps(deps: list, content: dict) -> dict:
+    found = {}
+    for dep in deps:
+        depname = 'dep_' + dep
+        if depname in content:
+            url, branch = get_dep(content[depname])
+            found[dep] = Dep(url, branch)
+        else:
+            warning('Dep ' + depname + ' not specified')
+    return found
+
+
 class ErlangMkConfig(ConfigFile):
     def __init__(self, path: str, url=None):
         super().__init__()
@@ -56,13 +69,10 @@ class ErlangMkConfig(ConfigFile):
     def __parse_deps(self, content: dict):
         if 'DEPS' in content:
             deps = content['DEPS'].split(' ')
-            for dep in deps:
-                depname = 'dep_' + dep
-                if depname in content:
-                    url, branch = get_dep(content[depname])
-                    self.deps[dep] = Dep(url, branch)
-                else:
-                    warning('Dep ' + depname + ' not specified')
+            self._deps = parse_deps(deps, content)
+        if 'TEST_DEPS' in content:
+            deps = content['TEST_DEPS'].split(' ')
+            self._test_deps = parse_deps(deps, content)
 
     def __conf_init(self, content: dict):
         self.__conf_vsn = content.get('PROJECT_VERSION', None)

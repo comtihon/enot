@@ -19,7 +19,7 @@ def write_coonfig(path, package_config):
 
 def request_hex_info(name: str) -> dict:
     package = request.urlopen('https://hex.pm/api/packages/' + name)
-    return json.loads(package.read())
+    return json.loads(package.read().decode())
 
 
 def get_dep_info_from_hex(name: str, tag: str) -> Dep:

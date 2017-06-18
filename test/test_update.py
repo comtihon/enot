@@ -10,7 +10,7 @@ from coon.pac_cache.cache import Cache
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
-from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag, switch_branch, new_commit
+from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag, switch_branch
 
 
 def mock_fetch_package(dep: Package):

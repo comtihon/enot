@@ -1,5 +1,5 @@
 {
-  "compiler" : "coon",
+  "compiler" : "native",
   "temp_dir": "{{ temp_dir }}",
   "cache":
   [

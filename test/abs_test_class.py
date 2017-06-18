@@ -1,13 +1,14 @@
 import json
+import os
 import unittest
 from os import listdir
 from os.path import join
 
-import os
-from coon.utils import logger
 from git import Repo
 
 import test
+from coon.tool.tool import AbstractTool
+from coon.utils import logger
 from coon.utils.file_utils import ensure_empty, remove_dir
 
 
@@ -98,3 +99,11 @@ def switch_branch(path: str, branch: str):
     repo = Repo(path)
     repo.create_head(branch)
     repo.git.checkout(branch)
+
+
+# each tool should be downloaded once per all tests (to speed them up)
+def ensure_tool(tool: AbstractTool):
+    tool_path = join(test.TEST_DIR, tool.name)
+    if os.path.isfile(tool_path):
+        return tool_path
+    return tool.ensure(test.TEST_DIR)

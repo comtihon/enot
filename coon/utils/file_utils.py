@@ -52,7 +52,9 @@ def write_file(path: str, content: str, binary=False) -> str:
     return path
 
 
-def if_dir_exists(path: str, dir_to_check: str) -> str or None:
+def if_dir_exists(path: str, dir_to_check: str or None) -> str or None:
+    if dir_to_check is None:
+        return None
     full = join(path, dir_to_check)
     if not os.path.exists(full):
         return None

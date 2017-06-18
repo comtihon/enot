@@ -9,7 +9,9 @@ _Why Coon?_
 - built deps caching locally and remotely
 - json project configuration
 - Jinja2 templating
-- automatic files build order
+- automatic files build order  
+
+Be in touch: [Blog](https://justtech.blog/tag/coon/)
 
 ### Installation
 Pypi:
@@ -53,7 +55,6 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
     {
         "name" : AppName,
         "app_vsn" : AppVsn,
-        "drop_unknown_deps" : Boolean,
         "with_source" : Boolean,
         "link_all" : Boolean,
         "rescan_deps" : Boolean,
@@ -83,10 +84,8 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
         ]
     }
 Here:  
-`name` is the name of current project, __mandatory__.  
+`name` is the name of current project.  
 `app_vsn` is a version of erlang application. Coon uses it when composing `.app` and in `relx.conf`.  
-`drop_unknown_deps` if set to true - will drop all deps specified in deps but not mentioned in `.app`/`.app.src`. 
-Default is false. TODO this is not working now :/  
 `with_source` if set to true - will include source, when moving to local/remote cache and packaging. Default is true.  
 `link_all` if set to true - all deps will be linked to main project (including deps of deps). Default is true. You can
   set it to false, to reduce number of deps you are not using directly in your project, but keep in mind, that relx 
@@ -95,7 +94,7 @@ Default is false. TODO this is not working now :/
 remove dead deps from deps directory. You can set it to false if you prefer manual deps removing.  
 `deps` is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep. If it is not specified - 
 url will be fetched from [hex](https://hex.pm/), `dep.tag` is a tag of a dep and `dep.branch` is a branch. 
-Last two are mutually exclusive. Only git deps are supported now.  
+Last two are mutually exclusive.    
 `test_deps` is the same, that `deps`, but are built, fetched and linked only for ct/eunit.  
 `prebuild` is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
 Only `shell` is supported now. `prebuild.Params` are the options to be passed to action. TODO example here.  

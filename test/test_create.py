@@ -2,6 +2,8 @@ import unittest
 from os.path import join
 
 import os
+
+from coon.tool.relxtool import RelxTool
 from mock import patch
 
 import coon.__main__
@@ -9,7 +11,7 @@ from coon.packages.config.coon import CoonConfig
 from coon.packages.package_builder import Builder
 from coon.utils.erl_file_utils import get_value, get_values
 from coon.utils.file_utils import read_file
-from test.abs_test_class import TestClass
+from test.abs_test_class import TestClass, ensure_tool
 
 '''
 Here are the tests, responsible for coon create
@@ -62,6 +64,8 @@ class CreateTests(TestClass):
         builder = Builder.init_from_path(project_dir)
         builder.populate()
         builder.build()
+        path = ensure_tool(RelxTool())
+        builder.system_config.cache.local_cache.add_tool('relx', path)
         self.assertEqual(True, builder.release())
         self.assertEqual(True, os.path.exists(join(project_dir, '_rel')))
         rel_dir = join(project_dir, '_rel', 'test_project')

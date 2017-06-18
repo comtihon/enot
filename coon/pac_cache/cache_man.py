@@ -1,11 +1,11 @@
 from os.path import join
 
-from coon.pac_cache import cache_factory
-
 from coon.compiler.c_compiler import CCompiler
+from coon.pac_cache import cache_factory
 from coon.pac_cache.cache import CacheType, Cache
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
+from coon.utils.logger import warning
 
 
 class CacheMan:
@@ -40,10 +40,11 @@ class CacheMan:
             dep.update_from_cache(path)
             return
         for cache in self.remote_caches.values():
-            if cache.exists(dep):  # remote cache has this package
-                package = cache.fetch_package(dep)  # dep -> package
-                self.add_fetched(cache, package)
-                return
+            try:
+                if self.exists_remote(cache, dep):
+                    return
+            except RuntimeError:
+                continue
         self.local_cache.fetch_package(dep)
 
     # check if local cache contains this dep
@@ -51,6 +52,16 @@ class CacheMan:
         if package.url is not None and self.local_cache.exists(package):  # local cache has this package
             return True
         return False
+
+    def exists_remote(self, cache: Cache, dep: Package) -> bool:
+        try:
+            if cache.exists(dep):  # remote cache has this package
+                package = cache.fetch_package(dep)  # dep -> package
+                self.add_fetched(cache, package)
+                return True
+        except Exception as e:
+            warning('Error from remote cache ' + cache.name + ': {0}'.format(e))
+            raise RuntimeError(e)
 
     # link package, return True if version changed (link updated)
     def link_package(self, package: Package, dest_path: str) -> bool:
@@ -71,11 +82,13 @@ class CacheMan:
         if remote in self.remote_caches.keys():
             if recurse:  # check deps in local cache
                 self.__check_all_deps(package)
-            result = self.remote_caches[remote].add_package(package, rewrite)
-            if recurse and result:
-                self.__add_all_deps(self.remote_caches[remote],
-                                    package)  # TODO no package in local cache. Need to create it
-            return result
+            try:
+                return self.__add_with_deps(self.remote_caches[remote],
+                                            package,
+                                            rewrite,
+                                            recurse)  # TODO no package in local cache. Need to create it
+            except RuntimeError:
+                return False
         else:
             raise RuntimeError('Cache not found: ' + remote)
 
@@ -105,11 +118,17 @@ class CacheMan:
                 raise RuntimeError('Dep ' + dep.name + ' not found in local cache. Rerun package.')
             self.__check_all_deps(dep)
 
-    # Add all deps to cache
-    def __add_all_deps(self, cache: Cache, package: Package):
-        for dep in package.deps:
-            if not cache.exists(dep):
-                # set dep's path - path to package in local cache
-                dep.path = join(self.local_cache.path, self.local_cache.get_package_path(dep))
-                cache.add_package(dep)
-            self.__add_all_deps(cache, dep)
+    # Add package to cache. If recurse - add all it's deps also
+    def __add_with_deps(self, cache: Cache, package: Package, rewrite: bool, recurse: bool) -> bool:
+        try:
+            result = cache.add_package(package, rewrite)
+        except Exception as e:
+            warning('Error from remote cache ' + cache.name + ': {0}'.format(e))
+            raise RuntimeError
+        if result and recurse:
+            for dep in package.deps:
+                if rewrite or not cache.exists(dep):
+                    # set dep's path - path to package in local cache
+                    dep.path = join(self.local_cache.path, self.local_cache.get_package_path(dep))
+                    self.__add_with_deps(cache, dep, rewrite, recurse)
+        return result

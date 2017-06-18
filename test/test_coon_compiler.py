@@ -94,7 +94,7 @@ class CompileTests(TestClass):
             \"name\":\"proper\",
             \"app_vsn\":\"1.0.0\",
             \"deps\": [{\"name\": \"test_dep\",
-                        \"url\": \"test_url\",
+                        \"url\": \"http://github/comtihon/test_dep\",
                         \"tag\": \"test_vsn\"}]
             }''')
         package = Package.from_path(self.test_dir)

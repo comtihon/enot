@@ -8,6 +8,7 @@ Usage:
   coon release [-l LEVEL]
   coon deps [-l LEVEL]
   coon version
+  coon upgrade [-d DEP] [-l LEVEL]
   coon eunit [-l LEVEL]
   coon ct [--log-dir DIR] [-l LEVEL]
   coon -v | --version
@@ -22,16 +23,17 @@ Options:
   -v --version                       print version and exit
   -l LEVEL --log-level LEVEL         set log level. Options: debug, info, warning, error, critical [default: info]
   --log-dir DIR                      common tests log dir [default: test/logs]
+  -d DEP --dep DEP                   ignore lock only for certain dep.
 """
+import os
 import sys
 from os.path import join
 
-import coon
-import os
 from docopt import docopt, DocoptExit
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
+import coon
 from coon import APPVSN
 from coon.packages.package_builder import Builder
 from coon.utils import logger
@@ -59,6 +61,8 @@ def main(args=None):
         result = release(path)
     if arguments['package']:
         result = package(path)
+    if arguments['upgrade']:
+        result = upgrade(path, arguments)
     if arguments['add_package']:
         result = add_package(path, arguments)
     if arguments['eunit']:
@@ -126,6 +130,15 @@ def package(path):
     if not do_build(builder):
         return False
     builder.package()
+    return True
+
+
+# Run upgrade
+def upgrade(path, arguments):
+    dep = arguments.get('--dep', None)
+    builder = Builder.init_from_path(path)
+    builder.drop_locs(dep)
+    builder.populate()
     return True
 
 

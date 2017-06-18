@@ -90,21 +90,14 @@ class Builder:
         if include_test_deps:
             deps += self.project.test_deps
         self.__populate_deps(deps)
-        locs = self.system_config.cache.local_cache.locks
-        if locs:
-            self.dump_locs(locs)
+        locks = self.system_config.cache.local_cache.locks
+        if locks:
+            self.dump_locs(locks)
 
     # dump package's locs if there are some.
-    # will dump only first level of locs. #TODO should I dump all?
-    def dump_locs(self, locs: dict):
-        filtered = {}
-        for lock in locs.keys():
-            [_, name] = lock.split('/')
-            if name in self.project.config.deps.keys():
-                filtered[lock] = locs[lock]
-        if filtered != {}:
-            with open(join(self.project.path, 'coon_locks.json'), 'w') as file:
-                json.dump(filtered, file, sort_keys=True, indent=4)
+    def dump_locs(self, locks: dict):
+        with open(join(self.project.path, 'coon_locks.json'), 'w') as file:
+            json.dump(locks, file, sort_keys=True, indent=4)
 
     # if name is None - remove all locs. if set - remove only locs for name
     def drop_locs(self, name: str or None):  # drop locs for one or all packages
@@ -204,7 +197,7 @@ class Builder:
     def __rescan_deps(self):
         deps_dir = join(self.project.path, 'deps')
         deps = listdir(deps_dir)
-        for dep in deps:
+        for dep in deps:  # TODO clear old locks too?
             if dep not in self.packages:
                 dep_path = join(deps_dir, dep)
                 info('Drop dead dep: ' + dep_path)

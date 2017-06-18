@@ -118,8 +118,6 @@ Coon remembers each commit's hash of branch deps, when you are using them. It cr
 This hashes will be used every next time your project is built.  
 Coon lets you use fixed branch commits when you develop, test and deploy your project.
 Locks guarantee no untested version appears in prod.  
-__Important:__ locks work only with your root's deps. Force to use tags everywhere for 
-more safety.  
 See __Deps upgrade__ for info how to move locks. 
 
 # Deps upgrade

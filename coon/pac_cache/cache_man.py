@@ -1,7 +1,8 @@
 from os.path import join
 
-from coon.compiler.c_compiler import CCompiler
 from coon.pac_cache import cache_factory
+
+from coon.compiler.c_compiler import CCompiler
 from coon.pac_cache.cache import CacheType, Cache
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
@@ -56,8 +57,9 @@ class CacheMan:
     def exists_remote(self, cache: Cache, dep: Package) -> bool:
         try:
             if cache.exists(dep):  # remote cache has this package
-                package = cache.fetch_package(dep)  # dep -> package
-                self.add_fetched(cache, package)
+                cache.fetch_package(dep)
+                self.add_fetched(cache, dep)
+                self.__fetch_all_deps(cache, dep)
                 return True
         except Exception as e:
             warning('Error from remote cache ' + cache.name + ': {0}'.format(e))
@@ -101,15 +103,15 @@ class CacheMan:
         self.local_cache.add_package(package)
 
     # Fetch all deps (if they are not already fetched to local cache)
-    def __fetch_all_deps(self, cache, package: Package):  # TODO where to use it?
+    def __fetch_all_deps(self, cache: Cache, package: Package):
         for dep in package.deps:
             if not self.local_cache.exists(dep):
-                if cache.exists(dep) and cache.fetch_package(dep):
+                if cache.exists(dep):
+                    cache.fetch_package(dep)
                     self.add_fetched(cache, dep)
-                    self.local_cache.add_package(package)
                     self.__fetch_all_deps(cache, dep)
                 else:
-                    raise RuntimeError('Dep not found ' + dep.name)
+                    raise RuntimeError('Dep ' + dep.name + ' not found in ' + cache.name)
 
     # Check if all deps exist in local cache
     def __check_all_deps(self, package: Package):

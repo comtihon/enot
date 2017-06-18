@@ -53,7 +53,7 @@ class Cache(metaclass=ABCMeta):
         pass
 
     # Take cp package archived file from package, extract it to temp dir
-    #  and update package's path to point to extracted dir
+    # and update package's path to point to extracted dir
     def unpackage(self, package: Package):  # TODO move me to package? use current dir + <something> instead of temp
         unpack_dir = join(self.temp_dir, package.name)
         coonpack = join(package.path, package.name + '.cp')

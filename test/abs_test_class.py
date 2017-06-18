@@ -1,14 +1,14 @@
 import json
-import os
 import unittest
-from os import listdir
 from os.path import join
 
+import os
+from coon.utils import logger
 from git import Repo
+from os import listdir
 
 import test
 from coon.tool.tool import AbstractTool
-from coon.utils import logger
 from coon.utils.file_utils import ensure_empty, remove_dir
 
 
@@ -62,6 +62,9 @@ class TestClass(unittest.TestCase):
 
     def tearDown(self):
         remove_dir(test.get_test_dir(self.test_name))
+
+    def clear_local_cache(self):
+        ensure_empty(self.cache_dir)
 
 
 def set_deps(path: str, deps: list, dep_type='deps'):

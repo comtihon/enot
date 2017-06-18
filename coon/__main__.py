@@ -5,6 +5,8 @@ Usage:
   coon build [-l LEVEL]
   coon package [-l LEVEL]
   coon add_package <repo> [-wp PACKAGE] [-r RECURSE] [-l LEVEL]
+  coon fetch <package>
+  coon install <package>
   coon release [-l LEVEL]
   coon deps [-l LEVEL]
   coon version
@@ -25,18 +27,18 @@ Options:
   --log-dir DIR                      common tests log dir [default: test/logs]
   -d DEP --dep DEP                   ignore lock only for certain dep.
 """
-import os
 import sys
 from os.path import join
 
+import coon
+import os
+from coon import APPVSN
+from coon.utils import logger
 from docopt import docopt, DocoptExit
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
-import coon
-from coon import APPVSN
 from coon.packages.package_builder import Builder
-from coon.utils import logger
 from coon.utils.file_utils import ensure_dir
 
 
@@ -65,6 +67,10 @@ def main(args=None):
         result = upgrade(path, arguments)
     if arguments['add_package']:
         result = add_package(path, arguments)
+    if arguments['fetch']:
+        result = fetch(arguments['<package>'])
+    if arguments['install']:
+        result = install(arguments['<package>'])
     if arguments['eunit']:
         result = eunit(path)
     if arguments['ct']:
@@ -88,7 +94,6 @@ def create(path: str, arguments: dict):
     return True
 
 
-# TODO upgrade deps support
 # Build project with all deps (fetch deps if needed)
 def build(path):
     builder = Builder.init_from_path(path)
@@ -139,6 +144,14 @@ def upgrade(path, arguments):
     builder = Builder.init_from_path(path)
     builder.drop_locs(dep)
     builder.populate()
+    return True
+
+
+def fetch(package: str):
+    return True
+
+
+def install(package: str):
     return True
 
 

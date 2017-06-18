@@ -111,7 +111,23 @@ class CacheMan:
                     self.add_fetched(cache, dep)
                     self.__fetch_all_deps(cache, dep)
                 else:
-                    raise RuntimeError('Dep ' + dep.name + ' not found in ' + cache.name)
+                    warning('Dep ' + dep.name + ' not found in ' + cache.name)
+                    self.__obtain_missing_dep(cache, dep)
+                    self.__fetch_all_deps(cache, dep)
+
+    # search for missing dep in other remote caches. If nothing found - fetch, build and add it manually
+    def __obtain_missing_dep(self, not_found_cache: Cache, dep: Package):
+        other_remote = self.remote_caches
+        for cache in other_remote.values():  # try to find dep in other remotes
+            if cache is not not_found_cache:
+                if cache.exists(dep):
+                    warning('Took dep ' + dep.name + ' from ' + cache.name)
+                    cache.fetch_package(dep)
+                    self.add_fetched(cache, dep)
+                    return True
+        warning('Should fetch and build missing dep ' + dep.name)
+        self.local_cache.fetch_package(dep)
+        return self.local_cache.add_package(dep)
 
     # Check if all deps exist in local cache
     def __check_all_deps(self, package: Package):

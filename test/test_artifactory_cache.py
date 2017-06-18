@@ -229,32 +229,21 @@ class ArtifactoryTests(TestClass):
         dep_path = join(self.tmp_dir, 'dep')
         set_git_url(dep_path, 'https://github/comtihon/dep')
         set_git_tag(dep_path, '1.0.0')
-        set_deps(dep_path,
-                 [
-                     {'name': 'dep_dep',
-                      'url': 'https://github.com/comtihon/dep_dep',
-                      'tag': '1.0.0'}
-                 ])
-        create(self.tmp_dir, {'<name>': 'dep_dep'})
-        dep_dep_path = join(self.tmp_dir, 'dep_dep')
-        set_git_url(dep_dep_path, 'https://github/comtihon/dep_dep')
-        set_git_tag(dep_dep_path, '1.0.0')
         builder = Builder.init_from_path(pack_path)
         builder.populate()
         self.assertEqual(True, package(pack_path))
-        self.assertEqual(True, builder.add_package('artifactory-local', True, True))
+        # Load project without dep to artifactory
+        self.assertEqual(True, builder.add_package('artifactory-local', True, False))
         self.clear_local_cache()
         # clear local cache to be sure we don't have this packages locally
         dep = Package.from_path(dep_path)
-        dep_dep = Package.from_path(dep_dep_path)
         self.assertEqual(False, builder.system_config.cache.local_cache.exists(dep))
-        self.assertEqual(False, builder.system_config.cache.local_cache.exists(dep_dep))
         artifactory_cache = builder.system_config.cache.remote_caches['artifactory-local']
-        # download package and all its deps from remote
+        # download package from remote
         exists = builder.system_config.cache.exists_remote(artifactory_cache, builder.project)
         self.assertEqual(True, exists)
+        # package's dep was fetched, built and added by local cache
         self.assertEqual(True, builder.system_config.cache.local_cache.exists(dep))
-        self.assertEqual(True, builder.system_config.cache.local_cache.exists(dep_dep))
 
     # Cache man should not crash if repo is unavailable
     # Test if this cache is unavailable

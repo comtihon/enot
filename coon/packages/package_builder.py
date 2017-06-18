@@ -18,7 +18,7 @@ from coon.utils.logger import debug, info, warning
 
 
 class Builder:
-    def __init__(self, path: str, package: Package):
+    def __init__(self, path: str, package: Package or None):
         super().__init__()
         self._system_config = GlobalProperties()
         self._path = path
@@ -36,6 +36,10 @@ class Builder:
     def init_from_path(cls, path) -> 'Builder':
         package = Package.from_path(path)
         return cls(path, package)
+
+    @classmethod
+    def init_without_package(cls, path) -> 'Builder':
+        return cls(path, None)
 
     @classmethod
     def init_from_package(cls, path_to_package) -> 'Builder':

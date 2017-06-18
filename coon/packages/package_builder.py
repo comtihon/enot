@@ -1,7 +1,7 @@
+import json
+import os
 from os import listdir
 from os.path import join
-
-import os
 
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.compiler_type import Compiler
@@ -86,6 +86,31 @@ class Builder:
         if include_test_deps:
             deps += self.project.test_deps
         self.__populate_deps(deps)
+        locs = self.system_config.cache.local_cache.locks
+        if locs:
+            self.dump_locs(locs)
+
+    # dump package's locs if there are some.
+    # will dump only first level of locs. #TODO should I dump all?
+    def dump_locs(self, locs: dict):
+        filtered = {}
+        for lock in locs.keys():
+            [_, name] = lock.split('/')
+            if name in self.project.config.deps.keys():
+                filtered[lock] = locs[lock]
+        if filtered != {}:
+            with open(join(self.project.path, 'coon_locks.json'), 'w') as file:
+                json.dump(filtered, file, sort_keys=True, indent=4)
+
+    # if name is None - remove all locs. if set - remove only locs for name
+    def drop_locs(self, name: str or None):  # drop locs for one or all packages
+        cache = self.system_config.cache.local_cache
+        if name is None:
+            cache.locks = {}
+        else:
+            del cache.locks[name]
+        with open(join(self.project.path, 'coon_locks.json'), 'w') as file:
+            json.dump(cache.locks, file, sort_keys=True, indent=4)
 
     def add_package(self, remote: str, rewrite: bool, recurse: bool) -> bool:
         return self.system_config.cache.add_package(self.project, remote, rewrite, recurse)

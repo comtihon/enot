@@ -2,6 +2,8 @@ import unittest
 from os.path import join
 
 import os
+
+from coon.tool.relxtool import RelxTool
 from mock import patch
 
 import test
@@ -11,7 +13,7 @@ from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
 from coon.utils.file_utils import ensure_dir
-from test.abs_test_class import TestClass, set_deps, set_link_policy
+from test.abs_test_class import TestClass, set_deps, set_link_policy, ensure_tool
 
 
 def mock_fetch_package(dep: Package):
@@ -20,6 +22,7 @@ def mock_fetch_package(dep: Package):
     dep.update_from_cache(join(tmp_path, dep.name))
 
 
+# TODO relx is using here. Download it only once, per all testcase
 class BuildTests(TestClass):
     def __init__(self, method_name):
         super().__init__('build_tests', method_name)
@@ -143,6 +146,8 @@ class BuildTests(TestClass):
         builder = Builder.init_from_path(pack_path)
         builder.populate()
         self.assertEqual(True, builder.build())
+        path = ensure_tool(RelxTool())
+        builder.system_config.cache.local_cache.add_tool('relx', path)
         self.assertEqual(True, builder.release())
         lib_dir = join(pack_path, '_rel', 'test_app', 'lib')
         self.assertEqual(True, os.path.exists(join(lib_dir, 'dep-0.0.1')))
@@ -171,6 +176,8 @@ class BuildTests(TestClass):
         builder = Builder.init_from_path(pack_path)
         builder.populate()
         self.assertEqual(True, builder.build())
+        path = ensure_tool(RelxTool())
+        builder.system_config.cache.local_cache.add_tool('relx', path)
         self.assertEqual(True, builder.release())
         lib_dir = join(pack_path, '_rel', 'test_app', 'lib')
         self.assertEqual(True, os.path.exists(join(lib_dir, 'dep-0.0.1')))
@@ -212,6 +219,8 @@ class BuildTests(TestClass):
         builder = Builder.init_from_path(pack_path)
         builder.populate()
         self.assertEqual(True, builder.build())
+        path = ensure_tool(RelxTool())
+        builder.system_config.cache.local_cache.add_tool('relx', path)
         self.assertEqual(True, builder.release())
         lib_dir = join(pack_path, '_rel', 'test_app', 'lib')
         self.assertEqual(True, os.path.exists(join(lib_dir, 'dep-0.0.1')))

@@ -18,7 +18,7 @@ class AbstractTool(metaclass=ABCMeta):
     def url(self) -> str:
         pass
 
-    def ensure(self, src_path: str) -> str or None:
+    def ensure(self, dst_path: str) -> str or None:
         debug('Fetching ' + self.name + ' ' + self.url)
         req = Request(self.url, headers={'User-Agent': 'Mozilla/5.0'})
         try:
@@ -26,6 +26,6 @@ class AbstractTool(metaclass=ABCMeta):
         except HTTPError as e:
             critical('Could not fetch ' + self.name + ': ' + str(e.reason))
             raise RuntimeError('Could not obtain ' + self.name)
-        tool_path = join(src_path, self.name)
+        tool_path = join(dst_path, self.name)
         write_file(tool_path, content, True)
         return tool_path

@@ -11,7 +11,7 @@ class S3Cache(Cache):
         self._bucket = conf['bucket']
         super().__init__(conf['name'], temp_dir, cache_url)
 
-    def exists(self, package: Package) -> bool:
+    def exists(self, package: Package) -> bool:   # TODO support branches
         raise RuntimeError('not implemented')
 
     def add_package(self, package: Package, rewrite=True) -> bool:

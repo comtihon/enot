@@ -1,13 +1,14 @@
+import json
+import os
 import shutil
 import stat
 from os import listdir
 from os.path import join
 
-import coon
-import os
 from git import Repo
 from pkg_resources import Requirement, resource_filename
 
+import coon
 from coon.pac_cache.cache import Cache
 from coon.packages.package import Package
 from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file
@@ -24,15 +25,39 @@ class LocalCache(Cache):
             os.makedirs(path)
         ensure_dir(temp_dir)
         ensure_dir(self.tool_dir)
+        self._locks = {}
+        self.__fill_locks()
 
     @property
     def tool_dir(self):
         return join(self.path, 'tool')
 
+    @property
+    def locks(self) -> dict:
+        return self._locks
+
+    @locks.setter
+    def locks(self, locks: dict):
+        self._locks = locks
+
+    def get_lock(self, name: str) -> str or None:
+        return self.locks.get(name, None)
+
+    def set_lock(self, dep: Package, hash_str: str):
+        self._locks[dep.fullname] = dep.git_branch + '-' + hash_str
+
+    def get_package_path(self, package: Package) -> str or None:
+        if package.git_tag is not None:  # normal tagged dep
+            return join(package.fullname, package.git_vsn, self.erlang_version)
+        lock = self.get_lock(package.fullname)
+        if lock is not None:  # locked branch dep
+            return join(package.fullname, lock, self.erlang_version)
+        return None  # unlocked branch dep, should be fetched
+
     def exists(self, package: Package) -> bool:
         path = self.get_package_path(package)
-        debug('check ' + self.path + ' ' + path)
-        return if_dir_exists(self.path, self.get_package_path(package)) is not None
+        debug('check ' + self.path + ' ' + str(path))
+        return if_dir_exists(self.path, path) is not None
 
     def tool_exists(self, toolname: str) -> bool:
         return os.path.exists(join(self.tool_dir, toolname))
@@ -42,13 +67,11 @@ class LocalCache(Cache):
         temp_path = join(self.temp_dir, dep.name)
         info('fetch ' + temp_path)
         remove_dir(temp_path)
-        repo = Repo.clone_from(dep.url, temp_path)
-        if repo.bare:
-            raise RuntimeError('Empty repo ' + dep.url)
-        git = repo.git
-        git.checkout(dep.git_vsn)
-        repo.create_head(dep.git_vsn)
+        vsn, need_lock = self.__get_vsn(dep)
+        hash_str = LocalCache.fetch(dep.url, vsn, temp_path)
         dep.update_from_cache(temp_path)
+        if need_lock:
+            self.set_lock(dep, hash_str)
 
     # add built package to local cache, update its path
     def add_package(self, package: Package, rewrite=False) -> bool:
@@ -102,11 +125,39 @@ class LocalCache(Cache):
         cache_path = join(self.tool_dir, toolname)
         link_if_needed(cache_path, join(package.path, toolname))
 
+    # load package's locks.
+    def __fill_locks(self):
+        if os.path.isfile('coon_locks.json'):
+            with open('coon_locks.json', 'r') as file:
+                self._locks = json.load(file)
+
+    # Return git version to use and should lock flag
+    def __get_vsn(self, dep: Package):
+        if dep.git_tag:  # no need to check lock over tag version
+            return dep.git_tag, False
+        lock = self.get_lock(dep.name)
+        if lock:  # this package's version is locked, return locked commit's hash
+            [branch, hash_str] = lock.split('-')
+            if branch == dep.git_branch:  # same branch locked
+                return hash_str, False
+            return dep.git_branch, True  # locked branch was changed
+        return dep.git_branch, True
+
     @staticmethod
     def link(cache_path: str, package_path: str, name: str, dir_to_link: str) -> bool:
         include_src = join(cache_path, dir_to_link)
         include_dst = join(package_path, 'deps', name, dir_to_link)
         return link_if_needed(include_src, include_dst)
+
+    @staticmethod
+    def fetch(url, rev, path):
+        repo = Repo.clone_from(url, path)
+        if repo.bare:
+            raise RuntimeError('Empty repo ' + url)
+        git = repo.git
+        git.checkout(rev)
+        repo.create_head(rev)
+        return repo.head.object.hexsha
 
     @staticmethod
     def __copy_include(rewrite, full_dir, path):

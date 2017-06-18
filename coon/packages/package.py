@@ -1,9 +1,8 @@
 import json
+import os
 import tarfile
 from os.path import join
 
-import os
-from coon.utils.logger import info
 from git import Repo, InvalidGitRepositoryError
 
 from coon.packages.application_config import AppConfig
@@ -11,8 +10,9 @@ from coon.packages.config import config_factory
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig
 from coon.packages.config.dep_config import DepConfig
-from coon.utils.file_utils import tar
 from coon.packages.dep import Dep
+from coon.utils.file_utils import tar
+from coon.utils.logger import info
 
 
 class Package:
@@ -34,6 +34,10 @@ class Package:
         return self.config.name
 
     @property
+    def fullname(self) -> str:  # namespace/name
+        return self.config.fullname
+
+    @property
     def url(self) -> str or None:  # git url
         return self.config.url
 
@@ -42,7 +46,7 @@ class Package:
         return self.config.git_branch
 
     @property
-    def git_tag(self) -> str:  # git tag
+    def git_tag(self) -> str or None:  # git tag
         return self.config.git_tag
 
     @property
@@ -126,6 +130,8 @@ class Package:
         self._config = config_factory.read_project(path, url=self.url)
         self._config.git_tag = git_tag
         self._config.git_branch = git_branch
+        if not self.fullname:
+            self.config.fullname_from_git(self.url, self.name)
         self._app_config = AppConfig.from_path(path)
         self._has_nifs = os.path.exists(join(path, 'c_src'))
         self._path = path
@@ -143,6 +149,8 @@ class Package:
         self._has_nifs = has_nifs
         self.config.git_tag = git_tag
         self.config.git_branch = git_branch
+        if not self.fullname:
+            self.config.fullname_from_git(self.url, self.name)
 
     # If package has dep and this dep has already be populated
     # becoming real package - update_from_duplicate should be called
@@ -159,14 +167,8 @@ class Package:
         export = self.config.export()
         export['name'] = self.name
         export['deps'] = [dep.export() for dep in self.deps]
-        if self.url is not None:
-            export['url'] = self.url
         if self.vsn is not None:
             export['app_vsn'] = self.vsn
-        if self.git_tag is not None:
-            export['tag'] = self.git_tag
-        if self.git_branch is not None:
-            export['branch'] = self.git_branch
         return export
 
     def generate_package(self):
@@ -183,6 +185,7 @@ class Package:
             add_if_exist(pack_dir, 'include', dirs_to_add)
             add_if_exist(pack_dir, 'c_src', dirs_to_add)
         add_if_exist(pack_dir, 'coonfig.json', dirs_to_add)
+        add_if_exist(pack_dir, 'coon_locks.json', dirs_to_add)
         package_dst = join(pack_dir, self.name + '.cp')
         info('create package ' + package_dst)
         tar(pack_dir, dirs_to_add, package_dst)
@@ -201,6 +204,8 @@ class Package:
                 self.config.url = repo.remotes.origin.url  # TODO remove .git ending?
             except InvalidGitRepositoryError:
                 return
+        if not self.fullname:
+            self.config.fullname_from_git(self.url, self.name)
 
     def __set_git_vsn(self):
         if not self.git_tag and self.path:

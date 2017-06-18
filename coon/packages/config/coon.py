@@ -21,9 +21,9 @@ def parse_deps(deps: list) -> dict:
 
 
 class CoonConfig(ConfigFile):
-    def __init__(self, config: dict, url=None):
+    def __init__(self, config: dict, url=None, name=None):
         super().__init__()
-        self._name = config['name']
+        self._name = config.get('name', name)
         self._drop_unknown = config.get('drop_unknown_deps', True)
         self._with_source = config.get('with_source', True)
         self.__parse_prebuild(config)
@@ -31,16 +31,18 @@ class CoonConfig(ConfigFile):
         self._deps = parse_deps(config.get('deps', {}))
         self._test_deps = parse_deps(config.get('test_deps', {}))
         self._conf_vsn = config.get('app_vsn', None)
-        self._git_vsn = config.get('tag', None)
+        self._git_tag = config.get('tag', None)
         self._git_branch = config.get('branch', None)
         self._link_all = config.get('link_all', self.link_all)
         self._rescan_deps = config.get('rescan_deps', self.rescan_deps)
         self._url = config.get('url', url)
+        self._fullname = config.get('fullname', None)
 
     @classmethod
     def from_path(cls, path: str, url=None) -> 'CoonConfig':
         content = read_file(join(path, 'coonfig.json'))
-        return cls(json.loads(content), url=url)
+        name = path.split('/')[-1:]  # use project dir name as a name if not set in config
+        return cls(json.loads(content), url=url, name=name)
 
     @classmethod
     def from_package(cls, package: TarFile, url: str) -> 'CoonConfig':

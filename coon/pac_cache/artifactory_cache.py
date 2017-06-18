@@ -16,7 +16,6 @@ class ArtifactoryCache(Cache):
             raise SyntaxError('username is required in ' + name)
         self._password = conf.get('password', None)
         self._api_key = conf.get('api_key', None)
-        self._ssl = cache_url.startswith('https')
         if not self._password and not self._api_key:
             raise SyntaxError('password or api_key required in ' + name)
         super().__init__(name, temp_dir, cache_url)
@@ -32,16 +31,12 @@ class ArtifactoryCache(Cache):
         else:
             return self._api_key
 
-    @property
-    def ssl(self) -> bool:  # TODO where does it used?
-        return self._ssl
-
-    def exists(self, package: Package):
+    def exists(self, package: Package):   # TODO support branches
         path = ArtifactoryPath(join(self.path, self.get_package_path(package)),
                                auth=(self.username, self.password))
         return path.exists()
 
-    def get_package_path(self, package: Package):
+    def get_package_path(self, package: Package) -> str or None:
         return join(self.username, package.name, package.git_vsn, self.erlang_version)
 
     def add_package(self, package: Package, rewrite=True) -> bool:

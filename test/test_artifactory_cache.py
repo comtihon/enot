@@ -2,13 +2,15 @@ import unittest
 from os.path import join
 
 import os
+import requests
 from artifactory import ArtifactoryPath
 from mock import patch
 
 from coon.__main__ import create, package
+from coon.pac_cache.cache_man import CacheMan
+from coon.packages.dep import Dep
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
-from coon.packages.dep import Dep
 from test.abs_test_class import TestClass, set_git_url, set_git_tag
 
 
@@ -105,11 +107,41 @@ class ArtifactoryTests(TestClass):
     def test_downloading_with_deps(self):
         True  # TODO emulate project with multiple deps. Deps should be downloaded to local cache resursively
 
+    # Cache man should not crash if repo is unavailable
+    # Test if this cache is unavailable
+    def test_cache_unavailable(self):
+        caches = {'temp_dir': self.tmp_dir,
+                  'compiler': self.compiler,
+                  'cache': [
+                      {
+                          'name': 'local_cache',
+                          'type': 'local',
+                          'url': 'file://' + self.cache_dir
+                      },
+                      {
+                          'name': 'artifactory-local',
+                          'type': 'artifactory',
+                          'url': 'http://some_unavailable_url',
+                          'username': self.username,
+                          'password': self.password
+                      }]}
+        cache_man = CacheMan(caches)
+        pack_path = join(self.test_dir, 'test_project')
+        set_git_url(pack_path, 'http://github/comtihon/test_project')
+        set_git_tag(pack_path, '1.0.0')
+        pack = Package.from_path(pack_path)
+        package(pack_path)
+        res = cache_man.add_package(pack, 'artifactory-local', False, False)
+        self.assertEqual(False, res)
+
     def tearDown(self):
         super().tearDown()
-        path = ArtifactoryPath(self.path + '/' + self.username, auth=(self.username, self.password))
-        if path.exists():
-            path.rmdir()
+        try:
+            path = ArtifactoryPath(self.path + '/' + self.username, auth=(self.username, self.password))
+            if path.exists():
+                path.rmdir()
+        except requests.exceptions.ConnectionError:
+            return
 
     @staticmethod
     def check_exists(caches: dict, pack: Package):

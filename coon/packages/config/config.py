@@ -1,7 +1,6 @@
 import json
 from abc import ABCMeta, abstractmethod
 from os.path import join
-
 from urllib import request
 
 from coon.compiler.compiler_type import Compiler
@@ -38,7 +37,6 @@ class ConfigFile(metaclass=ABCMeta):
         self._deps = {}
         self._test_deps = {}
         self._with_source = True
-        self._drop_unknown = True
         self._name = ''
         self._conf_vsn = None
         self._git_tag = None
@@ -46,6 +44,7 @@ class ConfigFile(metaclass=ABCMeta):
         self._url = None
         self._link_all = True
         self._rescan_deps = True
+        self._fullname = None
 
     @property
     def name(self) -> str:  # project's name
@@ -56,15 +55,11 @@ class ConfigFile(metaclass=ABCMeta):
         self._name = name
 
     @property
-    def drop_unknown(self) -> bool:  # if deps, not specified in app.src should be dropped
-        return self._drop_unknown
-
-    @property
     def with_source(self) -> bool:  # include source, when adding to local cache
         return self._with_source
 
     @property
-    def conf_vsn(self) -> str or None:  # version from config  # TODO move me to application config?
+    def conf_vsn(self) -> str or None:  # version from config
         return self._conf_vsn
 
     @property
@@ -74,6 +69,10 @@ class ConfigFile(metaclass=ABCMeta):
     @git_tag.setter
     def git_tag(self, tag):
         self._git_tag = tag
+
+    @property
+    def fullname(self) -> str or None:  # namespace/name
+        return self._fullname
 
     @property
     def git_branch(self) -> str:
@@ -126,10 +125,25 @@ class ConfigFile(metaclass=ABCMeta):
     def need_coonsify(self):
         return True
 
+    # fullname can be set from coonfig.json fullname or by parsing local git url
+    # while setting up Package
+    def fullname_from_git(self, url: str, name: str):
+        self._fullname = join(url.split('/')[-2], name)
+
     def export(self) -> dict:
-        return {'with_source': self.with_source,
-                'drop_unknown_deps': self.drop_unknown,
-                'build_vars': self.build_vars,  # TODO skip if empty
-                'c_build_vars': self.c_build_vars,
-                'prebuild': self.prebuild
-                }
+        export = {'with_source': self.with_source}
+        if self.build_vars:
+            export['build_vars'] = self.build_vars
+        if self.c_build_vars:
+            export['c_build_vars'] = self.c_build_vars
+        if self.prebuild:
+            export['prebuild'] = self.prebuild
+        if self.fullname:
+            export['fullname'] = self.fullname
+        if self.git_tag is not None:
+            export['tag'] = self.git_tag
+        if self.git_branch is not None:
+            export['branch'] = self.git_branch
+        if self.url is not None:
+            export['url'] = self.url
+        return export

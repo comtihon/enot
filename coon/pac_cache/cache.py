@@ -64,9 +64,8 @@ class Cache(metaclass=ABCMeta):
         package.path = unpack_dir  # update path pointer
         copy_file(coonpack, join(unpack_dir, package.name + '.cp'))
 
-    def get_package_path(self, package: Package):
-        namespace = package.url.split('/')[-2]
-        return join(namespace, package.name, package.git_vsn, self.erlang_version)
+    def get_package_path(self, package: Package) -> str or None:
+        return join(package.fullname, package.git_vsn, self.erlang_version)
 
     @staticmethod
     def get_erlang_version():

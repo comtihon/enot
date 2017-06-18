@@ -28,7 +28,7 @@ class ApplicationsTests(TestClass):
             w.write(get_application([]))
         with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep',
-                                       'url': "test_url",
+                                       'url': "http://github/comtihon/test_dep",
                                        'tag': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
         # test_dep in package deps (from package conf)
@@ -53,7 +53,7 @@ class ApplicationsTests(TestClass):
             w.write(get_application(['mnesia']))
         with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep',
-                                       'url': "test_url",
+                                       'url': "http://github/comtihon/test_dep",
                                        'tag': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
         # test_dep in package deps (from package conf)
@@ -70,10 +70,10 @@ class ApplicationsTests(TestClass):
             w.write(get_application(['test_dep1', 'test_dep2']))
         with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep1',
-                                       'url': "test_url",
+                                       'url': "http://github/comtihon/test_dep1",
                                        'tag': "test_vsn"},
                                       {'name': 'test_dep3',
-                                       'url': "test_url",
+                                       'url': "http://github/comtihon/test_dep3",
                                        'tag': "test_vsn"}]))
         package = Package.from_path(self.test_dir)
         package_deps = [dep.name for dep in package.deps]

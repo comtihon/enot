@@ -36,6 +36,7 @@ class CoonConfig(ConfigFile):
         self._link_all = config.get('link_all', self.link_all)
         self._rescan_deps = config.get('rescan_deps', self.rescan_deps)
         self._url = config.get('url', url)
+        self._erlang_versions = config.get('erlang', [])
         self._fullname = config.get('fullname', None)
 
     @classmethod

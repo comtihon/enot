@@ -23,8 +23,9 @@ For package `dummy` it will produce following:
     {extended_start_script, true}.
 # app.src templates
 When running build Coon can also use templates to convert app.src -> app. It uses  
-`modules`, `app` and `hostname`. Modules is the list of all compiled module names,
-`hostname` is the current hostname and the `app` is an instance of `Package` class.  
+`modules`, `app`, `hostname` and `erl`. Modules is the list of all compiled module names,
+`hostname` is the current hostname, `erl` is an Erlang version this package is compiled with
+ and the `app` is an instance of `Package` class.  
 Simple example:  
 
     {application, dummy, [

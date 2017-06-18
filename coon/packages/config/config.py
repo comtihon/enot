@@ -45,6 +45,7 @@ class ConfigFile(metaclass=ABCMeta):
         self._link_all = True
         self._rescan_deps = True
         self._fullname = None
+        self._erlang_versions = []
 
     @property
     def name(self) -> str:  # project's name
@@ -89,6 +90,10 @@ class ConfigFile(metaclass=ABCMeta):
     @property
     def test_deps(self) -> dict:
         return self._test_deps
+
+    @property
+    def erlang_versions(self) -> list:
+        return self._erlang_versions
 
     @property
     def prebuild(self) -> list:  # actions to be run before the build
@@ -146,4 +151,6 @@ class ConfigFile(metaclass=ABCMeta):
             export['branch'] = self.git_branch
         if self.url is not None:
             export['url'] = self.url
+        if self.erlang_versions is not None:
+            export['erlang'] = self.erlang_versions
         return export

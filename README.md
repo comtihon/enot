@@ -54,6 +54,8 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
 
     {
         "name" : AppName,
+        "fullname" : Namespace/AppName
+        "erlang" : [ListOfSupportedReleases],
         "app_vsn" : AppVsn,
         "with_source" : Boolean,
         "link_all" : Boolean,
@@ -85,6 +87,10 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
     }
 Here:  
 `name` is the name of current project.  
+`fullname` is a namespace with name. It is used to distinguish github forks. Usually you don't need it, as it will set 
+up automatically from url.  
+`erlang` is a list of erlang releases you application is compatible with. Is used by [octocoon](https://github.com/comtihon/octocoon)
+build system.  
 `app_vsn` is a version of erlang application. Coon uses it when composing `.app` and in `relx.conf`.  
 `with_source` if set to true - will include source, when moving to local/remote cache and packaging. Default is true.  
 `link_all` if set to true - all deps will be linked to main project (including deps of deps). Default is true. You can

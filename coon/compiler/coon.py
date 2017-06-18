@@ -1,4 +1,6 @@
 import socket
+
+from coon.pac_cache.cache import Cache
 from os import listdir
 from os.path import isfile, join, isdir
 
@@ -148,7 +150,10 @@ class CoonCompiler(AbstractCompiler):
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
             app_path = join(self.output_path, self.project_name + '.app')
             with open(app_path, 'w') as f:
-                f.write(Template(app_src).render(modules=all_files, app=self.package, hostname=socket.gethostname()))
+                f.write(Template(app_src).render(modules=all_files,
+                                                 app=self.package,
+                                                 hostname=socket.gethostname(),
+                                                 erl=Cache.get_erlang_version()))
 
     # scan all folders, return dict, where module names are the keys, and their paths are the values
     def __get_all_files(self, path: str, extension: str) -> dict:

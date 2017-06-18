@@ -1,3 +1,3 @@
 APPNAME = 'coon'
 APPAUTHOR = 'Valerii Tikhonov'
-APPVSN = '1.0.1'
+APPVSN = '1.0.2'

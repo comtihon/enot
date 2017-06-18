@@ -36,7 +36,7 @@ class CoonCompiler(AbstractCompiler):
         return join(self.package.path, 'deps')
 
     def compile(self) -> bool:
-        info('build ' + self.project_name)
+        info('Coon build ' + self.project_name)
         self.__run_prebuild()
         all_files = self.__get_all_files(self.src_path, 'erl')
         first_compiled = CoonCompiler.form_compilation_order(all_files)

@@ -125,11 +125,14 @@ class Package:
     # Update Package, created by from_dep classmethod.
     # Is called, when dep was fetched by local to some path and need to be fully filled
     def update_from_cache(self, path: str):
+        name = self.name
         git_tag = self.git_tag
         git_branch = self.git_branch
         self._config = config_factory.read_project(path, url=self.url)
         self._config.git_tag = git_tag
         self._config.git_branch = git_branch
+        if self.config.name == '':
+            self.config.name = name
         if not self.fullname:
             self.config.fullname_from_git(self.url, self.name)
         self._app_config = AppConfig.from_path(path)
@@ -140,6 +143,7 @@ class Package:
     # Update Package, created by from_dep classmethod.
     # Is called, when dep coon package was fetched by remote cache and need to be fully filled
     def update_from_package(self, path: str):
+        name = self.name
         git_tag = self.git_tag
         git_branch = self.git_branch
         project_path, has_nifs, config, app_config = do_update_from_package(path, self.url)
@@ -149,6 +153,8 @@ class Package:
         self._has_nifs = has_nifs
         self.config.git_tag = git_tag
         self.config.git_branch = git_branch
+        if self.config.name == '':
+            self.config.name = name
         if not self.fullname:
             self.config.fullname_from_git(self.url, self.name)
 

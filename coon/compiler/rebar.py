@@ -1,3 +1,5 @@
+from coon.utils.logger import info
+
 from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.packages.package import Package
 
@@ -9,6 +11,7 @@ class RebarCompiler(AbstractCompiler):
     def compile(self):
         # TODO check rebar existence in system or in ./
         # self as ensure_tool in builder
+        info('Rebar build ' + self.project_name)
         return run_cmd([self.executable, 'compile'], self.project_name, self.root_path)
 
     def unit(self) -> bool:

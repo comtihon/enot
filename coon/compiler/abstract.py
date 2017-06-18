@@ -68,6 +68,7 @@ class AbstractCompiler(metaclass=ABCMeta):
         return self.package.config.build_vars
 
     def compile(self) -> bool:
+        info(self.executable + ' build ' + self.project_name)
         return run_cmd(self.executable, self.project_name, self.root_path)
 
     def unit(self) -> bool:

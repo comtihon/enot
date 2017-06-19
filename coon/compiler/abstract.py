@@ -20,8 +20,9 @@ def run_cmd(cmd: str or list, project: str, path: str,
     p = subprocess.Popen(cmd, stdout=output, stderr=output, cwd=path, env=env_vars, shell=shell)
     if p.wait() != 0:
         critical(project + ' failed.')
-        error(p.stderr.read().decode('utf8'))
-        error(p.stdout.read().decode('utf8'))
+        if output is not None:
+            error(p.stderr.read().decode('utf8'))
+            error(p.stdout.read().decode('utf8'))
         return False
     else:
         return True

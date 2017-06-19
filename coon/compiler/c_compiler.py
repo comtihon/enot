@@ -1,5 +1,7 @@
 from os.path import join
 
+from coon.packages.config.config import ConfigFile
+
 import coon
 import os
 from pkg_resources import Requirement, resource_filename
@@ -24,17 +26,25 @@ class CCompiler(AbstractCompiler):
 
     # TODO override unit to run cunit?
 
-    def compile(self) -> bool:
+    def compile(self, override_config: ConfigFile or None = None) -> bool:
         ensure_dir(self.output_path)
         ensure_makefile(self.src_path)
-        env_vars = dict(os.environ)
-        for var in self.package.config.c_build_vars:
-            for k, v in var.items():
-                env_vars[k] = v
+        env_vars = self.__get_env_vars(override_config)
         return run_cmd([self.executable, '-C', 'c_src'],
                        self.project_name,
                        self.root_path,
                        env_vars)
+
+    def __get_env_vars(self, override_config: ConfigFile or None) -> dict:
+        env_vars = dict(os.environ)
+        if override_config is not None and override_config.override_conf:
+            vars_to_add = override_config.c_build_vars
+        else:
+            vars_to_add = self.package.config.c_build_vars
+        for var in vars_to_add:
+            for k, v in var.items():
+                env_vars[k] = v
+        return env_vars
 
 
 # copy makefile to c_src from templates, if no makefile presents

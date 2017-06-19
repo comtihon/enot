@@ -45,6 +45,9 @@ class ConfigFile(metaclass=ABCMeta):
         self._link_all = True
         self._rescan_deps = True
         self._fullname = None
+        self._auto_build_order = True
+        self._override_conf = False
+        self._disable_prebuild = False
         self._erlang_versions = []
 
     @property
@@ -74,6 +77,18 @@ class ConfigFile(metaclass=ABCMeta):
     @property
     def fullname(self) -> str or None:  # namespace/name
         return self._fullname
+
+    @property
+    def auto_build_order(self) -> bool:  # should analyse sources during compilation
+        return self._auto_build_order
+
+    @property
+    def override_conf(self) -> bool:  # should override deps configuration
+        return self._override_conf
+
+    @property
+    def disable_prebuild(self) -> bool:  # should skip prebuild
+        return self._disable_prebuild
 
     @property
     def git_branch(self) -> str:
@@ -136,13 +151,17 @@ class ConfigFile(metaclass=ABCMeta):
         self._fullname = join(url.split('/')[-2], name)
 
     def export(self) -> dict:
-        export = {'with_source': self.with_source}
+        export = {'with_source': self.with_source,
+                  'auto_build_order': self.auto_build_order,
+                  'override': self.override_conf,
+                  'disable_prebuild': self.disable_prebuild}
         if self.build_vars:
             export['build_vars'] = self.build_vars
         if self.c_build_vars:
             export['c_build_vars'] = self.c_build_vars
         if self.prebuild:
-            export['prebuild'] = self.prebuild
+            prebuild = [pb.export() for pb in self.prebuild]
+            export['prebuild'] = prebuild
         if self.fullname:
             export['fullname'] = self.fullname
         if self.git_tag is not None:

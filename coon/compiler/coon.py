@@ -1,14 +1,14 @@
+import os
 import socket
-
-from coon.pac_cache.cache import Cache
 from os import listdir
 from os.path import isfile, join, isdir
 
-import os
 from jinja2 import Template
 
 from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.compiler.c_compiler import CCompiler
+from coon.pac_cache.cache import Cache
+from coon.packages.config.config import ConfigFile
 from coon.utils.file_utils import ensure_dir, read_file
 from coon.utils.logger import debug, info
 
@@ -35,26 +35,26 @@ class CoonCompiler(AbstractCompiler):
     def deps_path(self) -> str:
         return join(self.package.path, 'deps')
 
-    def compile(self) -> bool:
+    def compile(self, override_config: ConfigFile or None = None) -> bool:
         info('Coon build ' + self.project_name)
-        self.__run_prebuild()
+        self.__run_prebuild(override_config)
         all_files = self.__get_all_files(self.src_path, 'erl')
-        first_compiled = CoonCompiler.form_compilation_order(all_files)
+        first_compiled = self.form_compilation_order(all_files)
         debug('ensure ' + self.output_path)
         ensure_dir(self.output_path)
         res = True
         if self.package.has_nifs:
-            res = CCompiler(self.package).compile()
+            res = CCompiler(self.package).compile(override_config=override_config)
         if res and first_compiled is not {}:
-            res = self.__do_compile(first_compiled)
+            res = self.__do_compile(first_compiled, override=override_config)
             [all_files.pop(key) for key in first_compiled if first_compiled[key] == all_files[key]]
         if res:
-            res = self.__do_compile(all_files)
+            res = self.__do_compile(all_files, override=override_config)
         if res:
             self.__write_app_file(list(all_files.keys()))
         return res
 
-    def common(self, log_dir: str) -> bool:
+    def common(self, log_dir: str) -> bool:  # TODO should I add override config compilation for tests?
         info('common tests for ' + self.project_name)
         all_src = self.__get_all_files(self.test_path, 'erl')
         if self.__do_compile(all_src, output=self.test_path):
@@ -71,31 +71,36 @@ class CoonCompiler(AbstractCompiler):
             return self.__do_unit_test(modules, test_dirs)
         return False
 
-    def __run_prebuild(self):
-        for action in self.package.config.prebuild:
-            action.run(self.root_path)
+    # run prebuild if it is not disabled in package's config,
+    # or disabled in root config with override set to True
+    def __run_prebuild(self, config: ConfigFile or None):
+        if not self.package.config.disable_prebuild and \
+                not (config is not None and config.override_conf and config.disable_prebuild):
+            for action in self.package.config.prebuild:
+                action.run(self.root_path)
 
-    @staticmethod  # TODO temporary static. See TODO below
-    def form_compilation_order(files: dict) -> dict:
+    def form_compilation_order(self, files: dict) -> dict:
+        if not self.package.config.auto_build_order:  # source analysis disabled
+            return {}
         first = {}
-        for name, path in files.items():  # TODO make this check optional - based on package config.
+        for name, path in files.items():
             with open(join(path, name) + '.erl', 'r', encoding='utf-8') as f:
                 parse_transform_first(first, files, f)
         return first
 
-    def __do_compile(self, files: dict, output=None) -> bool:
-        cmd = self.__compose_compiler_call(files, output)
+    def __do_compile(self, files: dict, override: ConfigFile or None = None, output=None) -> bool:
+        cmd = self.__compose_compiler_call(files, output, override)
         env_vars = self.__set_env_vars()
         return run_cmd(cmd, self.project_name, self.root_path, env_vars)
 
     def __do_unit_test(self, modules: list, test_dirs: list) -> bool:  # TODO make nice output and tests result sum
         cmd = self.__compose_unit_call(modules, test_dirs)
-        return run_cmd(cmd, self.project_name, self.root_path, shell=True, output=True)
+        return run_cmd(cmd, self.project_name, self.root_path, shell=True, output=None)
 
     def __do_common_test(self, log_dir: str) -> bool:
         cmd = self.__compose_ct_call(log_dir)
         env_vars = self.__set_env_vars()
-        return run_cmd(cmd, self.project_name, self.root_path, env_vars, output=True)
+        return run_cmd(cmd, self.project_name, self.root_path, env_vars, output=None)
 
     def __set_env_vars(self) -> dict:
         env_vars = dict(os.environ)
@@ -103,7 +108,7 @@ class CoonCompiler(AbstractCompiler):
             env_vars['ERL_LIBS'] = self.deps_path
         return env_vars
 
-    def __compose_compiler_call(self, files: dict, output: str or None):
+    def __compose_compiler_call(self, files: dict, output: str or None, override):
         cmd = [self.executable]
         if os.path.exists(self.include_path):
             cmd += ['-I', self.include_path]
@@ -112,7 +117,7 @@ class CoonCompiler(AbstractCompiler):
             cmd += ['-o', output]
         else:
             cmd += ['-o', self.output_path]
-        self.__append_macro(cmd)
+        self.__append_macro(cmd, override)
         for filename, path in files.items():
             cmd.append(join(path, filename) + '.erl')
         return cmd
@@ -137,8 +142,12 @@ class CoonCompiler(AbstractCompiler):
         cmd += ['-logdir', logs]
         return cmd
 
-    def __append_macro(self, cmd):
-        for var in self.build_vars:
+    def __append_macro(self, cmd, override: ConfigFile or None):
+        if override is not None and override.override_conf:
+            build_vars = override.build_vars
+        else:
+            build_vars = self.build_vars
+        for var in build_vars:
             if isinstance(var, dict):
                 for k, v in var.items():
                     cmd += ['-D' + k + '=' + v]  # variable with value

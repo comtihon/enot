@@ -37,6 +37,9 @@ class CoonConfig(ConfigFile):
         self._rescan_deps = config.get('rescan_deps', self.rescan_deps)
         self._url = config.get('url', url)
         self._erlang_versions = config.get('erlang', [])
+        self._auto_build_order = config.get('auto_build_order', True)
+        self._override_conf = config.get('override', False)
+        self._disable_prebuild = config.get('disable_prebuild', False)
         self._fullname = config.get('fullname', None)
 
     @classmethod

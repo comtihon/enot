@@ -93,14 +93,17 @@ def ensure_dir(path: str):
         os.makedirs(path)
 
 
-# Get path to cmd or None if not found in system
-def get_cmd(path: str, cmd) -> str or None:
+# Get cmd and check if it is installed in system
+# Return same cmd if it is installed in system,
+# True if it was found locally in package's dir
+# Fakse if it was not found
+def check_cmd(path: str, cmd: str) -> str or bool:
     if ensure_programm(cmd):  # check cmd in system
         return cmd
     else:
         if os.path.isfile(join(path, cmd)):  # check cmd in current dir
-            return './' + cmd
-    return None
+            return True
+    return False
 
 
 # Check if program installed in system

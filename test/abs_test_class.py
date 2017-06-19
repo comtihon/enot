@@ -1,14 +1,14 @@
 import json
+import os
 import unittest
+from os import listdir
 from os.path import join
 
-import os
-from coon.utils import logger
 from git import Repo
-from os import listdir
 
 import test
 from coon.tool.tool import AbstractTool
+from coon.utils import logger
 from coon.utils.file_utils import ensure_empty, remove_dir
 
 
@@ -72,6 +72,17 @@ def set_deps(path: str, deps: list, dep_type='deps'):
     with open(fullpath, 'r') as file:
         conf = json.load(file)
     conf[dep_type] = deps
+    with open(fullpath, 'w') as file:
+        json.dump(conf, file)
+
+
+def set_prebuild(path: str, prebuild: list, disable_prebuild=False, override_conf=False):
+    fullpath = join(path, 'coonfig.json')
+    with open(fullpath, 'r') as file:
+        conf = json.load(file)
+    conf['disable_prebuild'] = disable_prebuild
+    conf['prebuild'] = prebuild
+    conf['override'] = override_conf
     with open(fullpath, 'w') as file:
         json.dump(conf, file)
 

@@ -18,6 +18,10 @@ class AbstractTool(metaclass=ABCMeta):
     def url(self) -> str:
         pass
 
+    @property
+    def local_executable(self) -> str:
+        return './' + self.name
+
     def ensure(self, dst_path: str) -> str or None:
         debug('Fetching ' + self.name + ' ' + self.url)
         req = Request(self.url, headers={'User-Agent': 'Mozilla/5.0'})

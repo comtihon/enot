@@ -4,17 +4,21 @@ from os import listdir
 from os.path import join
 
 from coon.compiler.compiler_factory import get_compiler
-from coon.compiler.compiler_type import Compiler
 from coon.compiler.relx import RelxCompiler
 from coon.global_properties import GlobalProperties
 from coon.packages.package import Package
-from coon.tool.erlang_mk import ErlangMKTool
-from coon.tool.rebar import RebarTool
-from coon.tool.rebar3 import Rebar3Tool
-from coon.tool.relxtool import RelxTool
-from coon.tool.tool import AbstractTool
-from coon.utils.file_utils import get_cmd, remove_dir
+from coon.utils.file_utils import remove_dir
 from coon.utils.logger import debug, info, warning
+
+
+# Can raise ValueError
+# Returns [major, minor, bugfix] semver
+def try_get_semver(vsn: str) -> list:
+    if vsn.startswith('v'):
+        to_parse = vsn[1:]
+    else:
+        to_parse = vsn
+    return to_parse.split('.')
 
 
 class Builder:
@@ -25,12 +29,6 @@ class Builder:
         self._packages = {}
         self._project = package
         self._rescan_deps = False
-        if self.system_config.compiler == Compiler.REBAR3:  # TODO refactor me somehow
-            self.__ensure_rebar3()
-        elif self.system_config.compiler == Compiler.REBAR:
-            self.__ensure_rebar()
-        elif self.system_config.compiler == Compiler.ERLANG_MK:
-            self.__ensure_erlangmk()
 
     @classmethod
     def init_from_path(cls, path) -> 'Builder':
@@ -124,8 +122,9 @@ class Builder:
             self.__rescan_deps()
 
     def release(self):
-        relx_path = self.__ensure_relx()
-        return RelxCompiler(self.project, relx_path).compile()
+        compiler = RelxCompiler(self.project)
+        compiler.ensure_tool(self.system_config.cache.local_cache)
+        return compiler.compile()
 
     # Build all deps, add to cache and link to project
     def __build_deps(self, package: Package, is_subpackage=True):
@@ -151,12 +150,12 @@ class Builder:
     def __build_tree(self, package: Package, is_subpackage=True):
         self.__build_deps(package, is_subpackage)  # TODO add an ability to compile deps in parallel
         compiler = get_compiler(self.system_config, package)
-        res = compiler.compile()
+        compiler.ensure_tool(self.system_config.cache.local_cache)
+        res = compiler.compile(override_config=self.project.config)
         if is_subpackage and res:
             self.system_config.cache.add_package_local(package)
         return res
 
-    # TODO lock deps after fetched.
     def __populate_deps(self, level):  # TODO add an ability to fetch deps in parallel
         next_level = []
         for dep in level:
@@ -174,8 +173,8 @@ class Builder:
         pkg_vsn = self.packages[dep.name].git_vsn
         if dep.git_vsn != pkg_vsn:  # It is not the same dep
             try:  # try to compare versions
-                [major1, minor1, bug1] = dep.git_vsn.split('.')
-                [major2, minor2, bug2] = pkg_vsn.split('.')
+                [major1, minor1, bug1] = try_get_semver(dep.git_vsn)
+                [major2, minor2, bug2] = try_get_semver(pkg_vsn)
                 if major1 != major2:
                     raise RuntimeError(
                         'Deps ' + dep.name + ' has incompatible versions: ' + pkg_vsn + ' vs ' + dep.git_vsn)
@@ -205,40 +204,3 @@ class Builder:
                     os.remove(dep_path)
                 else:
                     remove_dir(dep_path)
-
-    def __ensure_relx(self):
-        return self.__ensure_tool(RelxTool())
-
-    def __ensure_rebar3(self):
-        return self.__ensure_tool(Rebar3Tool())
-
-    def __ensure_rebar(self):
-        return self.__ensure_tool(RebarTool())
-
-    def __ensure_erlangmk(self):
-        return self.__ensure_tool(ErlangMKTool())
-
-    # Find binary. It can installed in the system, located in project directory, be in local cache.
-    # If there is no - try to make it.
-    def __ensure_tool(self, tool: AbstractTool):
-        tool_path = get_cmd(self.path, tool.name)
-        if tool_path is None:
-            tool_path = self.__find_in_local(tool.name)
-        if tool_path is None:
-            tool_path = self.__build_tool(tool)
-        if tool_path is None:
-            raise RuntimeError("Can't obtain " + tool.name)
-        return tool_path
-
-    def __find_in_local(self, tool_name):
-        if self.system_config.cache.local_cache.tool_exists(tool_name):  # tool is in local cache
-            self.system_config.cache.local_cache.link_tool(self.project, tool_name)
-            return './' + tool_name
-        return None
-
-    def __build_tool(self, tool: AbstractTool):
-        path = self.system_config.cache.local_cache.temp_dir
-        tool_path = tool.ensure(path)
-        self.system_config.cache.local_cache.add_tool(tool.name, tool_path)
-        self.system_config.cache.local_cache.link_tool(self.project, tool.name)
-        return './' + tool.name

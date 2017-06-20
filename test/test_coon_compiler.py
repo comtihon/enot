@@ -1,23 +1,31 @@
+import os
 import unittest
+from os import listdir
 from os.path import join
 
-import os
+from coon.packages.package_builder import Builder
 from mock import patch
-from os import listdir
 
 import test
 from coon.__main__ import create
 from coon.compiler.coon import CoonCompiler
+from coon.pac_cache.local_cache import LocalCache
 from coon.packages.config.coon import CoonConfig
 from coon.packages.package import Package
 from coon.utils.erl_file_utils import parse_app_config
 from coon.utils.file_utils import ensure_empty, ensure_dir
-from test.abs_test_class import TestClass
+from test.abs_test_class import TestClass, set_prebuild, set_git_url, set_git_tag, set_deps
+
+
+def mock_fetch_package(dep: Package):
+    test_dir = test.get_test_dir('compile_tests')
+    tmp_path = join(os.getcwd(), test_dir, 'tmp')
+    dep.update_from_cache(join(tmp_path, dep.name))
 
 
 class CompileTests(TestClass):
     def __init__(self, method_name):
-        super().__init__('create_tests', method_name)
+        super().__init__('compile_tests', method_name)
 
     @property
     def src_dir(self):
@@ -26,9 +34,6 @@ class CompileTests(TestClass):
     @property
     def ebin_dir(self):
         return join(self.test_dir, 'ebin')
-
-    def setUp(self):
-        ensure_empty(test.get_test_dir(self.test_name))
 
     # Proper erlang file is compiled
     @patch.object(CoonCompiler, '_CoonCompiler__write_app_file')
@@ -110,6 +115,7 @@ class CompileTests(TestClass):
         self.assertEqual('1.0.0', vsn)
         self.assertEqual(deps, ['kernel', 'stdlib', 'test_dep'])
 
+    # if parse transform belongs to a project it will be built before module using it.
     @patch('coon.global_properties.ensure_conf_file')
     def test_build_parse_transform_first(self, mock_conf):
         mock_conf.return_value = self.conf_file
@@ -160,6 +166,65 @@ class CompileTests(TestClass):
         compiler = CoonCompiler(package)
         self.assertEqual(True, compiler.compile())
         self.assertEqual(True, os.path.exists(join(project_dir, 'ebin')))
+
+    # if config has some prebuild steps - they should be tun
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_prebuild(self, mock_conf):
+        mock_conf.return_value = self.conf_file
+        create(self.tmp_dir, {'<name>': 'project'})
+        project_dir = join(self.tmp_dir, 'project')
+        test_file_path = join(project_dir, 'test_file')
+        set_prebuild(project_dir, [{'shell': 'echo "test" > ' + test_file_path}])
+        self.assertEqual(False, os.path.exists(test_file_path))
+        package = Package.from_path(project_dir)
+        compiler = CoonCompiler(package)
+        self.assertEqual(True, compiler.compile())
+        self.assertEqual(True, os.path.exists(test_file_path))
+        with open(test_file_path, 'r') as file:
+            self.assertEqual('test\n', file.read())
+
+    # if prebuild step is disabled - no prebuild will run
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_disable_prebuild(self, mock_conf):
+        mock_conf.return_value = self.conf_file
+        create(self.tmp_dir, {'<name>': 'project'})
+        project_dir = join(self.tmp_dir, 'project')
+        test_file_path = join(project_dir, 'test_file')
+        set_prebuild(project_dir,
+                     [{'shell': 'echo "test" > ' + test_file_path}],
+                     disable_prebuild=True)
+        self.assertEqual(False, os.path.exists(test_file_path))
+        package = Package.from_path(project_dir)
+        compiler = CoonCompiler(package)
+        self.assertEqual(True, compiler.compile())
+        self.assertEqual(False, os.path.exists(test_file_path))
+
+    # if root prebuild is disabled and override conf is true - no prebuild will run
+    @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_override_disable_prebuild(self, mock_conf, _):
+        mock_conf.return_value = self.conf_file
+        create(self.tmp_dir, {'<name>': 'project'})
+        project_dir = join(self.tmp_dir, 'project')
+        set_prebuild(project_dir, [], disable_prebuild=True, override_conf=True)
+        # root project has dep, which has some shell prebuild step
+        set_deps(project_dir,
+                 [
+                     {'name': 'dep',
+                      'url': 'https://github.com/comtihon/dep',
+                      'tag': '1.0.0'}
+                 ])
+        create(self.tmp_dir, {'<name>': 'dep'})
+        dep_path = join(self.tmp_dir, 'dep')
+        set_git_url(dep_path, 'https://github/comtihon/dep')
+        set_git_tag(dep_path, '1.0.0')
+        test_file_path = join(project_dir, 'test_file')
+        set_prebuild(dep_path, [{'shell': 'echo "test" > ' + test_file_path}])
+        builder = Builder.init_from_path(project_dir)
+        builder.populate()
+        self.assertEqual(True, builder.build())
+        self.assertEqual(False, os.path.exists(test_file_path))  # no dep's prebuild step was executed
+
 
 if __name__ == '__main__':
     unittest.main()

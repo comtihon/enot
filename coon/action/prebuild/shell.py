@@ -14,3 +14,6 @@ class Shell(Action):
 
     def run(self, path):
         subprocess.check_call(self.params, shell=True, cwd=path)
+
+    def export(self) -> dict:
+        return {'shell': self.params}

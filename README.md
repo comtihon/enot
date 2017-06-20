@@ -74,6 +74,9 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
                 "tag" : GitTag / "branch" : BranchName
             }
         ],
+        "auto_build_order" : Boolean,
+        "override" : Boolean,
+        "disable_prebuild" : Boolean,
         "prebuild" : [
             {Action : Params}
         ],
@@ -86,27 +89,35 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
         ]
     }
 Here:  
-`name` is the name of current project.  
-`fullname` is a namespace with name. It is used to distinguish github forks. Usually you don't need it, as it will set 
+__name__ is the name of current project.  
+__fullname__ is a namespace with name. It is used to distinguish github forks. Usually you don't need it, as it will set 
 up automatically from url.  
-`erlang` is a list of erlang releases you application is compatible with. Is used by [octocoon](https://github.com/comtihon/octocoon)
+__erlang__ is a list of erlang releases you application is compatible with. Is used by [octocoon](https://github.com/comtihon/octocoon)
 build system.  
-`app_vsn` is a version of erlang application. Coon uses it when composing `.app` and in `relx.conf`.  
-`with_source` if set to true - will include source, when moving to local/remote cache and packaging. Default is true.  
-`link_all` if set to true - all deps will be linked to main project (including deps of deps). Default is true. You can
+__app_vsn__ is a version of erlang application. Coon uses it when composing `.app` and in `relx.conf`.  
+__with_source__ if set to true - will include source, when moving to local/remote cache and packaging. Default is `true`.  
+__link_all__ if set to true - all deps will be linked to main project (including deps of deps). Default is `true`. You can
   set it to false, to reduce number of deps you are not using directly in your project, but keep in mind, that relx 
   needs all dep tree for proper building. So if you use releases - switch to true.  
-`rescan_deps` if set to true (default is true) - will rescan all deps tree if dep update detected after build - and 
+__rescan_deps__ if set to true (default is `true`) - will rescan all deps tree if dep update detected after build - and 
 remove dead deps from deps directory. You can set it to false if you prefer manual deps removing.  
-`deps` is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep. If it is not specified - 
+__deps__ is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep. If it is not specified - 
 url will be fetched from [hex](https://hex.pm/), `dep.tag` is a tag of a dep and `dep.branch` is a branch. 
 Last two are mutually exclusive.    
-`test_deps` is the same, that `deps`, but are built, fetched and linked only for ct/eunit.  
-`prebuild` is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
+__test_deps__ is the same, that `deps`, but are built, fetched and linked only for ct/eunit.  
+__auto_build_order__ when true - searches project's source files content for parse-transform usage. If parse-transform 
+module belongs to the same repo - will compile it first. Default is `true`. Can be set to `false` to speed up 
+compilation.  
+__override__ if set to true - root project will override deps tree build configuration, such as `build_vars`, 
+`c_build_vars` and `disable_prebuild`. Default is `false`. Pay attention, that this won't work in case of `native` or 
+`makefile` build in Coon Global Config.  
+__disable_prebuild__ if set to true - Coon won't execute any prebuild steps. It is useless without `override` set to true
+in case you don't wont to execute deps prebuild steps, may be for security reasons.  
+__prebuild__ is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
 Only `shell` is supported now. `prebuild.Params` are the options to be passed to action. TODO example here.  
-`build_vars` is a list of erlang build vars, used when building a project. They can be either single or with value: 
+__build_vars__ is a list of erlang build vars, used when building a project. They can be either single or with value: 
 TODO example here  
-`c_build_vars` is a list of build vars, used when building `c_src` sources.  
+__c_build_vars__ is a list of build vars, used when building `c_src` sources.  
 
 _Why JSON?_  
 it is simple, well known, and can be easily accessed by third-party tools:

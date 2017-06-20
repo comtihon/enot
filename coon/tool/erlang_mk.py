@@ -9,3 +9,7 @@ class ErlangMKTool(AbstractTool):
     @property
     def name(self) -> str:
         return 'erlang.mk'
+
+    @property
+    def local_executable(self) -> str:
+        return 'make'  # still callinkg make. No matter if erlang.mk is linked.

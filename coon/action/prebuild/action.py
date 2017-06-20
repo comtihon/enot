@@ -10,3 +10,7 @@ class Action(metaclass=ABCMeta):
     @abstractmethod
     def run(self, path: str):
         pass
+
+    @abstractmethod
+    def export(self) -> dict:
+        pass

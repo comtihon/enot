@@ -3,6 +3,7 @@ import subprocess
 import tarfile
 from os.path import join
 from shutil import copyfile
+from subprocess import PIPE
 
 import os
 
@@ -109,7 +110,7 @@ def check_cmd(path: str, cmd: str) -> str or bool:
 # Check if program installed in system
 def ensure_programm(name: str) -> bool:
     try:
-        subprocess.call([name])
+        subprocess.call([name], stdout=PIPE, stderr=PIPE)
         return True
     except OSError as e:
         if e.errno == os.errno.ENOENT:

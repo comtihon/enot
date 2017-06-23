@@ -1,13 +1,12 @@
 from coon.compiler.abstract import AbstractCompiler
-from coon.compiler.compiler_type import Compiler
-from coon.compiler.erlang_mk import ErlangMKCompiler
-from coon.compiler.rebar import RebarCompiler
-from coon.compiler.coon import CoonCompiler
-from coon.compiler.makefile import MakefileCompiler
 from coon.compiler.bootstrap import BootstrapCompiler
-from coon.packages.package import Package
-
+from coon.compiler.compiler_type import Compiler
+from coon.compiler.coon import CoonCompiler
+from coon.compiler.erlang_mk import ErlangMKCompiler
+from coon.compiler.makefile import MakefileCompiler
+from coon.compiler.rebar import RebarCompiler
 from coon.global_properties import GlobalProperties
+from coon.packages.package import Package
 
 
 def get_compiler(global_config: GlobalProperties, package: Package) -> AbstractCompiler:
@@ -21,7 +20,7 @@ def select_compiler(compiler: Compiler, package: Package):
     if compiler == Compiler.COON:
         return CoonCompiler(package)
     if compiler == Compiler.REBAR:
-        return RebarCompiler(package)
+        return RebarCompiler(package)  # TODO how to determine rebar3?
     if compiler == Compiler.ERLANG_MK:
         return ErlangMKCompiler(package)
     if compiler == Compiler.MAKEFILE:

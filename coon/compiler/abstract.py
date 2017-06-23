@@ -76,7 +76,7 @@ class AbstractCompiler(metaclass=ABCMeta):
 
     def compile(self, override_config: ConfigFile or None = None) -> bool:
         info(self.executable + ' build ' + self.project_name)
-        return run_cmd(self.executable, self.project_name, self.root_path)
+        return run_cmd(self.executable, self.project_name, self.root_path, output=None)
 
     def unit(self) -> bool:
         raise RuntimeError("Don't know how to run unit tests with " + self.executable)

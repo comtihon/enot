@@ -2,15 +2,15 @@
 
 Usage:
   coon create <name> [-l LEVEL]
-  coon build [-l LEVEL]
-  coon package [-l LEVEL]
+  coon build [-l LEVEL][--define VARLINE]
+  coon package [-l LEVEL][--define VARLINE]
   coon add_package <repo> [-wp PACKAGE] [-r RECURSE] [-l LEVEL]
-  coon release [-l LEVEL]
+  coon release [-l LEVEL][--define VARLINE]
   coon deps [-l LEVEL]
   coon version
   coon upgrade [-d DEP] [-l LEVEL]
-  coon eunit [-l LEVEL]
-  coon ct [--log-dir DIR] [-l LEVEL]
+  coon eunit [-l LEVEL][--define VARLINE]
+  coon ct [--log-dir DIR] [-l LEVEL][--define VARLINE]
   coon -v | --version
   coon -h | --help
 
@@ -24,6 +24,9 @@ Options:
   -l LEVEL --log-level LEVEL         set log level. Options: debug, info, warning, error, critical [default: info]
   --log-dir DIR                      common tests log dir [default: test/logs]
   -d DEP --dep DEP                   ignore lock only for certain dep.
+  --define VARLINE                   define vars for file compilation. Used in erlang preprocessor. different vars 
+                                     should be separated with spaces, KV vars should use, f.e. --define 'TEST VAR=123'.
+                                     [default: '']
 """
 import sys
 from os.path import join
@@ -52,21 +55,21 @@ def main(args=None):
     if arguments['create']:
         result = create(path, arguments)
     if arguments['build']:
-        result = build(path)
+        result = build(path, arguments)
     if arguments['version']:
         result = version(path)
     if arguments['deps']:
         result = deps(path)
     if arguments['release']:
-        result = release(path)
+        result = release(path, arguments)
     if arguments['package']:
-        result = package(path)
+        result = package(path, arguments)
     if arguments['upgrade']:
         result = upgrade(path, arguments)
     if arguments['add_package']:
         result = add_package(path, arguments)
     if arguments['eunit']:
-        result = eunit(path)
+        result = eunit(path, arguments)
     if arguments['ct']:
         result = ct(path, arguments)
     if result:
@@ -89,14 +92,15 @@ def create(path: str, arguments: dict):
 
 
 # Build project with all deps (fetch deps if needed)
-def build(path):
+def build(path, arguments: dict):
+    define = arguments['--define']
     builder = Builder.init_from_path(path)
-    return do_build(builder)
+    return do_build(builder, define)
 
 
-def do_build(builder: Builder, test=False):
+def do_build(builder: Builder, define: str, test=False):
     builder.populate(test)
-    return builder.build()
+    return builder.build(define)
 
 
 # Print project's application version. Prefer coonfig.json vsn, but if none - use app.src version.
@@ -107,9 +111,10 @@ def version(path):
 
 
 # Build a release. Will use current rel dir with config or create new, if none is found
-def release(path):
+def release(path, arguments: dict):
+    define = arguments['--define']
     builder = Builder.init_from_path(path)
-    if not do_build(builder):  # TODO check if project was already built
+    if not do_build(builder, define):  # TODO check if project was already built
         return False
     builder.release()
     return True
@@ -124,9 +129,10 @@ def deps(path):
 
 
 # Create coon package
-def package(path):
+def package(path, arguments: dict):
+    define = arguments['--define']
     builder = Builder.init_from_path(path)
-    if not do_build(builder):
+    if not do_build(builder, define):
         return False
     builder.package()
     return True
@@ -155,17 +161,19 @@ def add_package(path, arguments):
 
 
 # Run tests
-def eunit(path):
+def eunit(path, arguments: dict):
+    define = arguments['--define']
     builder = Builder.init_from_path(path)
-    if not do_build(builder, test=True):
+    if not do_build(builder, define, test=True):
         return False
     return builder.unit_test()
 
 
 def ct(path, arguments):
     log_dir = arguments['--log-dir']
+    define = arguments['--define']
     builder = Builder.init_from_path(path)
-    if not do_build(builder, test=True):
+    if not do_build(builder, define, test=True):
         return False
     return builder.common_test(log_dir)
 

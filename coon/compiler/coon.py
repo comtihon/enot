@@ -1,14 +1,15 @@
-import os
 import socket
-from os import listdir
 from os.path import isfile, join, isdir
 
+import os
 from jinja2 import Template
+from os import listdir
 
 from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.compiler.c_compiler import CCompiler
 from coon.pac_cache.cache import Cache
 from coon.packages.config.config import ConfigFile
+from coon.packages.package import Package
 from coon.utils.file_utils import ensure_dir, read_file
 from coon.utils.logger import debug, info
 
@@ -31,6 +32,18 @@ def parse_transform_first(first: dict, files: dict, file):
 
 
 class CoonCompiler(AbstractCompiler):
+    def __init__(self, package: Package, define: str = '', executable='erlc'):
+        super().__init__(package, executable)
+        self._define = define
+
+    @property
+    def define(self) -> list:
+        defines = []
+        for define in self._define.split(' '):
+            if define != '':
+                defines.append(['-D', define])
+        return defines
+
     @property
     def deps_path(self) -> str:
         return join(self.package.path, 'deps')
@@ -117,13 +130,16 @@ class CoonCompiler(AbstractCompiler):
             cmd += ['-o', output]
         else:
             cmd += ['-o', self.output_path]
+        defines = self.define
+        for define in defines:
+            cmd += define
         self.__append_macro(cmd, override)
         for filename, path in files.items():
             cmd.append(join(path, filename) + '.erl')
         return cmd
 
     def __compose_unit_call(self, modules: list, test_dirs: list) -> str:
-        cmd = 'erl '
+        cmd = 'erl'
         for test_dir in test_dirs:
             cmd += ' -pa ' + join('test', test_dir)
         cmd += ' -pa ' + self.output_path
@@ -184,6 +200,6 @@ class CoonCompiler(AbstractCompiler):
         modules = []
         for file, path in all_files.items():
             if not file.endswith(drop_extension):  # drop all common tests
-                to_link.add(os.path.relpath(self.test_path, path))
+                to_link.add(os.path.relpath(path, self.test_path))
                 modules.append(file)
         return modules, list(to_link)

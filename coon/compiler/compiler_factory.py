@@ -9,16 +9,16 @@ from coon.global_properties import GlobalProperties
 from coon.packages.package import Package
 
 
-def get_compiler(global_config: GlobalProperties, package: Package) -> AbstractCompiler:
+def get_compiler(global_config: GlobalProperties, define: str, package: Package) -> AbstractCompiler:
     if global_config.compiler == Compiler.NATIVE:
-        return select_compiler(package.config.get_compiler(), package)
+        return select_compiler(package.config.get_compiler(), define, package)
     else:
-        return select_compiler(global_config.compiler, package)
+        return select_compiler(global_config.compiler, define, package)
 
 
-def select_compiler(compiler: Compiler, package: Package):
+def select_compiler(compiler: Compiler, define: str, package: Package):
     if compiler == Compiler.COON:
-        return CoonCompiler(package)
+        return CoonCompiler(package, define)
     if compiler == Compiler.REBAR:
         return RebarCompiler(package)  # TODO how to determine rebar3?
     if compiler == Compiler.ERLANG_MK:

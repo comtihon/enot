@@ -1,8 +1,9 @@
-import os
 import subprocess
 from abc import ABCMeta
 from os.path import join
 from subprocess import PIPE
+
+import os
 
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.config.config import ConfigFile

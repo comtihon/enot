@@ -1,5 +1,7 @@
 import os
 import unittest
+
+import subprocess
 from os import listdir
 from os.path import join
 
@@ -224,6 +226,28 @@ class CompileTests(TestClass):
         builder.populate()
         self.assertEqual(True, builder.build())
         self.assertEqual(False, os.path.exists(test_file_path))  # no dep's prebuild step was executed
+
+    # File is compiled with defined var
+    @patch.object(CoonCompiler, '_CoonCompiler__write_app_file')
+    def test_defines_setting(self, mock_compiler):
+        mock_compiler.return_value = True
+        ensure_dir(self.src_dir)
+        with open(join(self.src_dir, 'proper.erl'), 'w') as w:
+            w.write('''
+            -module(proper).
+            -export([test/0]).
+            test() -> io:format("~p~n", [?TEST_DEFINE]).
+            ''')
+        config = CoonConfig({'name': 'test'})
+        package = Package(self.test_dir, config, None)
+        compiler = CoonCompiler(package, 'TEST_DEFINE=test')
+        self.assertEqual(True, compiler.compile())
+        self.assertEqual(True, os.path.exists(join(self.ebin_dir, 'proper.beam')))
+        p = subprocess.Popen(['erl', '-pa', 'ebin', '-run', 'proper', 'test', '-run', 'init', 'stop', '-noshell'],
+                             stdout=subprocess.PIPE,
+                             cwd=self.ebin_dir)
+        self.assertEqual(0, p.wait(5000))
+        self.assertEqual('test\n', p.stdout.read().decode('utf8'))
 
 
 if __name__ == '__main__':

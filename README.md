@@ -141,7 +141,7 @@ For now only version, name and deps can be used.
 * deps auto update if newer dep presents in dependency tree
 * deps auto removing if dep is not used any more  
 
-More about [dependency management](../docs/deps.md).
+More about [dependency management](docs/deps.md).
 
 ### Jinja2 templating
 Coon allows you to use [Jinja2](http://jinja.pocoo.org/) template engine in your config files:  
@@ -159,7 +159,7 @@ __app.src__
 Where `modules` are the list of all application's modules and `app` is the object of Package class from 
 `coon/packages/package.py` representing current project. You can use it's properties in templating.  
 In `app.src` you have also `hostname` available for templating.  
-More about [templating](../docs/templating.md).   
+More about [templating](docs/templating.md).   
 
 __relx.config__
 

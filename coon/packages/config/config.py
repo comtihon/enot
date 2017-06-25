@@ -1,6 +1,7 @@
 import json
 from abc import ABCMeta, abstractmethod
 from os.path import join
+
 from urllib import request
 
 from coon.compiler.compiler_type import Compiler
@@ -25,7 +26,8 @@ def get_dep_info_from_hex(name: str, tag: str) -> Dep:
     parsed = request_hex_info(name)
     meta = parsed['meta']
     links = meta['links']
-    url = links['GitHub']
+    links_lower = {k.lower(): v for k, v in links.items()}  # sometimes Hex have GitHub and sometimes Github it response
+    url = links_lower['github']
     return Dep(url, None, tag=tag)
 
 

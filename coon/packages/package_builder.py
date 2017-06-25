@@ -1,7 +1,8 @@
 import json
+from os.path import join
+
 import os
 from os import listdir
-from os.path import join
 
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.relx import RelxCompiler
@@ -28,6 +29,7 @@ class Builder:
         self._path = path
         self._packages = {}
         self._project = package
+        self._define = ''
         self._rescan_deps = False
 
     @classmethod
@@ -69,17 +71,21 @@ class Builder:
     def project(self) -> Package:  # root package being built
         return self._project
 
+    @property
+    def define(self) -> str:
+        return self._define
+
     # Compose a package file
     def package(self):
         self.project.generate_package()
 
     # Run unit and common tests
     def unit_test(self) -> bool:
-        compiler = get_compiler(self.system_config, self.project)
+        compiler = get_compiler(self.system_config, self.define, self.project)
         return compiler.unit()
 
     def common_test(self, log_dir):
-        compiler = get_compiler(self.system_config, self.project)
+        compiler = get_compiler(self.system_config, self.define, self.project)
         return compiler.common(log_dir)
 
     # Parse package config, download missing deps to /tmp
@@ -110,7 +116,8 @@ class Builder:
     def add_package(self, remote: str, rewrite: bool, recurse: bool) -> bool:
         return self.system_config.cache.add_package(self.project, remote, rewrite, recurse)
 
-    def build(self):
+    def build(self, define: str = ''):
+        self._define = define
         build_res = self.__build_tree(self.project, is_subpackage=False)
         if self.rescan_deps:
             self.__rescan_deps()
@@ -149,7 +156,7 @@ class Builder:
     # Build package and it's deps, then add built package to local cache
     def __build_tree(self, package: Package, is_subpackage=True):
         self.__build_deps(package, is_subpackage)  # TODO add an ability to compile deps in parallel
-        compiler = get_compiler(self.system_config, package)
+        compiler = get_compiler(self.system_config, self.define, package)  # TODO should defines go only for root?
         compiler.ensure_tool(self.system_config.cache.local_cache)
         res = compiler.compile(override_config=self.project.config)
         if is_subpackage and res:

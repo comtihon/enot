@@ -115,8 +115,9 @@ __disable_prebuild__ if set to true - Coon won't execute any prebuild steps. It 
 in case you don't wont to execute deps prebuild steps, may be for security reasons.  
 __prebuild__ is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
 Only `shell` is supported now. `prebuild.Params` are the options to be passed to action. TODO example here.  
-__build_vars__ is a list of erlang build vars, used when building a project. They can be either single or with value: 
-TODO example here  
+__build_vars__ is a list of erlang build vars, used when building a project. They can be either single or with value. 
+Build vars can also be passed via coon argument `--define`. It can be used in case of test builds, if you don't want 
+to add test build vars to project conf.  
 __c_build_vars__ is a list of build vars, used when building `c_src` sources.  
 
 _Why JSON?_  

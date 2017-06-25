@@ -41,6 +41,7 @@ class CoonConfig(ConfigFile):
         self._override_conf = config.get('override', False)
         self._disable_prebuild = config.get('disable_prebuild', False)
         self._fullname = config.get('fullname', None)
+        self._compare_versions = config.get('compare_versions', True)
 
     @classmethod
     def from_path(cls, path: str, url=None) -> 'CoonConfig':

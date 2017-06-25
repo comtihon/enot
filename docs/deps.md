@@ -38,7 +38,9 @@ Then newer, `1.0.1` version of `dep3` will be used.
 Or, if your project has `1.0.1` version of `dep3` and `dep2` has older `1.0.0` - 
 newer version of `dep3` will also be used.  
 __Important__ this works only for tag commits. If you specify dep via branch - it will
-just overrides all other down level deps.
+just overrides all other down level deps.  
+__Important__ if you need to turn off deps auto updating - add `{"compare_versions" : false}` to your `coonfig.json`. 
+Then coon will take versions closer to root. Beware, using incompatible major versions could be dangerous!
 # Deps conflicts
 According to semantic versioning - changing major leads to incompatible api changes.
 So, if you have different major versions in your deps tree - Coon wont build the 
@@ -87,7 +89,9 @@ You can modify branch and tag:
     ]
 This will do following:
 * change `dep1` branch from `master` to `develop`
-* update `dep2` from `1.0.0` to `1.2.0` tag
+* update `dep2` from `1.0.0` to `1.2.0` tag  
+
+_Hint: {"compare_versions": false} will turn off crash on conflicts._
 
 # Deps auto cleaning
 When dep's version changes - it can loose it's own dependencies of gain a new ones. In 

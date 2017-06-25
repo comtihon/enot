@@ -76,6 +76,7 @@ Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in
         ],
         "auto_build_order" : Boolean,
         "override" : Boolean,
+        "compare_versions" : Boolean,
         "disable_prebuild" : Boolean,
         "prebuild" : [
             {Action : Params}
@@ -111,6 +112,8 @@ compilation.
 __override__ if set to true - root project will override deps tree build configuration, such as `build_vars`, 
 `c_build_vars` and `disable_prebuild`. Default is `false`. Pay attention, that this won't work in case of `native` or 
 `makefile` build in Coon Global Config.  
+__compare_versions__ if set to `false` - will not fail on incompatible (based on major vsn) deps are used in project. 
+Default is `true`.  
 __disable_prebuild__ if set to true - Coon won't execute any prebuild steps. It is useless without `override` set to true
 in case you don't wont to execute deps prebuild steps, may be for security reasons.  
 __prebuild__ is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
@@ -136,8 +139,9 @@ For now only version, name and deps can be used.
 * speficy deps in coonfig
 * deps update if tag changed in coonfig
 * deps auto update if newer dep presents in dependency tree
-* deps auto removing if dep is not used any more
-TODO link on article
+* deps auto removing if dep is not used any more  
+
+More about [dependency management](../docs/deps.md).
 
 ### Jinja2 templating
 Coon allows you to use [Jinja2](http://jinja.pocoo.org/) template engine in your config files:  
@@ -154,8 +158,8 @@ __app.src__
     ]}.
 Where `modules` are the list of all application's modules and `app` is the object of Package class from 
 `coon/packages/package.py` representing current project. You can use it's properties in templating.  
-In `app.src` you have also `hostname` available for templating. Read more in the full 
-[article](https://justtech.blog/2017/06/01/dynamic-configuration-erlang/).    
+In `app.src` you have also `hostname` available for templating.  
+More about [templating](../docs/templating.md).   
 
 __relx.config__
 

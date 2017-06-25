@@ -51,6 +51,7 @@ class ConfigFile(metaclass=ABCMeta):
         self._override_conf = False
         self._disable_prebuild = False
         self._erlang_versions = []
+        self._compare_versions = True
 
     @property
     def name(self) -> str:  # project's name
@@ -79,6 +80,10 @@ class ConfigFile(metaclass=ABCMeta):
     @property
     def fullname(self) -> str or None:  # namespace/name
         return self._fullname
+
+    @property
+    def compare_versions(self) -> bool:
+        return self._compare_versions
 
     @property
     def auto_build_order(self) -> bool:  # should analyse sources during compilation

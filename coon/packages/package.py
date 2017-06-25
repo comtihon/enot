@@ -50,6 +50,10 @@ class Package:
         return self.config.git_tag
 
     @property
+    def compare_versions(self) -> bool:
+        return self.config.compare_versions
+
+    @property
     def git_vsn(self) -> str:  # prefer tag, but if None - return branch name
         if self.git_tag:
             return self.git_tag

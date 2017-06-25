@@ -47,6 +47,10 @@ class Builder:
         return cls(path_to_package, package)
 
     @property
+    def compare_versions(self) -> bool:
+        return self.project.compare_versions
+
+    @property
     def path(self) -> str:  # path in system of building project
         return self._path
 
@@ -180,22 +184,28 @@ class Builder:
         pkg_vsn = self.packages[dep.name].git_vsn
         if dep.git_vsn != pkg_vsn:  # It is not the same dep
             try:  # try to compare versions
-                [major1, minor1, bug1] = try_get_semver(dep.git_vsn)
-                [major2, minor2, bug2] = try_get_semver(pkg_vsn)
-                if major1 != major2:
-                    raise RuntimeError(
-                        'Deps ' + dep.name + ' has incompatible versions: ' + pkg_vsn + ' vs ' + dep.git_vsn)
-                if minor1 > minor2 or bug1 > bug2:  # dep is newer than selected - prefer it
-                    info('Prefer newer version for ' + dep.name + ', ' + pkg_vsn + ' -> ' + dep.git_vsn)
-                    self.packages[dep.name] = dep
-                    # TODO try use same repo to speed up new vsn fetch
-                    self.system_config.cache.populate(dep)
-                    dep.update_from_duplicate(self.packages[dep.name])
-                    return dep.deps
+                self.__compare_vsns(dep, pkg_vsn)
             except ValueError:  # not m.m.b version (may be tag vs branch). Just replace.
                 warning('Skip ' + dep.name + ' (' + dep.git_vsn + '). Use ' + pkg_vsn)
         dep.update_from_duplicate(self.packages[dep.name])
         return []
+
+    # compare to versions, update to newer or fail if incompatible majors. Do not compare if disallowed.
+    def __compare_vsns(self, dep: Package, pkg_vsn):
+        if not self.compare_versions:
+            raise ValueError  # skip vsn check - always prefer versions closer to root
+        [major1, minor1, bug1] = try_get_semver(dep.git_vsn)
+        [major2, minor2, bug2] = try_get_semver(pkg_vsn)
+        if major1 != major2:
+            raise RuntimeError(
+                'Deps ' + dep.name + ' has incompatible versions: ' + pkg_vsn + ' vs ' + dep.git_vsn)
+        if minor1 > minor2 or bug1 > bug2:  # dep is newer than selected - prefer it
+            info('Prefer newer version for ' + dep.name + ', ' + pkg_vsn + ' -> ' + dep.git_vsn)
+            self.packages[dep.name] = dep
+            # TODO try use same repo to speed up new vsn fetch
+            self.system_config.cache.populate(dep)
+            dep.update_from_duplicate(self.packages[dep.name])
+            return dep.deps
 
     # list deps directory and compare to packages, which should always be actual due to
     # populate at the beginning of the build. If dep is in deps dir, but not in self.packages

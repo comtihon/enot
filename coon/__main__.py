@@ -130,7 +130,7 @@ def deps(path):
 
 # Create coon package
 def package(path, arguments: dict):
-    define = arguments['--define']
+    define = arguments.get('--define', '')
     builder = Builder.init_from_path(path)
     if not do_build(builder, define):
         return False

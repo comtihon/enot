@@ -40,7 +40,7 @@ class CoonCompiler(AbstractCompiler):
     def define(self) -> list:
         defines = []
         for define in self._define.split(' '):
-            if define != '':
+            if define != '' and define != "''":
                 defines.append(['-D', define])
         return defines
 

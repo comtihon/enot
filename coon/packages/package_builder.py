@@ -182,13 +182,14 @@ class Builder:
 
     def __compare_and_select(self, dep: Package) -> list:
         pkg_vsn = self.packages[dep.name].git_vsn
+        additional_deps = []
         if dep.git_vsn != pkg_vsn:  # It is not the same dep
             try:  # try to compare versions
-                self.__compare_vsns(dep, pkg_vsn)
+                additional_deps = self.__compare_vsns(dep, pkg_vsn)
             except ValueError:  # not m.m.b version (may be tag vs branch). Just replace.
                 warning('Skip ' + dep.name + ' (' + dep.git_vsn + '). Use ' + pkg_vsn)
         dep.update_from_duplicate(self.packages[dep.name])
-        return []
+        return additional_deps
 
     # compare to versions, update to newer or fail if incompatible majors. Do not compare if disallowed.
     def __compare_vsns(self, dep: Package, pkg_vsn):
@@ -204,8 +205,8 @@ class Builder:
             self.packages[dep.name] = dep
             # TODO try use same repo to speed up new vsn fetch
             self.system_config.cache.populate(dep)
-            dep.update_from_duplicate(self.packages[dep.name])
             return dep.deps
+        return []
 
     # list deps directory and compare to packages, which should always be actual due to
     # populate at the beginning of the build. If dep is in deps dir, but not in self.packages

@@ -48,6 +48,9 @@ To release a project (in project's dir):
 This will build a project if not built, install [relx](https://github.com/erlware/relx]creates) if not installed,
  create `relx.config`, `rel/vm.args`, `rel/sys.config` if not exist and build a release using relx in `_rel` 
  directory.
+ 
+### Package management api
+To learn how to fetch, install, uninstall and list coon packages read [commands](docs/commands.md).
 
 ### Project Configuration
 Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in [JSON](http://www.json.org) format.

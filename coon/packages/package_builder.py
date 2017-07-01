@@ -1,8 +1,7 @@
 import json
-from os.path import join
-
 import os
 from os import listdir
+from os.path import join
 
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.relx import RelxCompiler
@@ -136,6 +135,16 @@ class Builder:
         compiler = RelxCompiler(self.project)
         compiler.ensure_tool(self.system_config.cache.local_cache)
         return compiler.compile()
+
+    def fetch(self, fullname: str, maybe_version: str or None) -> bool:
+        vsn = maybe_version
+        if vsn is None:
+            versions = self.system_config.cache.get_versions(fullname)
+            if not versions:
+                return False
+            [last_version] = versions[-1:]
+            vsn = last_version
+        return self.system_config.cache.fetch_version(fullname, vsn)
 
     # Build all deps, add to cache and link to project
     def __build_deps(self, package: Package, is_subpackage=True):

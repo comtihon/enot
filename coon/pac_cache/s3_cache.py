@@ -1,11 +1,10 @@
 from os.path import join
 
 from coon.packages.package import Package
+from coon.pac_cache.remote_cache import RemoteCache
 
-from coon.pac_cache.cache import Cache
 
-
-class S3Cache(Cache):
+class S3Cache(RemoteCache):  # TODO implement me
     def __init__(self, temp_dir, conf):
         cache_url = conf['url']
         self._bucket = conf['bucket']
@@ -18,6 +17,12 @@ class S3Cache(Cache):
         raise RuntimeError('not implemented')
 
     def fetch_package(self, package: Package) -> bool:
+        raise RuntimeError('not implemented')
+
+    def get_versions(self, fullname: str) -> list:
+        raise RuntimeError('not implemented')
+
+    def fetch_version(self, fullname: str, version: str) -> Package or None:
         raise RuntimeError('not implemented')
 
     def __get_package_url(self, package: Package):

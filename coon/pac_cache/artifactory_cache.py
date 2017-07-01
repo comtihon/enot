@@ -1,13 +1,14 @@
+from os import listdir
 from os.path import join
 
 from artifactory import ArtifactoryPath
-from coon.utils.logger import info
 
-from coon.pac_cache.cache import Cache
 from coon.packages.package import Package
+from coon.utils.logger import info, warning
+from coon.pac_cache.remote_cache import RemoteCache
 
 
-class ArtifactoryCache(Cache):
+class ArtifactoryCache(RemoteCache):
     def __init__(self, temp_dir, conf: dict):
         cache_url = conf['url']
         name = conf['name']
@@ -31,19 +32,19 @@ class ArtifactoryCache(Cache):
         else:
             return self._api_key
 
-    def exists(self, package: Package):   # TODO support branches
+    def exists(self, package: Package):
         path = ArtifactoryPath(join(self.path, self.get_package_path(package)),
                                auth=(self.username, self.password))
         return path.exists()
 
-    def get_package_path(self, package: Package) -> str or None:
+    def get_user_package_path(self, package: Package) -> str:
         return join(self.username, package.name, package.git_vsn, self.erlang_version)
 
     def add_package(self, package: Package, rewrite=True) -> bool:
         if not rewrite and self.exists(package):
             return True
         info('Add ' + package.name + ' to ' + self.name)
-        path = ArtifactoryPath(join(self.path, self.get_package_path(package)),
+        path = ArtifactoryPath(join(self.path, self.get_user_package_path(package)),
                                auth=(self.username, self.password))
         if not path.exists():
             path.mkdir()  # exist_ok doesn't work there on python3.2-3.5
@@ -59,3 +60,37 @@ class ArtifactoryCache(Cache):
             with open(write_path, 'wb') as out:
                 out.write(fd.read())
         dep.update_from_package(write_path)
+
+    def fetch_version(self, fullname: str, version: str) -> Package or None:
+        [name] = fullname.split('/')[-1:]
+        path = ArtifactoryPath(join(self.path, fullname, version, self.erlang_version, name + '.cp'),
+                               auth=(self.username, self.password))
+        if not path.exists():
+            warning('No built package in ' + self.name + ' for your Erlang '
+                    + self.erlang_version + ', available are: ' + str(self.get_erl_versions(fullname, version)))
+            return None
+
+        write_path = join(self.temp_dir, name + '.cp')
+        with path.open() as fd:
+            with open(write_path, 'wb') as out:
+                out.write(fd.read())
+        return Package.from_package(write_path)
+
+    def get_versions(self, fullname: str) -> list:
+        path = ArtifactoryPath(join(self.path, fullname), auth=(self.username, self.password))
+        if not path.exists():
+            return []
+        return ArtifactoryCache.listdir(path)
+
+    def get_erl_versions(self, fullname: str, version: str):
+        path = ArtifactoryPath(join(self.path, fullname, version), auth=(self.username, self.password))
+        if not path.exists():
+            return []
+        return ArtifactoryCache.listdir(path)
+
+    @staticmethod
+    def listdir(path: ArtifactoryPath) -> list:
+        listing = []
+        for d in path:
+            listing.append(d.name)
+        return listing

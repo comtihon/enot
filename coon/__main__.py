@@ -6,6 +6,10 @@ Usage:
   coon package [-l LEVEL][--define VARLINE]
   coon add_package <repo> [-wp PACKAGE] [-r RECURSE] [-l LEVEL]
   coon release [-l LEVEL][--define VARLINE]
+  coon fetch <package> [<version>] [-l LEVEL]
+  coon install <package> [<version>] [-l LEVEL]
+  coon uninstall <package> [-l LEVEL]
+  coon installed
   coon deps [-l LEVEL]
   coon version
   coon upgrade [-d DEP] [-l LEVEL]
@@ -20,26 +24,27 @@ Options:
                                      [default: True]
   -r RECURSE --recurse RECURSE       add package and all it's deps recursively [default: True]
   -h --help                          show this help message and exit
-  -v --version                       print version and exit
+  -v --version                       print Coon's version and exit
   -l LEVEL --log-level LEVEL         set log level. Options: debug, info, warning, error, critical [default: info]
   --log-dir DIR                      common tests log dir [default: test/logs]
   -d DEP --dep DEP                   ignore lock only for certain dep.
-  --define VARLINE                   define vars for file compilation. Used in erlang preprocessor. different vars 
+  --define VARLINE                   define vars for file compilation. Used in erlang preprocessor. different vars
                                      should be separated with spaces, KV vars should use, f.e. --define 'TEST VAR=123'.
                                      [default: '']
 """
+import os
 import sys
 from os.path import join
 
-import coon
-import os
-from coon import APPVSN
-from coon.utils import logger
+from coon.utils.logger import warning
 from docopt import docopt, DocoptExit
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
+import coon
+from coon import APPVSN
 from coon.packages.package_builder import Builder
+from coon.utils import logger
 from coon.utils.file_utils import ensure_dir
 
 
@@ -72,6 +77,8 @@ def main(args=None):
         result = eunit(path, arguments)
     if arguments['ct']:
         result = ct(path, arguments)
+    if arguments['fetch']:
+        result = fetch(path, arguments)
     if result:
         sys.exit(0)
     else:
@@ -144,6 +151,32 @@ def upgrade(path, arguments):
     builder = Builder.init_from_path(path)
     builder.drop_locs(dep)
     builder.populate()
+    return True
+
+
+# Fetch package to local cache
+def fetch(path, arguments):
+    fullname = arguments['<package>']
+    if fullname is None or '/' not in fullname:
+        warning('Incorrect package parameter. Should be namespace/package_name.')
+        raise ValueError('Incorrect package parameter\'s value')
+    maybe_vsn = arguments['<version>']
+    builder = Builder.init_without_package(path)
+    return builder.fetch(fullname, maybe_vsn)
+
+
+# Run package installation steps. If not in local cache - fetch it.
+def install(path, arguments):
+    return True
+
+
+# Uninstall previously installed package. It still remains in local cache.
+def uninstall(path, arguments):
+    return True
+
+
+# Print installed packages
+def installed():
     return True
 
 

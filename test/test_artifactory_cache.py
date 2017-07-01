@@ -1,9 +1,10 @@
+import os
 import unittest
 from os.path import join
 
-import os
 import requests
 from artifactory import ArtifactoryPath
+from coon.pac_cache.cache import Cache
 from mock import patch
 
 import test
@@ -13,7 +14,7 @@ from coon.pac_cache.local_cache import LocalCache
 from coon.packages.dep import Dep
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
-from test.abs_test_class import TestClass, set_git_url, set_git_tag, set_deps
+from test.abs_test_class import TestClass, set_git_url, set_git_tag, set_deps, modify_config
 
 
 def mock_fetch_package(dep: Package):
@@ -214,7 +215,6 @@ class ArtifactoryTests(TestClass):
     @patch('coon.global_properties.ensure_conf_file')
     def test_downloading_with_deps_some_missing(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
-        mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_project')
         set_git_url(pack_path, 'https://github/comtihon/test_project')
         set_git_tag(pack_path, '1.0.0')
@@ -271,6 +271,47 @@ class ArtifactoryTests(TestClass):
         package(pack_path, {})
         res = cache_man.add_package(pack, 'artifactory-local', False, False)
         self.assertEqual(False, res)
+
+    # Package from artifactory cache can be fetched to local
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_fetch_package(self, mock_conf):
+        mock_conf.return_value = self.conf_file
+        erl = Cache.get_erlang_version()
+        pack_path = join(self.test_dir, 'test_project')
+        set_git_url(pack_path, 'http://github/comtihon/test_project')
+        # package and load
+        modify_config(pack_path, {'tag': '1.0.0'})
+        package(pack_path, {})
+        path = ArtifactoryPath(join(self.path, 'comtihon/test_project/1.0.0', erl),
+                               auth=(self.username, self.password))
+        if not path.exists():
+            path.mkdir()
+        path.deploy_file(join(pack_path, 'test_project' + '.cp'))
+        # load another version
+        modify_config(pack_path, {'tag': '1.1.0'})
+        package(pack_path, {})
+        path = ArtifactoryPath(join(self.path, 'comtihon/test_project/1.1.0', erl),
+                               auth=(self.username, self.password))
+        if not path.exists():
+            path.mkdir()
+        path.deploy_file(join(pack_path, 'test_project' + '.cp'))
+        # check local cache doesn't contain this package
+        pack1 = Package.from_dep('test_project', Dep('git://github.com/comtihon/test_project', 'master', tag='1.0.0'))
+        pack2 = Package.from_dep('test_project', Dep('git://github.com/comtihon/test_project', 'master', tag='1.1.0'))
+        builder = Builder.init_without_package(pack_path)
+        self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack1))
+        self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack2))
+        artifactory_cache = builder.system_config.cache.remote_caches['artifactory-local']
+        # check versions available
+        self.assertEqual(['1.0.0', '1.1.0'], artifactory_cache.get_versions('comtihon/test_project'))
+        # check fetched version exists
+        self.assertEqual(True, builder.fetch('comtihon/test_project', '1.0.0'))
+        self.assertEqual(True, builder.system_config.cache.local_cache.exists(pack1))
+        self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack2))
+        # fetch newer version
+        self.assertEqual(True, builder.fetch('comtihon/test_project', '1.1.0'))
+        self.assertEqual(True, builder.system_config.cache.local_cache.exists(pack1))
+        self.assertEqual(True, builder.system_config.cache.local_cache.exists(pack2))
 
     def tearDown(self):
         super().tearDown()

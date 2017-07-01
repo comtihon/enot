@@ -54,8 +54,7 @@ only for branch, which use `branch` as a source. `tag` deps upgrade automaticall
 Use:
 
     coon upgrade -d my_dep
-to upgrade only `my_dep`.  
-Read [this](deps.md) for more info.
+to upgrade only `my_dep`. Read [this](deps.md) for more info.
 
 # Package API
 ### package
@@ -96,7 +95,9 @@ Install Coon package.
 
     coon install foo/bar 1.0.0
 Will install package `bar` from local cache (or fetch it first from remote if not exists). Installed package
-will be added to list of installed packages
+will be added to list of installed packages.  
+Package installation is a step-by-step execution of actions, set in `coonfig.json` `install` section. It is performed
+just after fetching and building deps.
 
 ### installed
 Print all installed packages and versions.

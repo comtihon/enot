@@ -36,7 +36,6 @@ import os
 import sys
 from os.path import join
 
-from coon.utils.logger import warning
 from docopt import docopt, DocoptExit
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
@@ -44,8 +43,10 @@ from pkg_resources import Requirement, resource_filename
 import coon
 from coon import APPVSN
 from coon.packages.package_builder import Builder
+from coon.packages.package_controller import Controller
 from coon.utils import logger
 from coon.utils.file_utils import ensure_dir
+from coon.utils.logger import warning
 
 
 def main(args=None):
@@ -78,7 +79,13 @@ def main(args=None):
     if arguments['ct']:
         result = ct(path, arguments)
     if arguments['fetch']:
-        result = fetch(path, arguments)
+        result = fetch(arguments)
+    if arguments['install']:
+        result = install(arguments)
+    if arguments['uninstall']:
+        result = uninstall(arguments)
+    if arguments['installed']:
+        result = installed()
     if result:
         sys.exit(0)
     else:
@@ -155,28 +162,31 @@ def upgrade(path, arguments):
 
 
 # Fetch package to local cache
-def fetch(path, arguments):
-    fullname = arguments['<package>']
-    if fullname is None or '/' not in fullname:
-        warning('Incorrect package parameter. Should be namespace/package_name.')
-        raise ValueError('Incorrect package parameter\'s value')
+def fetch(arguments):
+    fullname = __get_full_name(arguments)
     maybe_vsn = arguments['<version>']
-    builder = Builder.init_without_package(path)
-    return builder.fetch(fullname, maybe_vsn)
+    controller = Controller()
+    return controller.fetch(fullname, maybe_vsn)
 
 
 # Run package installation steps. If not in local cache - fetch it.
-def install(path, arguments):
-    return True
+def install(arguments):
+    fullname = __get_full_name(arguments)
+    maybe_vsn = arguments['<version>']
+    controller = Controller()
+    return controller.install(fullname, maybe_vsn)
 
 
 # Uninstall previously installed package. It still remains in local cache.
-def uninstall(path, arguments):
-    return True
+def uninstall(arguments):
+    fullname = __get_full_name(arguments)
+    controller = Controller()
+    return controller.uninstall(fullname)
 
 
 # Print installed packages
 def installed():
+    print(Controller().installed())
     return True
 
 
@@ -226,6 +236,14 @@ def __ensure_template(src_dir, name, suffix, overwrite_name=False):
                                              vsn_tmp="{{ app.vsn }}",
                                              apps_tmp="{{ app.std_apps + app.apps }}",
                                              modules_tmp="{{ modules }}"))
+
+
+def __get_full_name(args: dict) -> str:
+    fullname = args['<package>']
+    if fullname is None or '/' not in fullname:
+        warning('Incorrect package parameter. Should be namespace/package_name.')
+        raise ValueError('Incorrect package parameter\'s value')
+    return fullname
 
 
 if __name__ == "__main__":

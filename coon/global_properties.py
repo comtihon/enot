@@ -41,11 +41,16 @@ class GlobalProperties:
         config_path = ensure_conf_file(path)
         content = read_file(config_path)
         conf = json.loads(content)
+        self._conf_dir = path
         self.__init_from_dict(conf)
 
     @property
     def temp_dir(self) -> str:
         return self._temp_dir
+
+    @property
+    def conf_dir(self) -> str:
+        return self._conf_dir
 
     @property
     def compiler(self) -> Compiler:

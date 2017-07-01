@@ -54,6 +54,10 @@ class CacheMan:
             return True
         return False
 
+    # check if local cache contains namespace/package_name/version
+    def check_exists_local(self, fullname: str, vsn: str) -> bool:
+        return self.local_cache.check_exists(join(fullname, vsn))
+
     def exists_remote(self, cache: Cache, dep: Package) -> bool:
         try:
             if cache.exists(dep):  # remote cache has this package

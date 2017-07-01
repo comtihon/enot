@@ -18,9 +18,5 @@ class RemoteCache(Cache):
         pass
 
     @abstractmethod
-    def get_versions(self, fullname: str) -> list:
-        pass
-
-    @abstractmethod
     def fetch_version(self, fullname: str, version: str) -> Package or None:
         pass

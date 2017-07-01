@@ -2,7 +2,7 @@ import json
 from os.path import join
 from tarfile import TarFile
 
-from coon.action.prebuild import action_factory
+from coon.action import action_factory
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile, get_dep_info_from_hex
 from coon.packages.dep import Dep
@@ -26,7 +26,6 @@ class CoonConfig(ConfigFile):
         self._name = config.get('name', name)
         self._drop_unknown = config.get('drop_unknown_deps', True)
         self._with_source = config.get('with_source', True)
-        self.__parse_prebuild(config)
         self.__parse_build_vars(config)
         self._deps = parse_deps(config.get('deps', {}))
         self._test_deps = parse_deps(config.get('test_deps', {}))
@@ -42,6 +41,9 @@ class CoonConfig(ConfigFile):
         self._disable_prebuild = config.get('disable_prebuild', False)
         self._fullname = config.get('fullname', None)
         self._compare_versions = config.get('compare_versions', True)
+        self._prebuild = CoonConfig.parse_steps(config.get('prebuild', []))
+        self._install = CoonConfig.parse_steps(config.get('install', []))
+        self._uninstall = CoonConfig.parse_steps(config.get('uninstall', []))
 
     @classmethod
     def from_path(cls, path: str, url=None) -> 'CoonConfig':
@@ -61,11 +63,14 @@ class CoonConfig(ConfigFile):
     def get_compiler(self):
         return Compiler.COON
 
-    def __parse_prebuild(self, parsed):
-        for step in parsed.get('prebuild', []):
-            [(action_type, params)] = step.items()
-            self.prebuild.append(action_factory.get_action(action_type, params))
-
     def __parse_build_vars(self, parsed):
         self._build_vars = parsed.get('build_vars', [])
         self._c_build_vars = parsed.get('c_build_vars', [])
+
+    @staticmethod
+    def parse_steps(steps: list) -> list:
+        actions = []
+        for step in steps:
+            [(action_type, params)] = step.items()
+            actions.append(action_factory.get_action(action_type, params))
+        return actions

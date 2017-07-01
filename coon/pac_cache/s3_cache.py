@@ -25,5 +25,8 @@ class S3Cache(RemoteCache):  # TODO implement me
     def fetch_version(self, fullname: str, version: str) -> Package or None:
         raise RuntimeError('not implemented')
 
+    def get_erl_versions(self, fullname: str, version: str) -> list:
+        raise RuntimeError('not implemented')
+
     def __get_package_url(self, package: Package):
         return join(self.get_package_path(package), package.name) + '.cp'

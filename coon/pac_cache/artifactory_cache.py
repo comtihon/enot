@@ -1,11 +1,10 @@
-from os import listdir
 from os.path import join
 
 from artifactory import ArtifactoryPath
 
+from coon.pac_cache.remote_cache import RemoteCache
 from coon.packages.package import Package
 from coon.utils.logger import info, warning
-from coon.pac_cache.remote_cache import RemoteCache
 
 
 class ArtifactoryCache(RemoteCache):

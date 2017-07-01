@@ -1,7 +1,7 @@
+import os
 import unittest
 from os.path import join
 
-import os
 from mock import patch
 
 import test

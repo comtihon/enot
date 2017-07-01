@@ -1,7 +1,7 @@
+import os
 import unittest
 from os.path import join
 
-import os
 from mock import patch
 
 import test
@@ -11,7 +11,7 @@ from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
 from coon.utils.file_utils import remove_dir, copy_file
-from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag, set_link_policy
+from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag, modify_config
 
 
 def mock_fetch_package(dep: Package):
@@ -226,6 +226,24 @@ class LocalCacheTests(TestClass):
             erl = Cache.get_erlang_version()
             real_dep = join(self.cache_dir, 'comtihon', dep, '1.0.0', erl, 'ebin')
             self.assertEqual(real_dep, os.readlink(dep_link_ebin))
+
+    # Local cache contains multiple package's versions and they all can be listed. Same with erl versions.
+    @patch('coon.global_properties.ensure_conf_file')
+    def test_versions_api(self, mock_conf):
+        mock_conf.return_value = self.conf_file
+        pack_path = join(self.test_dir, 'test_app')
+        set_git_url(pack_path, 'http://github/comtihon/test_app')
+        modify_config(pack_path, {'tag': '1.0.0'})
+        builder = Builder.init_from_path(pack_path)
+        self.assertEqual(True, builder.build())
+        builder.system_config.cache.add_package_local(builder.project)
+        modify_config(pack_path, {'tag': '1.1.0'})
+        builder = Builder.init_from_path(pack_path)
+        self.assertEqual(True, builder.build())
+        builder.system_config.cache.add_package_local(builder.project)
+        local_cache = builder.system_config.cache.local_cache
+        self.assertEqual(['1.0.0', '1.1.0'], local_cache.get_versions('comtihon/test_app'))
+        self.assertEqual([Cache.get_erlang_version()], local_cache.get_erl_versions('comtihon/test_app', '1.1.0'))
 
 
 if __name__ == '__main__':

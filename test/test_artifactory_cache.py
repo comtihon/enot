@@ -4,16 +4,17 @@ from os.path import join
 
 import requests
 from artifactory import ArtifactoryPath
-from coon.pac_cache.cache import Cache
 from mock import patch
 
 import test
 from coon.__main__ import create, package
+from coon.pac_cache.cache import Cache
 from coon.pac_cache.cache_man import CacheMan
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.dep import Dep
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
+from coon.packages.package_controller import Controller
 from test.abs_test_class import TestClass, set_git_url, set_git_tag, set_deps, modify_config
 
 
@@ -73,7 +74,7 @@ class ArtifactoryTests(TestClass):
         package(pack_path, {})
         builder = Builder.init_from_path(pack_path)
         builder.system_config.cache.add_package(pack, 'artifactory-local', False, False)
-        exists = ArtifactoryTests.check_exists(builder.system_config.cache.remote_caches, pack)
+        exists = self.check_exists(pack)
         self.assertEqual(True, exists)
 
     # Test package branch uploading to artifactory
@@ -86,7 +87,7 @@ class ArtifactoryTests(TestClass):
         package(pack_path, {})
         builder = Builder.init_from_path(pack_path)
         builder.system_config.cache.add_package(pack, 'artifactory-local', False, False)
-        exists = ArtifactoryTests.check_exists(builder.system_config.cache.remote_caches, pack)
+        exists = self.check_exists(pack)
         self.assertEqual(True, exists)
 
     # check if not exists, add package, check if exists
@@ -98,12 +99,12 @@ class ArtifactoryTests(TestClass):
         set_git_tag(pack_path, '1.0.0')
         pack = Package.from_path(pack_path)
         builder = Builder.init_from_path(pack_path)
-        exists = ArtifactoryTests.check_exists(builder.system_config.cache.remote_caches, pack)
+        exists = self.check_exists(pack)
         self.assertEqual(False, exists)
         package(pack_path, {})
         self.assertEqual(True, os.path.isfile(join(pack_path, 'test_project.cp')))
         builder.system_config.cache.add_package(pack, 'artifactory-local', False, False)
-        exists = ArtifactoryTests.check_exists(builder.system_config.cache.remote_caches, pack)
+        exists = self.check_exists(pack)
         self.assertEqual(True, exists)
 
     # download package from remote cache, add to local
@@ -115,7 +116,7 @@ class ArtifactoryTests(TestClass):
         pack.update_from_cache(pack_path)
         package(pack_path, {})
         builder = Builder.init_from_path(pack_path)
-        builder.system_config.cache.add_package(pack, 'artifactory-local', False, False)
+        self.add_with_namespace(pack_path, pack)
         self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack))
         artifactory_cache = builder.system_config.cache.remote_caches['artifactory-local']
         artifactory_cache.fetch_package(pack)
@@ -156,12 +157,11 @@ class ArtifactoryTests(TestClass):
         builder.populate()
         self.assertEqual(True, package(pack_path, {}))
         self.assertEqual(True, builder.add_package('artifactory-local', True, True))
-        artifactory_cache = builder.system_config.cache.remote_caches['artifactory-local']
         # All two deps are in cache now
         dep_pack = Package.from_path(dep_path)
-        self.assertEqual(True, artifactory_cache.exists(dep_pack))
         dep_dep_pack = Package.from_path(dep_dep_path)
-        self.assertEqual(True, artifactory_cache.exists(dep_dep_pack))
+        self.assertEqual(True, self.check_exists(dep_pack))
+        self.assertEqual(True, self.check_exists(dep_dep_pack))
 
     # download package and all it's deps from remote
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
@@ -196,7 +196,10 @@ class ArtifactoryTests(TestClass):
         builder = Builder.init_from_path(pack_path)
         builder.populate()
         self.assertEqual(True, package(pack_path, {}))
-        self.assertEqual(True, builder.add_package('artifactory-local', True, True))
+        # adding package and deps by hand, to load with correct namespaces
+        self.add_with_namespace(pack_path, builder.project)
+        self.add_with_namespace(dep_path, Package.from_path(dep_path))
+        self.add_with_namespace(dep_dep_path, Package.from_path(dep_dep_path))
         self.clear_local_cache()
         # clear local cache to be sure we don't have this packages locally
         dep = Package.from_path(dep_path)
@@ -233,7 +236,7 @@ class ArtifactoryTests(TestClass):
         builder.populate()
         self.assertEqual(True, package(pack_path, {}))
         # Load project without dep to artifactory
-        self.assertEqual(True, builder.add_package('artifactory-local', True, False))
+        self.add_with_namespace(pack_path, builder.project)
         self.clear_local_cache()
         # clear local cache to be sure we don't have this packages locally
         dep = Package.from_path(dep_path)
@@ -298,37 +301,45 @@ class ArtifactoryTests(TestClass):
         # check local cache doesn't contain this package
         pack1 = Package.from_dep('test_project', Dep('git://github.com/comtihon/test_project', 'master', tag='1.0.0'))
         pack2 = Package.from_dep('test_project', Dep('git://github.com/comtihon/test_project', 'master', tag='1.1.0'))
-        builder = Builder.init_without_package(pack_path)
-        self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack1))
-        self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack2))
-        artifactory_cache = builder.system_config.cache.remote_caches['artifactory-local']
+        controller = Controller()
+        self.assertEqual(False, controller.system_config.cache.local_cache.exists(pack1))
+        self.assertEqual(False, controller.system_config.cache.local_cache.exists(pack2))
+        artifactory_cache = controller.system_config.cache.remote_caches['artifactory-local']
         # check versions available
         self.assertEqual(['1.0.0', '1.1.0'], artifactory_cache.get_versions('comtihon/test_project'))
         # check fetched version exists
-        self.assertEqual(True, builder.fetch('comtihon/test_project', '1.0.0'))
-        self.assertEqual(True, builder.system_config.cache.local_cache.exists(pack1))
-        self.assertEqual(False, builder.system_config.cache.local_cache.exists(pack2))
+        self.assertEqual(True, controller.fetch('comtihon/test_project', '1.0.0'))
+        self.assertEqual(True, controller.system_config.cache.local_cache.exists(pack1))
+        self.assertEqual(False, controller.system_config.cache.local_cache.exists(pack2))
         # fetch newer version
-        self.assertEqual(True, builder.fetch('comtihon/test_project', '1.1.0'))
-        self.assertEqual(True, builder.system_config.cache.local_cache.exists(pack1))
-        self.assertEqual(True, builder.system_config.cache.local_cache.exists(pack2))
+        self.assertEqual(True, controller.fetch('comtihon/test_project', '1.1.0'))
+        self.assertEqual(True, controller.system_config.cache.local_cache.exists(pack1))
+        self.assertEqual(True, controller.system_config.cache.local_cache.exists(pack2))
 
     def tearDown(self):
         super().tearDown()
         try:
-            path = ArtifactoryPath(self.path + '/' + self.username, auth=(self.username, self.password))
+            path = ArtifactoryPath(self.path, auth=(self.username, self.password))
             if path.exists():
                 path.rmdir()
         except requests.exceptions.ConnectionError:
             return
 
-    @staticmethod
-    def check_exists(caches: dict, pack: Package):
-        for cache in caches.values():
-            if cache.exists(pack):
-                return True
-        return False
+    # check exist with username as a namespace (as ArtifactoryCache::add_package adds package with username namespace)
+    def check_exists(self, pack: Package):
+        check_path = join(self.username, pack.name, pack.git_vsn, Cache.get_erlang_version())
+        path = ArtifactoryPath(join(self.path, check_path), auth=(self.username, self.password))
+        return path.exists()
 
+    # ArtifactoryCache::add_package adds package with username namespace. This test function avoids it
+    def add_with_namespace(self, pack_path: str, pack: Package):
+        package_path = join(pack.fullname, pack.git_vsn, Cache.get_erlang_version())
+        path = ArtifactoryPath(join(self.path, package_path),
+                               auth=(self.username, self.password))
+        if not path.exists():
+            path.mkdir()  # exist_ok doesn't work there on python3.2-3.5
+        path_to_package = join(pack_path, pack.name + '.cp')
+        path.deploy_file(path_to_package)
 
 if __name__ == '__main__':
     unittest.main()

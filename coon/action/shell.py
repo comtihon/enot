@@ -1,6 +1,6 @@
 import subprocess
 
-from coon.action.prebuild.action import Action
+from coon.action.action import Action
 
 
 class Shell(Action):
@@ -12,8 +12,12 @@ class Shell(Action):
     def params(self) -> str:
         return self._params
 
-    def run(self, path):
-        subprocess.check_call(self.params, shell=True, cwd=path)
+    def run(self, path) -> bool:
+        try:
+            subprocess.check_call(self.params, shell=True, cwd=path)
+            return True
+        except subprocess.CalledProcessError:
+            return False
 
     def export(self) -> dict:
         return {'shell': self.params}

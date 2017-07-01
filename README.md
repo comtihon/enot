@@ -49,91 +49,10 @@ This will build a project if not built, install [relx](https://github.com/erlwar
  create `relx.config`, `rel/vm.args`, `rel/sys.config` if not exist and build a release using relx in `_rel` 
  directory.
 
-### Project Coon Configuration
+### Project Configuration
 Coon configuration file is `coonfig.json`, it is placed in project_dir. It is in [JSON](http://www.json.org) format.
-
-    {
-        "name" : AppName,
-        "fullname" : Namespace/AppName
-        "erlang" : [ListOfSupportedReleases],
-        "app_vsn" : AppVsn,
-        "with_source" : Boolean,
-        "link_all" : Boolean,
-        "rescan_deps" : Boolean,
-        "deps" : [
-            {
-                "name" : DepName,
-                "url" : DepUrl,
-                "tag" : GitTag / "branch" : BranchName
-            }
-        ],
-        "test_deps" : [
-            {
-                "name" : DepName,
-                "url" : DepUrl,
-                "tag" : GitTag / "branch" : BranchName
-            }
-        ],
-        "auto_build_order" : Boolean,
-        "override" : Boolean,
-        "compare_versions" : Boolean,
-        "disable_prebuild" : Boolean,
-        "prebuild" : [
-            {Action : Params}
-        ],
-        "build_vars" : [
-            {Var1 : Value}
-            Var2
-        ],
-        "c_build_vars" : [
-            {VarName1 : VarValue1}
-        ]
-    }
-Here:  
-__name__ is the name of current project.  
-__fullname__ is a namespace with name. It is used to distinguish github forks. Usually you don't need it, as it will set 
-up automatically from url.  
-__erlang__ is a list of erlang releases you application is compatible with. Is used by [octocoon](https://github.com/comtihon/octocoon)
-build system.  
-__app_vsn__ is a version of erlang application. Coon uses it when composing `.app` and in `relx.conf`.  
-__with_source__ if set to true - will include source, when moving to local/remote cache and packaging. Default is `true`.  
-__link_all__ if set to true - all deps will be linked to main project (including deps of deps). Default is `true`. You can
-  set it to false, to reduce number of deps you are not using directly in your project, but keep in mind, that relx 
-  needs all dep tree for proper building. So if you use releases - switch to true.  
-__rescan_deps__ if set to true (default is `true`) - will rescan all deps tree if dep update detected after build - and 
-remove dead deps from deps directory. You can set it to false if you prefer manual deps removing.  
-__deps__ is a list of deps, where `dep.name` is a name of dep, `dep.url` is a full url to dep. If it is not specified - 
-url will be fetched from [hex](https://hex.pm/), `dep.tag` is a tag of a dep and `dep.branch` is a branch. 
-Last two are mutually exclusive.    
-__test_deps__ is the same, that `deps`, but are built, fetched and linked only for ct/eunit.  
-__auto_build_order__ when true - searches project's source files content for parse-transform usage. If parse-transform 
-module belongs to the same repo - will compile it first. Default is `true`. Can be set to `false` to speed up 
-compilation.  
-__override__ if set to true - root project will override deps tree build configuration, such as `build_vars`, 
-`c_build_vars` and `disable_prebuild`. Default is `false`. Pay attention, that this won't work in case of `native` or 
-`makefile` build in Coon Global Config.  
-__compare_versions__ if set to `false` - will not fail on incompatible (based on major vsn) deps are used in project. 
-Default is `true`.  
-__disable_prebuild__ if set to true - Coon won't execute any prebuild steps. It is useless without `override` set to true
-in case you don't wont to execute deps prebuild steps, may be for security reasons.  
-__prebuild__ is a list of actions, which should be run before build. `prebuild.Action` is a type of the action. 
-Only `shell` is supported now. `prebuild.Params` are the options to be passed to action. TODO example here.  
-__build_vars__ is a list of erlang build vars, used when building a project. They can be either single or with value. 
-Build vars can also be passed via coon argument `--define`. It can be used in case of test builds, if you don't want 
-to add test build vars to project conf.  
-__c_build_vars__ is a list of build vars, used when building `c_src` sources.  
-
-_Why JSON?_  
-it is simple, well known, and can be easily accessed by third-party tools:
-
-    cat coonfig.json | jq .
-    <nice color output>
-    cat coonfig.json | jq .app_vsn
-    "3.0.0"
-
-### Other build systems
-Although it is not recommended, but you can use [Erlang.mk](https://erlang.mk/) or `rebar.config` as a project config. 
-For now only version, name and deps can be used.
+Coon also supports `rebar.config` and `Makefile` ErlangMK's config.  
+For format, fields and examples read [project configuration](docs/project_configuration.md).
 
 ### Dependency management
 * speficy deps in coonfig
@@ -144,32 +63,11 @@ For now only version, name and deps can be used.
 More about [dependency management](docs/deps.md).
 
 ### Jinja2 templating
-Coon allows you to use [Jinja2](http://jinja.pocoo.org/) template engine in your config files:  
-__app.src__
-
-    {application, project_name, [
-        {description, ""},
-        {vsn, "{{ app.vsn }}"},
-        {registered, []},
-        {applications, {{ app.std_apps + app.apps }}},
-        {modules, {{ modules }}},
-        {mod, {project_name_app, []}},
-        {env, []}
-    ]}.
-Where `modules` are the list of all application's modules and `app` is the object of Package class from 
-`coon/packages/package.py` representing current project. You can use it's properties in templating.  
-In `app.src` you have also `hostname` available for templating.  
-More about [templating](docs/templating.md).   
-
-__relx.config__
-
-    {release, {"{{ app.name }}", "{{ app.vsn }}"}, ["{{ app.name }}"]}.
-    {sys_config, "rel/sys.config"}.
-    {vm_args, "rel/vm.args"}.
-    {extended_start_script, true}.
-Where `app` is the object of Package class from `coon/packages/package.py` representing current project.    
-You can add `relx.config`, `vm.args` and `sys.config` to git as templates. When running release - these templates will be
- filled, but after the release files will be overwritten as before. So, no files will be changed.
+Coon allows you to use [Jinja2](http://jinja.pocoo.org/) template engine in your `app.src`, `relx.config`, `vm.args` 
+and `sys.config`.  
+After filling templates and making a release all file changes are reverted. Coon's files templates won't disturb you 
+with endless git changes.
+For more information read [templating](docs/templating.md).   
 
 ### Caching
 Every dependency, fetched and built locally is saved to coon local cache. It is situated in `user_cache_dir/coon`: 

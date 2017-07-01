@@ -200,6 +200,18 @@ class Package:
         info('create package ' + package_dst)
         tar(pack_dir, dirs_to_add, package_dst)
 
+    def install(self) -> bool:
+        for action in self.config.install:
+            if not action.run(self.path):
+                return False
+        return True
+
+    def uninstall(self):
+        for action in self.config.uninstall:
+            if not action.run(self.path):
+                return False
+        return True
+
     def __set_deps(self):
         if self.config:  # TODO check config.drop_unknown (if not a template)
             for name, dep in self.config.deps.items():

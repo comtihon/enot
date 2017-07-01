@@ -77,21 +77,20 @@ def set_deps(path: str, deps: list, dep_type='deps'):
 
 
 def set_prebuild(path: str, prebuild: list, disable_prebuild=False, override_conf=False):
-    fullpath = join(path, 'coonfig.json')
-    with open(fullpath, 'r') as file:
-        conf = json.load(file)
-    conf['disable_prebuild'] = disable_prebuild
-    conf['prebuild'] = prebuild
-    conf['override'] = override_conf
-    with open(fullpath, 'w') as file:
-        json.dump(conf, file)
+    modify_config(path, {'disable_prebuild': disable_prebuild,
+                         'prebuild': prebuild,
+                         'override': override_conf})
 
 
 def set_link_policy(path: str, policy: bool):
+    modify_config(path, {'link_all': policy})
+
+
+def modify_config(path: str, override: dict):
     fullpath = join(path, 'coonfig.json')
     with open(fullpath, 'r') as file:
         conf = json.load(file)
-    conf['link_all'] = policy
+    conf.update(override)
     with open(fullpath, 'w') as file:
         json.dump(conf, file)
 

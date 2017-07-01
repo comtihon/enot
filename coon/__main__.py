@@ -6,6 +6,10 @@ Usage:
   coon package [-l LEVEL][--define VARLINE]
   coon add_package <repo> [-wp PACKAGE] [-r RECURSE] [-l LEVEL]
   coon release [-l LEVEL][--define VARLINE]
+  coon fetch <package> [<version>] [-l LEVEL]
+  coon install <package> [<version>] [-l LEVEL]
+  coon uninstall <package> [-l LEVEL]
+  coon installed
   coon deps [-l LEVEL]
   coon version
   coon upgrade [-d DEP] [-l LEVEL]
@@ -20,27 +24,29 @@ Options:
                                      [default: True]
   -r RECURSE --recurse RECURSE       add package and all it's deps recursively [default: True]
   -h --help                          show this help message and exit
-  -v --version                       print version and exit
+  -v --version                       print Coon's version and exit
   -l LEVEL --log-level LEVEL         set log level. Options: debug, info, warning, error, critical [default: info]
   --log-dir DIR                      common tests log dir [default: test/logs]
   -d DEP --dep DEP                   ignore lock only for certain dep.
-  --define VARLINE                   define vars for file compilation. Used in erlang preprocessor. different vars 
+  --define VARLINE                   define vars for file compilation. Used in erlang preprocessor. different vars
                                      should be separated with spaces, KV vars should use, f.e. --define 'TEST VAR=123'.
                                      [default: '']
 """
+import os
 import sys
 from os.path import join
 
-import coon
-import os
-from coon import APPVSN
-from coon.utils import logger
 from docopt import docopt, DocoptExit
 from jinja2 import Template
 from pkg_resources import Requirement, resource_filename
 
+import coon
+from coon import APPVSN
 from coon.packages.package_builder import Builder
+from coon.packages.package_controller import Controller
+from coon.utils import logger
 from coon.utils.file_utils import ensure_dir
+from coon.utils.logger import warning
 
 
 def main(args=None):
@@ -72,6 +78,14 @@ def main(args=None):
         result = eunit(path, arguments)
     if arguments['ct']:
         result = ct(path, arguments)
+    if arguments['fetch']:
+        result = fetch(arguments)
+    if arguments['install']:
+        result = install(arguments)
+    if arguments['uninstall']:
+        result = uninstall(arguments)
+    if arguments['installed']:
+        result = installed()
     if result:
         sys.exit(0)
     else:
@@ -147,6 +161,35 @@ def upgrade(path, arguments):
     return True
 
 
+# Fetch package to local cache
+def fetch(arguments):
+    fullname = __get_full_name(arguments)
+    maybe_vsn = arguments['<version>']
+    controller = Controller()
+    return controller.fetch(fullname, maybe_vsn)
+
+
+# Run package installation steps. If not in local cache - fetch it.
+def install(arguments):
+    fullname = __get_full_name(arguments)
+    maybe_vsn = arguments['<version>']
+    controller = Controller()
+    return controller.install(fullname, maybe_vsn)
+
+
+# Uninstall previously installed package. It still remains in local cache.
+def uninstall(arguments):
+    fullname = __get_full_name(arguments)
+    controller = Controller()
+    return controller.uninstall(fullname)
+
+
+# Print installed packages
+def installed():
+    print(Controller().installed())
+    return True
+
+
 # Add created package to cache
 def add_package(path, arguments):
     repo = arguments['<repo>']
@@ -193,6 +236,14 @@ def __ensure_template(src_dir, name, suffix, overwrite_name=False):
                                              vsn_tmp="{{ app.vsn }}",
                                              apps_tmp="{{ app.std_apps + app.apps }}",
                                              modules_tmp="{{ modules }}"))
+
+
+def __get_full_name(args: dict) -> str:
+    fullname = args['<package>']
+    if fullname is None or '/' not in fullname:
+        warning('Incorrect package parameter. Should be namespace/package_name.')
+        raise ValueError('Incorrect package parameter\'s value')
+    return fullname
 
 
 if __name__ == "__main__":

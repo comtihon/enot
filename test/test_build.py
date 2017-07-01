@@ -22,7 +22,6 @@ def mock_fetch_package(dep: Package):
     dep.update_from_cache(join(tmp_path, dep.name))
 
 
-# TODO relx is using here. Download it only once, per all testcase
 class BuildTests(TestClass):
     def __init__(self, method_name):
         super().__init__('build_tests', method_name)

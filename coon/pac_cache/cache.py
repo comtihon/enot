@@ -52,6 +52,14 @@ class Cache(metaclass=ABCMeta):
     def add_package(self, package: Package, rewrite=True) -> bool:  # add package to cache
         pass
 
+    @abstractmethod
+    def get_versions(self, fullname: str) -> list:  # get available package's versions
+        pass
+
+    @abstractmethod
+    def get_erl_versions(self, fullname: str, version: str) -> list:  # get available package's erlang versions
+        pass
+
     # Take cp package archived file from package, extract it to temp dir
     # and update package's path to point to extracted dir
     def unpackage(self, package: Package):  # TODO move me to package? use current dir + <something> instead of temp

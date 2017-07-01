@@ -10,3 +10,4 @@ pytest
 enum34
 artifactory
 pathlib
+tinydb

@@ -8,7 +8,7 @@ class ActionType(Enum):
 
 class Action(metaclass=ABCMeta):
     @abstractmethod
-    def run(self, path: str):
+    def run(self, path: str) -> bool:
         pass
 
     @abstractmethod

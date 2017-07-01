@@ -52,6 +52,8 @@ class ConfigFile(metaclass=ABCMeta):
         self._disable_prebuild = False
         self._erlang_versions = []
         self._compare_versions = True
+        self._install = []
+        self._uninstall = []
 
     @property
     def name(self) -> str:  # project's name
@@ -145,6 +147,14 @@ class ConfigFile(metaclass=ABCMeta):
     def url(self, url):
         self._url = url
 
+    @property
+    def install(self) -> list:
+        return self._install
+
+    @property
+    def uninstall(self) -> list:
+        return self._uninstall
+
     @abstractmethod
     def get_compiler(self) -> Compiler:
         pass
@@ -169,6 +179,12 @@ class ConfigFile(metaclass=ABCMeta):
         if self.prebuild:
             prebuild = [pb.export() for pb in self.prebuild]
             export['prebuild'] = prebuild
+        if self.install:
+            install = [action.export() for action in self.install]
+            export['install'] = install
+        if self.uninstall:
+            uninstall = [action.export() for action in self.uninstall]
+            export['uninstall'] = uninstall
         if self.fullname:
             export['fullname'] = self.fullname
         if self.git_tag is not None:

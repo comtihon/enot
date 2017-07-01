@@ -1,8 +1,7 @@
 import json
-from os.path import join
-
 import os
 from os import listdir
+from os.path import join
 
 from coon.compiler.compiler_factory import get_compiler
 from coon.compiler.relx import RelxCompiler

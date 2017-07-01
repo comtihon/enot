@@ -1,10 +1,10 @@
 from os.path import join
 
-from coon.pac_cache import cache_factory
-
 from coon.compiler.c_compiler import CCompiler
+from coon.pac_cache import cache_factory
 from coon.pac_cache.cache import CacheType, Cache
 from coon.pac_cache.local_cache import LocalCache
+from coon.pac_cache.remote_cache import RemoteCache
 from coon.packages.package import Package
 from coon.utils.logger import warning
 
@@ -30,7 +30,7 @@ class CacheMan:
         return self._local_cache
 
     @property
-    def remote_caches(self) -> {str: Cache}:
+    def remote_caches(self) -> {str: RemoteCache}:
         return self._caches
 
     # Populate dep to become a package.
@@ -53,6 +53,10 @@ class CacheMan:
         if package.url is not None and self.local_cache.exists(package):  # local cache has this package
             return True
         return False
+
+    # check if local cache contains namespace/package_name/version
+    def check_exists_local(self, fullname: str, vsn: str) -> bool:
+        return self.local_cache.check_exists(join(fullname, vsn))
 
     def exists_remote(self, cache: Cache, dep: Package) -> bool:
         try:
@@ -77,6 +81,23 @@ class CacheMan:
     def fetch_package(self, package: Package):
         if self.local_cache:
             self.local_cache.fetch_package(package)
+
+    def fetch_version(self, fullname: str, vsn: str) -> bool:
+        for cache in self.remote_caches.values():
+            maybe_package = cache.fetch_version(fullname, vsn)
+            if maybe_package:
+                self.add_fetched(cache, maybe_package)
+                return True
+        warning('No such package ' + fullname + ':' + vsn)
+        return False
+
+    def get_versions(self, fullname: str) -> list:
+        for cache in self.remote_caches.values():
+            versions = cache.get_versions(fullname)
+            if versions:
+                return versions
+        warning('No such package ' + fullname)
+        return []
 
     # Add package to remote cache. If recurse - add all package's deps to remote cache (if they are not there)
     # Package's deps should exist in local cache. It is guaranteed by calling `coon package`

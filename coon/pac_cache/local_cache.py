@@ -55,7 +55,9 @@ class LocalCache(Cache):
         return None  # unlocked branch dep, should be fetched
 
     def exists(self, package: Package) -> bool:
-        path = self.get_package_path(package)
+        return self.check_exists(self.get_package_path(package))
+
+    def check_exists(self, path: str) -> bool:
         debug('check ' + self.path + ' ' + str(path))
         return if_dir_exists(self.path, path) is not None
 
@@ -98,6 +100,18 @@ class LocalCache(Cache):
         copy_file(resource, join(full_dir, 'Makefile'))
         package.path = full_dir  # update package's dir to point to cache
         return True
+
+    def get_erl_versions(self, fullname: str, version: str) -> list:
+        vsn_path = join(self.path, fullname, version)
+        if not os.path.exists(vsn_path):
+            return []
+        return listdir(vsn_path)
+
+    def get_versions(self, fullname: str) -> list:
+        name_path = join(self.path, fullname)
+        if not os.path.exists(name_path):
+            return []
+        return listdir(name_path)
 
     def add_tool(self, toolname: str, toolpath: str):
         info('add ' + toolname)

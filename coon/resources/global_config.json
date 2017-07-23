@@ -7,6 +7,12 @@
       "name": "local",
       "type": "local",
       "url": "file://{{ local_cache }}"
+    },
+    {
+      "name": "Coon Official Repo",
+      "type": "artifactory",
+      "url": "http://coon.justtech.blog:80/artifactory/generic-local",
+      "username": "anonymous"
     }
   ]
 }

@@ -1,9 +1,9 @@
+import os
+import stat
 import subprocess
 from abc import ABCMeta
 from os.path import join
 from subprocess import PIPE
-
-import os
 
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.config.config import ConfigFile
@@ -18,6 +18,7 @@ def run_cmd(cmd: str or list, project: str, path: str,
     debug(cmd)
     if env_vars is None:
         env_vars = dict(os.environ)
+    ensure_runnable(cmd)
     p = subprocess.Popen(cmd, stdout=output, stderr=output, cwd=path, env=env_vars, shell=shell)
     if p.wait() != 0:
         critical(project + ' failed.')
@@ -27,6 +28,13 @@ def run_cmd(cmd: str or list, project: str, path: str,
         return False
     else:
         return True
+
+
+def ensure_runnable(cmd: str):
+    if cmd.startswith("./"):
+        if not os.access(cmd, os.X_OK):
+            st = os.stat(cmd)
+            os.chmod(cmd, st.st_mode | stat.S_IEXEC)
 
 
 class AbstractCompiler(metaclass=ABCMeta):

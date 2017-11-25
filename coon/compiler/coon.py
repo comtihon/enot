@@ -171,7 +171,7 @@ class CoonCompiler(AbstractCompiler):
                 cmd += ['-D' + var]  # just standalone variable
 
     def __write_app_file(self, all_files: list):
-        if self.package.app_config.compose_app_file:  # TODO move me to app_config?
+        if self.package.app_config.compose_app_file:
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
             app_path = join(self.output_path, self.project_name + '.app')
             with open(app_path, 'w') as f:

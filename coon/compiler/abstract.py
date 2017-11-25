@@ -31,10 +31,10 @@ def run_cmd(cmd: str or list, project: str, path: str,
 
 
 def ensure_runnable(cmd: str):
-    if cmd.startswith("./"):
+    if cmd[0].startswith("./"):
         if not os.access(cmd, os.X_OK):
             st = os.stat(cmd)
-            os.chmod(cmd, st.st_mode | stat.S_IEXEC)
+            os.chmod(cmd[0], st.st_mode | stat.S_IEXEC)
 
 
 class AbstractCompiler(metaclass=ABCMeta):

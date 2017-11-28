@@ -2,18 +2,23 @@ sudo: required
 dist: trusty
 language: python
 python:
-  - "3.4"
-  - "3.5"
-  - "3.6"
+- '3.4'
+- '3.5'
+- '3.6'
 before_install:
-  - sudo apt-get -y install erlang
-  - bash travis/install_deps.sh
-install: "python setup.py install"
-addons:
+- sudo apt-get -y install erlang
+- bash travis/install_deps.sh
+install: python setup.py install
+addons: 
 cache:
   directories:
-  - $HOME/artifactory
+  - "$HOME/artifactory"
 script:
-  - $HOME/artifactory/artifactory/bin/artifactory.sh &
-  - bash travis/sleep_if_needed.sh
-  - make tests
+- "$HOME/artifactory/artifactory/bin/artifactory.sh &"
+- bash travis/sleep_if_needed.sh
+- make tests
+deploy:
+  provider: pypi
+  user: valerii.tikhonov
+  password:
+    secure: sw3ghpFZC6PhjZmcBerZARRYJVKckmQi9TL+YPXXfLAgzPqkqTMhSUCxALlzEhd4C/R/uvgK2DyA8CyXKLh8VPlV/bU9ECTWyD9MHJIhPisX6FO8f4GuoH7G6XZhkU9mc7Z5UMNMwt5fQQTe9Q0w1RmSZiWB5+czqc9uk+MOiqmT3WHCiXimrTeAhZAHBuo3y8PN6FwasJ0/kRcSE9xoarmPLZlsr8A5REGiKlJXjfcuZz4GDgUKEH3r+CHVfNp/IK9U/0DC6jC9LJOOd+xGvLKwO+7HLXvcyU4xe5KO43dSQ8O4hOXAHTs5RsrCsVyxSatFt5Jw5BWgfjVvHdAs+sJ0y9aRgb4tBnqvDt1ZJyTukERyzeyFN4PVjxXzVu+Fq2IP823XMboMQm8wAU/G+d3iQ8C0W/tiJjU9p5LOJ/zqgaf40sxU6d57l6kh3j+i4iXbJIxvnK9FVk4CJu8iyYAIeZAc40brc6yXIPe4pylpoN5rOCzgbOufza/X95aSibRwojP55QsF8h50Y25mF2/ItLiixNI74tr+Azdj9JQ8cNDi8sOREUUXEFN/0uz5fEKiZ6zvBwzPov5OCgpSjyonYRb5dwTq+nO9C5zJ/XFzCRS830zvWfKSaMPSntMJw8kA5GEh9lYylGFIFwHd9UpB/o1OLzA6Kdfz4kB89+0=

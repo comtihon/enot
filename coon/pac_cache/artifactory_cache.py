@@ -16,6 +16,8 @@ class ArtifactoryCache(RemoteCache):
             raise SyntaxError('username is required in ' + name)
         self._password = conf.get('password', None)
         self._api_key = conf.get('api_key', None)
+        if not self._password and not self._api_key:
+            raise SyntaxError('password or api_key required in ' + name)
         super().__init__(name, temp_dir, cache_url)
 
     @property
@@ -23,14 +25,15 @@ class ArtifactoryCache(RemoteCache):
         return self._username
 
     @property
-    def password(self) -> str or None:
+    def password(self) -> str:
         if self._password:
             return self._password
         else:
             return self._api_key
 
     def exists(self, package: Package):
-        path = self.maybe_auth_access(join(self.path, self.get_package_path(package)))
+        path = ArtifactoryPath(join(self.path, self.get_package_path(package)),
+                               auth=(self.username, self.password))
         return path.exists()
 
     def get_user_package_path(self, package: Package) -> str:
@@ -40,7 +43,8 @@ class ArtifactoryCache(RemoteCache):
         if not rewrite and self.exists(package):
             return True
         info('Add ' + package.name + ' to ' + self.name)
-        path = self.maybe_auth_access(join(self.path, self.get_user_package_path(package)))
+        path = ArtifactoryPath(join(self.path, self.get_user_package_path(package)),
+                               auth=(self.username, self.password))
         if not path.exists():
             path.mkdir()  # exist_ok doesn't work there on python3.2-3.5
         coon_package = join(package.path, package.name + '.cp')
@@ -48,7 +52,8 @@ class ArtifactoryCache(RemoteCache):
         return True
 
     def fetch_package(self, dep: Package):
-        path = self.maybe_auth_access(join(self.path, self.get_package_path(dep), dep.name + '.cp'))
+        path = ArtifactoryPath(join(self.path, self.get_package_path(dep), dep.name + '.cp'),
+                               auth=(self.username, self.password))
         write_path = join(self.temp_dir, dep.name + '.cp')
         with path.open() as fd:
             with open(write_path, 'wb') as out:
@@ -57,7 +62,8 @@ class ArtifactoryCache(RemoteCache):
 
     def fetch_version(self, fullname: str, version: str) -> Package or None:
         [name] = fullname.split('/')[-1:]
-        path = self.maybe_auth_access(join(self.path, fullname, version, self.erlang_version, name + '.cp'))
+        path = ArtifactoryPath(join(self.path, fullname, version, self.erlang_version, name + '.cp'),
+                               auth=(self.username, self.password))
         if not path.exists():
             warning('No built package in ' + self.name + ' for your Erlang '
                     + self.erlang_version + ', available are: ' + str(self.get_erl_versions(fullname, version)))
@@ -70,22 +76,16 @@ class ArtifactoryCache(RemoteCache):
         return Package.from_package(write_path)
 
     def get_versions(self, fullname: str) -> list:
-        path = self.maybe_auth_access(join(self.path, fullname))
+        path = ArtifactoryPath(join(self.path, fullname), auth=(self.username, self.password))
         if not path.exists():
             return []
         return ArtifactoryCache.listdir(path)
 
     def get_erl_versions(self, fullname: str, version: str):
-        path = self.maybe_auth_access(join(self.path, fullname, version))
+        path = ArtifactoryPath(join(self.path, fullname, version), auth=(self.username, self.password))
         if not path.exists():
             return []
         return ArtifactoryCache.listdir(path)
-
-    def maybe_auth_access(self, path):
-        if self.password:
-            return ArtifactoryPath(path, auth=(self.username, self.password))
-        else:
-            return ArtifactoryPath(path)
 
     @staticmethod
     def listdir(path: ArtifactoryPath) -> list:

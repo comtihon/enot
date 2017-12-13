@@ -24,8 +24,7 @@ class Package:
         self._deps = []
         self._test_deps = []
         self.__set_deps()
-        self.__set_url_from_git()
-        self.__set_git_vsn()
+        self.__set_git_config()
 
     @property
     def name(self) -> str:
@@ -219,31 +218,26 @@ class Package:
             for name, dep in self.config.test_deps.items():
                 self._test_deps.append(Package.from_dep(name, dep))
 
-    def __set_url_from_git(self):
-        if not self.url:
+    def __set_git_config(self):
+        if not self.url or not self.git_tag and self.path:
             try:
                 repo = Repo(self.path)
-                self.config.url = repo.remotes.origin.url  # TODO remove .git ending?
-            except InvalidGitRepositoryError:
+                if not self.url:
+                    self.config.url = repo.remotes.origin.url  # TODO remove .git ending?
+                if not self.git_tag:
+                    tag_name = None
+                    for tag in repo.tags:
+                        if tag.commit == repo.head.commit:
+                            tag_name = tag.path
+                    if tag_name:
+                        paths = tag_name.split('/')
+                        [tag] = paths[-1:]
+                        self.config.git_tag = tag
+                    self.config.git_branch = repo.active_branch.name
+            except (InvalidGitRepositoryError, TypeError):
                 return
         if not self.fullname:
             self.config.fullname_from_git(self.url, self.name)
-
-    def __set_git_vsn(self):
-        if not self.git_tag and self.path:
-            try:
-                repo = Repo(self.path)
-                tag_name = None
-                for tag in repo.tags:
-                    if tag.commit == repo.head.commit:
-                        tag_name = tag.path
-                if tag_name:
-                    paths = tag_name.split('/')
-                    [tag] = paths[-1:]
-                    self.config.git_tag = tag
-                self.config.git_branch = repo.active_branch.name
-            except (InvalidGitRepositoryError, TypeError):
-                return
 
 
 def add_if_exist(src_dir, dir_to_add, dirs):

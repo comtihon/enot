@@ -1,11 +1,9 @@
 import os
-import unittest
-
 import subprocess
+import unittest
 from os import listdir
 from os.path import join
 
-from coon.packages.package_builder import Builder
 from mock import patch
 
 import test
@@ -14,8 +12,9 @@ from coon.compiler.coon import CoonCompiler
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.config.coon import CoonConfig
 from coon.packages.package import Package
+from coon.packages.package_builder import Builder
 from coon.utils.erl_file_utils import parse_app_config
-from coon.utils.file_utils import ensure_empty, ensure_dir
+from coon.utils.file_utils import ensure_dir
 from test.abs_test_class import TestClass, set_prebuild, set_git_url, set_git_tag, set_deps
 
 

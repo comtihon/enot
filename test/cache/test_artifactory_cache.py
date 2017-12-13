@@ -341,5 +341,6 @@ class ArtifactoryTests(TestClass):
         path_to_package = join(pack_path, pack.name + '.cp')
         path.deploy_file(path_to_package)
 
+
 if __name__ == '__main__':
     unittest.main()

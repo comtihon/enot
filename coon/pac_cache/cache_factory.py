@@ -2,11 +2,14 @@ from coon.pac_cache.artifactory_cache import ArtifactoryCache
 from coon.pac_cache.local_cache import LocalCache
 from coon.pac_cache.s3_cache import S3Cache
 from coon.pac_cache.cache import Cache, CacheType
+from coon.pac_cache.coon_cache import CoonCache
 
 
 def get_cache(cache_type: CacheType, conf: dict, tepm_dir: str) -> Cache:
     if cache_type == CacheType.LOCAL:
         return LocalCache(tepm_dir, conf)
+    elif cache_type == CacheType.COON:
+        return CoonCache(tepm_dir, conf)
     elif cache_type == CacheType.ARTIFACTORY:
         return ArtifactoryCache(tepm_dir, conf)
     elif cache_type == CacheType.S3:

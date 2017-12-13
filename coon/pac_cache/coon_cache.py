@@ -35,7 +35,7 @@ class CoonCache(RemoteCache):
                 'clone_url': package.url,
                 'versions': [{'erl_version': self.erlang_version, 'ref': package.git_vsn}]
                 }
-        r = requests.post(url, data=body)
+        r = requests.post(url, json=body, headers={'Content-type': 'application/json'})
         debug('Issue build order: ' + str(body))
         return r.json()['result']
 
@@ -45,8 +45,10 @@ class CoonCache(RemoteCache):
 
     def exists(self, package: Package) -> bool:
         url = join(self.path, 'builds')
-        r = requests.post(url, data={'full_name': package.fullname,
-                                     'versions': [{'ref': package.git_vsn, 'erl_version': self.erlang_version}]})
+        r = requests.post(url,
+                          json={'full_name': package.fullname,
+                                'versions': [{'ref': package.git_vsn, 'erl_version': self.erlang_version}]},
+                          headers={'Content-type': 'application/json'})
         json = r.json()
         if json['result'] is not True:
             warning('Error accessing ' + url + ': ' + json['response'])
@@ -58,7 +60,7 @@ class CoonCache(RemoteCache):
         data = {'full_name': fullname}
         if ref is not None:
             data['versions'] = {'ref': ref}
-        r = requests.post(url, data=data)
+        r = requests.post(url, json=data, headers={'Content-type': 'application/json'})
         json = r.json()
         if json['result'] is not True:
             warning('Error accessing ' + url + ': ' + json['response'])
@@ -68,8 +70,10 @@ class CoonCache(RemoteCache):
     def __download_package(self, name: str, fullname: str, version: str):
         url = join(self.path, 'get')
         write_path = join(self.temp_dir, name + '.cp')
-        r = requests.post(url, data={'full_name': fullname,
-                                     'versions': [{'ref': version, 'erl_version': self.erlang_version}]})
+        r = requests.post(url,
+                          json={'full_name': fullname,
+                                'versions': [{'ref': version, 'erl_version': self.erlang_version}]},
+                          headers={'Content-type': 'application/json'})
         with open(write_path, 'wb') as fd:
             for chunk in r.iter_content(chunk_size=128):
                 fd.write(chunk)

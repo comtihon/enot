@@ -22,7 +22,7 @@ class PackageTests(TestClass):
         pack = Package.from_path(join(self.test_dir, 'test_app'))
         self.assertEqual('test_app', pack.name)
         self.assertEqual('0.0.1', pack.vsn)
-        self.assertEqual('http://github/my_namespace/my_project.git', pack.url)
+        self.assertEqual('http://github/my_namespace/my_project', pack.url)
         self.assertEqual('1.0.0', pack.git_tag)
         self.assertEqual('master', pack.git_branch)
         self.assertEqual([], pack.deps)

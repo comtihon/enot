@@ -43,18 +43,6 @@ class CoonCache(RemoteCache):
         write_path = self.__download_package(package.name, package.fullname, package.git_vsn)
         package.update_from_package(write_path)
 
-    def exists(self, package: Package) -> bool:
-        url = join(self.path, 'builds')
-        r = requests.post(url,
-                          json={'full_name': package.fullname,
-                                'versions': [{'ref': package.git_vsn, 'erl_version': self.erlang_version}]},
-                          headers={'Content-type': 'application/json'})
-        json = r.json()
-        if json['result'] is not True:
-            warning('Error accessing ' + url + ': ' + json['response'])
-            return False
-        return json['response'] is not []
-
     def _get_versions(self, fullname, ref=None) -> [dict]:
         url = join(self.path, 'versions')
         data = {'full_name': fullname}

@@ -16,7 +16,7 @@ from coon.utils.logger import info
 
 
 class Package:
-    def __init__(self, path: str, config: ConfigFile or None, app_config: AppConfig or None, has_nifs=False):
+    def __init__(self, path: str or None, config: ConfigFile or None, app_config: AppConfig or None, has_nifs=False):
         self._config = config
         self._app_config = app_config
         self._path = path
@@ -76,9 +76,17 @@ class Package:
     def app_config(self) -> AppConfig or None:  # .app.src or .app
         return self._app_config
 
+    @app_config.setter
+    def app_config(self, app_config):
+        self._app_config = app_config
+
     @property
     def config(self) -> ConfigFile:  # ConfigFile
         return self._config
+
+    @config.setter
+    def config(self, config):
+        self._config = config
 
     @property
     def deps(self) -> list:  # package's deps.
@@ -104,6 +112,10 @@ class Package:
     def has_nifs(self) -> bool:
         return self._has_nifs
 
+    @has_nifs.setter
+    def has_nifs(self, has_nifs):
+        self._has_nifs = has_nifs
+
     @classmethod  # TODO url is not set here!
     # Package is created from path on local system. Usually when opening project
     def from_path(cls, path: str, url=None):
@@ -116,8 +128,9 @@ class Package:
     # Package is created from coon package archive.
     # Usually when downloading cp file from remote cache or manually uploading a package
     def from_package(cls, path: str, url=None):  # TODO url is not set here!
-        project_path, has_nifs, config, app_config = do_update_from_package(path, url)
-        return cls(project_path, config, app_config, has_nifs)
+        package = cls(None, None, None, False)
+        package.__do_update_from_package(path, url)
+        return package
 
     @classmethod
     # Package is created from dependency name, (url, vsn), got from config file deps
@@ -137,7 +150,7 @@ class Package:
         if self.config.name == '':
             self.config.name = name
         if not self.fullname:
-            self.config.fullname_from_git(self.url, self.name)
+            self.config.fullname_from_git(self.url)
         self._app_config = AppConfig.from_path(path)
         self._has_nifs = os.path.exists(join(path, 'c_src'))
         self._path = path
@@ -149,17 +162,13 @@ class Package:
         name = self.name
         git_tag = self.git_tag
         git_branch = self.git_branch
-        project_path, has_nifs, config, app_config = do_update_from_package(path, self.url)
-        self.path = project_path
-        self._config = config
-        self._app_config = app_config
-        self._has_nifs = has_nifs
-        self.config.git_tag = git_tag
+        self.__do_update_from_package(path, self.url)
+        self.config.git_tag = git_tag  # TODO refactor me
         self.config.git_branch = git_branch
         if self.config.name == '':
             self.config.name = name
         if not self.fullname:
-            self.config.fullname_from_git(self.url, self.name)
+            self.config.fullname_from_git(self.url)
 
     # If package has dep and this dep has already be populated
     # becoming real package - update_from_duplicate should be called
@@ -219,7 +228,9 @@ class Package:
                 self._test_deps.append(Package.from_dep(name, dep))
 
     def __set_git_config(self):
-        if not self.url or not self.git_tag and self.path:
+        if not self.config:
+            return
+        if (not self.url or not self.git_tag) and self.path:
             try:
                 repo = Repo(self.path)
                 if not self.url:
@@ -237,28 +248,31 @@ class Package:
             except (InvalidGitRepositoryError, TypeError):
                 return
         if not self.fullname:
-            self.config.fullname_from_git(self.url, self.name)
+            self.config.fullname_from_git(self.url)
+
+    def __do_update_from_package(self, path: str, url: str or None):
+        paths = path.split('/')
+        package_name = paths[len(paths) - 1]
+        project_path = '/'.join(paths[:-1])
+        with tarfile.open(path) as pack:
+            config = CoonConfig.from_package(pack, url, self.config)
+            names = pack.getnames()
+            conf_app_src = package_name + '.app.src'
+            conf_app = package_name + '.app'
+            if conf_app_src in names:
+                app_config = AppConfig.from_package(conf_app_src, pack)
+            elif conf_app in names:
+                app_config = AppConfig.from_package(conf_app, pack, compose=False)
+            else:
+                app_config = None
+            has_nifs = 'c_src' in names
+        self.path = project_path
+        self.has_nifs = has_nifs
+        self.config = config
+        self.app_config = app_config
+        self.__set_git_config()
 
 
 def add_if_exist(src_dir, dir_to_add, dirs):
     if os.path.exists(join(src_dir, dir_to_add)):
         dirs.append(dir_to_add)
-
-
-def do_update_from_package(path: str, url: str or None) -> (str, bool, ConfigFile, AppConfig or None):
-    paths = path.split('/')
-    package_name = paths[len(paths) - 1]
-    project_path = '/'.join(paths[:-1])
-    with tarfile.open(path) as pack:
-        config = CoonConfig.from_package(pack, url)
-        names = pack.getnames()
-        conf_app_src = package_name + '.app.src'
-        conf_app = package_name + '.app'
-        if conf_app_src in names:
-            app_config = AppConfig.from_package(conf_app_src, pack)
-        elif conf_app in names:
-            app_config = AppConfig.from_package(conf_app, pack, compose=False)
-        else:
-            app_config = None
-        has_nifs = 'c_src' in names
-    return project_path, has_nifs, config, app_config

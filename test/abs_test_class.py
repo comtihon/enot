@@ -100,7 +100,7 @@ def set_git_url(path: str, url: str):
     repo.index.add(listdir(path))
     repo.index.commit("First commit")
     repo.create_head('master')
-    repo.create_remote('origin', url=url + '.git')
+    repo.create_remote('origin', url=url)
 
 
 def set_git_tag(path: str, tag: str):

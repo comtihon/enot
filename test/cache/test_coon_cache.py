@@ -5,7 +5,6 @@ import requests_mock
 
 from coon.__main__ import create
 from coon.pac_cache.coon_cache import CoonCache
-from coon.packages.package import Package
 from test.abs_test_class import TestClass, set_git_url, set_git_tag
 
 OK_1_19_2_20 = '{"result":true,"response":[{"ref":"1","erl_version":"19"},{"ref":"2","erl_version":"19"}]}'
@@ -63,12 +62,6 @@ class CoonCacheTests(TestClass):
         cache = CoonCache(self.test_dir, self.conf)
         versions = cache.get_erl_versions('test', '1')
         self.assertEqual(['18', '19'], versions)
-
-    @requests_mock.mock()
-    def test_exists(self, mock_post):
-        mock_post.post(join(self.path, 'builds'), text=OK_BUILD_1)
-        cache = CoonCache(self.test_dir, self.conf)
-        self.assertEqual(True, cache.exists(Package.from_path(join(self.test_dir, 'test_project'))))
 
 
 if __name__ == '__main__':

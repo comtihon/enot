@@ -9,9 +9,8 @@ class RemoteCache(Cache):
     def fetch_package(self, package: Package):
         pass
 
-    @abstractmethod
     def exists(self, package: Package) -> bool:
-        pass
+        return True
 
     @abstractmethod
     def add_package(self, package: Package, rewrite=True) -> bool:

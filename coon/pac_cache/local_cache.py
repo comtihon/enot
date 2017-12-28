@@ -79,7 +79,7 @@ class LocalCache(Cache):
     def add_package(self, package: Package, rewrite=False) -> bool:
         full_dir = join(self.path, self.get_package_path(package))
         ensure_dir(full_dir)
-        info('add ' + package.name)
+        info('add ' + package.fullname)
         path = package.path
         LocalCache.__copy_data(rewrite, full_dir, path, 'ebin')
         LocalCache.__copy_include(rewrite, full_dir, path)

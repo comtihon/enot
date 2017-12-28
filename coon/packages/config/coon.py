@@ -52,10 +52,14 @@ class CoonConfig(ConfigFile):
         return cls(json.loads(content), url=url, name=name)
 
     @classmethod
-    def from_package(cls, package: TarFile, url: str) -> 'CoonConfig':
+    def from_package(cls, package: TarFile, url: str, config: ConfigFile) -> 'CoonConfig':
         f = package.extractfile('coonfig.json')
         content = f.read()
-        return cls(json.loads(content.decode('utf-8')), url=url)
+        conf = cls(json.loads(content.decode('utf-8')), url=url)
+        if config is not None:
+            if config.fullname:  # overwrite fullname by package's fullname (from dep.config).
+                conf.fullname = config.fullname
+        return conf
 
     def need_coonsify(self):
         return False

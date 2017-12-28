@@ -11,3 +11,5 @@ enum34
 artifactory
 pathlib
 tinydb
+requests
+requests_mock

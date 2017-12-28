@@ -1,7 +1,6 @@
 import json
 from abc import ABCMeta, abstractmethod
 from os.path import join
-
 from urllib import request
 
 from coon.compiler.compiler_type import Compiler
@@ -82,6 +81,10 @@ class ConfigFile(metaclass=ABCMeta):
     @property
     def fullname(self) -> str or None:  # namespace/name
         return self._fullname
+
+    @fullname.setter
+    def fullname(self, fullname):
+        self._fullname = fullname
 
     @property
     def compare_versions(self) -> bool:
@@ -164,8 +167,8 @@ class ConfigFile(metaclass=ABCMeta):
 
     # fullname can be set from coonfig.json fullname or by parsing local git url
     # while setting up Package
-    def fullname_from_git(self, url: str, name: str):
-        self._fullname = join(url.split('/')[-2], name)
+    def fullname_from_git(self, url: str):
+        self._fullname = join(url.split('/')[-2], url.split('/')[-1])
 
     def export(self) -> dict:
         export = {'with_source': self.with_source,

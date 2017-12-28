@@ -1,12 +1,10 @@
 """
 Application config .app.src or .app
 """
+from logging import warning
 from os.path import join
 from tarfile import TarFile
 
-import logging
-
-import coon
 from coon.utils.erl_file_utils import parse_app_config, contains_app_file, parse_app_config_content
 
 

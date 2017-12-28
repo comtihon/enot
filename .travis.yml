@@ -8,8 +8,10 @@ python:
 before_install:
 - sudo apt-get -y install erlang
 - bash travis/install_deps.sh
-install: python setup.py install
-addons: 
+install:
+- pip install -e .
+- python setup.py install
+addons:
 cache:
   directories:
   - "$HOME/artifactory"

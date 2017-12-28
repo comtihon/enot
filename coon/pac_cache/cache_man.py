@@ -41,11 +41,8 @@ class CacheMan:
             dep.update_from_cache(path)
             return
         for cache in self.remote_caches.values():
-            try:
                 if self.exists_remote(cache, dep):
                     return
-            except RuntimeError:
-                continue
         self.local_cache.fetch_package(dep)
 
     # check if local cache contains this dep
@@ -60,14 +57,13 @@ class CacheMan:
 
     def exists_remote(self, cache: Cache, dep: Package) -> bool:
         try:
-            if cache.exists(dep):  # remote cache has this package
-                cache.fetch_package(dep)
-                self.add_fetched(cache, dep)
-                self.__fetch_all_deps(cache, dep)
-                return True
+            cache.fetch_package(dep)
+            self.add_fetched(cache, dep)
+            self.__fetch_all_deps(cache, dep)
+            return True
         except Exception as e:
             warning('Error from remote cache ' + cache.name + ': {0}'.format(e))
-            raise RuntimeError(e)
+            return False
 
     # link package, return True if version changed (link updated)
     def link_package(self, package: Package, dest_path: str) -> bool:

@@ -22,8 +22,8 @@ For package `dummy` it will produce following:
     {vm_args, "rel/vm.args"}.
     {extended_start_script, true}.
 # app.src templates
-When running build Coon can also use templates to convert app.src -> app. It uses  
-`modules`, `app`, `hostname` and `erl`. Modules is the list of all compiled module names,
+When running build Coon can also use templates to convert app.src -> app. It can use environment vars and
+`modules`, `app`, `hostname`, `erl` as special vars. Modules is the list of all compiled module names,
 `hostname` is the current hostname, `erl` is an Erlang version this package is compiled with
  and the `app` is an instance of `Package` class.  
 Simple example:  
@@ -48,6 +48,25 @@ For package `dummy` it will produce following:
           {mod, {'super_service_app', []}},
           {env, []}
         ]}.
+Env var example:
+
+    {application, dummy, [
+          {description, "Your description"},
+          {vsn, {{ app.vsn}} },
+          {registered, []},
+          {applications, {{ app.std_apps + app.apps }} },
+          {modules, {{ modules }}},
+          {mod, {'super_service_app', []}},
+          {env, [
+                    {% if MAGIC_GREETING is defined %}
+                      {greeting, "{{ MAGIC_GREETING }}"}
+                    {% else %}
+                      {greeting, "hello world!" }
+                    {% endif %}
+                  ]}
+        ]}.
+It will produce app file with `{greeting, "hello world"}` on machines without 
+`MAGIC_GREETING` env var exported and will use its value when available.
 # app.src advanced templates
 To fill the power of templates you can use conditionals in app.src:
 

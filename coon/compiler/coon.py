@@ -1,9 +1,9 @@
+import os
 import socket
+from os import listdir
 from os.path import isfile, join, isdir
 
-import os
 from jinja2 import Template
-from os import listdir
 
 from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.compiler.c_compiler import CCompiler
@@ -174,11 +174,13 @@ class CoonCompiler(AbstractCompiler):
         if self.package.app_config.compose_app_file:
             app_src = read_file(join(self.src_path, self.project_name + '.app.src'))
             app_path = join(self.output_path, self.project_name + '.app')
+            params = {x: os.environ[x] for x in os.environ}
+            params['modules'] = all_files
+            params['app'] = self.package
+            params['hostname'] = socket.gethostname()
+            params['erl'] = Cache.get_erlang_version()
             with open(app_path, 'w') as f:
-                f.write(Template(app_src).render(modules=all_files,
-                                                 app=self.package,
-                                                 hostname=socket.gethostname(),
-                                                 erl=Cache.get_erlang_version()))
+                f.write(Template(app_src).render(params))
 
     # scan all folders, return dict, where module names are the keys, and their paths are the values
     def __get_all_files(self, path: str, extension: str) -> dict:

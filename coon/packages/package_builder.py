@@ -116,9 +116,6 @@ class Builder:
         with open(join(self.project.path, 'coon_locks.json'), 'w') as file:
             json.dump(cache.locks, file, sort_keys=True, indent=4)
 
-    def add_package(self, remote: str, rewrite: bool, recurse: bool) -> bool:
-        return self.system_config.cache.add_package(self.project, remote, rewrite, recurse)
-
     def build(self, define: str = ''):
         self._define = define
         build_res = self.__build_tree(self.project, is_subpackage=False)

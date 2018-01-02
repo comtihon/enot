@@ -4,7 +4,6 @@ Usage:
   coon create <name> [-l LEVEL]
   coon build [-l LEVEL][--define VARLINE]
   coon package [-l LEVEL][--define VARLINE]
-  coon add_package <repo> [-wp PACKAGE] [-r RECURSE] [-l LEVEL]
   coon release [-l LEVEL][--define VARLINE]
   coon fetch <package> [<version>] [-l LEVEL]
   coon install <package> [<version>] [-l LEVEL]
@@ -19,10 +18,6 @@ Usage:
   coon -h | --help
 
 Options:
-  -p PACKAGE --package PACKAGE       path to package. If not specified, tries to add current application's package
-  -w --rewrite                       should rewrite package if already loaded to repository with same version
-                                     [default: True]
-  -r RECURSE --recurse RECURSE       add package and all it's deps recursively [default: True]
   -h --help                          show this help message and exit
   -v --version                       print Coon's version and exit
   -l LEVEL --log-level LEVEL         set log level. Options: debug, info, warning, error, critical [default: info]
@@ -72,8 +67,6 @@ def main(args=None):
         result = package(path, arguments)
     if arguments['upgrade']:
         result = upgrade(path, arguments)
-    if arguments['add_package']:
-        result = add_package(path, arguments)
     if arguments['eunit']:
         result = eunit(path, arguments)
     if arguments['ct']:
@@ -188,19 +181,6 @@ def uninstall(arguments):
 def installed():
     print(Controller().installed())
     return True
-
-
-# Add created package to cache
-def add_package(path, arguments):
-    repo = arguments['<repo>']
-    rewrite = arguments['--rewrite']
-    recurse = arguments['--recurse']
-    path_overwrite = arguments.get('--package', False)
-    if path_overwrite:
-        builder = Builder.init_from_package(path_overwrite)
-    else:
-        builder = Builder.init_from_path(path)
-    return builder.add_package(repo, rewrite, recurse)
 
 
 # Run tests

@@ -64,20 +64,6 @@ Generate a Coon package.
 In `foobar` project's directory will compile foobar project and generate `foobar.cp` Coon package.
 This package can be transferred to other machine or uploaded to cache.
 
-### add_package
-Add Coon package to remote repo.
-
-    coon add_package my_remote_repo
-Loads previously created Coon package to remote repo. Remote repo credentials should exist in 
-global Coon configuration. Package will be loaded with username from configuration as a namespace. Use 
-[octocoon](https://github.com/comtihon/octocoon) integration to add package with it's own namespace.  
-By default try to find package in current dir. You can specify `--package` argument to point to package's
-file.  
-Other arguments: 
-__--rewrite__ - rewrite package if already exists.  
-__--recurse__ - add all dep's tree recursively to repo. Default is True. __Info__: octocoon integration 
-doesn't load package's deps.
-
 ### fetch
 Fetch Coon package from remote repo to local cache.
 

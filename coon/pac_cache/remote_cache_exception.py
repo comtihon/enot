@@ -1,0 +1,2 @@
+class RemoteCacheException(Exception):
+    pass

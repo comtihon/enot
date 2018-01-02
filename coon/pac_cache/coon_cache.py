@@ -3,8 +3,9 @@ from os.path import join
 import requests
 
 from coon.pac_cache.remote_cache import RemoteCache
+from coon.pac_cache.remote_cache_exception import RemoteCacheException
 from coon.packages.package import Package
-from coon.utils.logger import warning, debug
+from coon.utils.logger import warning
 
 
 class CoonCache(RemoteCache):
@@ -27,17 +28,7 @@ class CoonCache(RemoteCache):
         return Package.from_package(write_path)
 
     def add_package(self, package: Package, rewrite=True) -> bool:
-        url = join(self.path, 'buildAsync')
-        if package.url is None:
-            warning('No url for package')
-            return False
-        body = {'full_name': package.fullname,
-                'clone_url': package.url,
-                'versions': [{'erl_version': self.erlang_version, 'ref': package.git_vsn}]
-                }
-        r = requests.post(url, json=body, headers={'Content-type': 'application/json'})
-        debug('Issue build order: ' + str(body))
-        return r.json()['result']
+        raise RuntimeError('Not implemented')
 
     def fetch_package(self, package: Package):
         write_path = self.__download_package(package.name, package.fullname, package.git_vsn)
@@ -62,7 +53,12 @@ class CoonCache(RemoteCache):
                           json={'full_name': fullname,
                                 'versions': [{'ref': version, 'erl_version': self.erlang_version}]},
                           headers={'Content-type': 'application/json'})
+        first_bytes_checked = False
         with open(write_path, 'wb') as fd:
             for chunk in r.iter_content(chunk_size=128):
+                if not first_bytes_checked:
+                    if chunk == b'No such build':
+                        raise RemoteCacheException('Package ' + fullname + ':' + version + ' not found')
+                    first_bytes_checked = True
                 fd.write(chunk)
         return write_path

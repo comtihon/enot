@@ -1,4 +1,5 @@
 import os
+import socket
 from os.path import join
 
 from jinja2 import Template
@@ -11,6 +12,7 @@ from coon.packages.package import Package
 from coon.tool.relxtool import RelxTool
 from coon.utils.file_utils import ensure_dir, write_file, read_file, copy_file, ensure_empty
 from coon.utils.logger import debug
+from coon.pac_cache.cache import Cache
 
 
 class RelxCompiler(AbstractCompiler):
@@ -38,7 +40,11 @@ class RelxCompiler(AbstractCompiler):
         resource_path = self.__ensure_resource(resource, path)
         resource = read_file(resource_path)
         if '{{ ' in resource:
-            resource_filled = Template(resource).render(app=self.package)
+            params = {x: os.environ[x] for x in os.environ}
+            params['app'] = self.package
+            params['hostname'] = socket.gethostname()
+            params['erl'] = Cache.get_erlang_version()
+            resource_filled = Template(resource).render(params)
             write_file(resource_path, resource_filled)
             return True, resource_path, resource
         return False, resource_path, resource

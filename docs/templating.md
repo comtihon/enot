@@ -21,6 +21,7 @@ For package `dummy` it will produce following:
     {sys_config, "rel/sys.config"}.
     {vm_args, "rel/vm.args"}.
     {extended_start_script, true}.
+You can use environmental vars or special vars like `hostname`, `app` and `erl`.
 # app.src templates
 When running build Coon can also use templates to convert app.src -> app. It can use environment vars and
 `modules`, `app`, `hostname`, `erl` as special vars. Modules is the list of all compiled module names,

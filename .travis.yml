@@ -7,17 +7,11 @@ python:
 - '3.6'
 before_install:
 - sudo apt-get -y install erlang
-- bash travis/install_deps.sh
 install:
 - pip install -e .
 - python setup.py install
 addons:
-cache:
-  directories:
-  - "$HOME/artifactory"
 script:
-- "$HOME/artifactory/artifactory/bin/artifactory.sh &"
-- bash travis/sleep_if_needed.sh
 - make tests
 deploy:
   provider: pypi

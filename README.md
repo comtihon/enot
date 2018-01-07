@@ -5,11 +5,12 @@
 [![PyPI](https://img.shields.io/pypi/wheel/coon.svg)](https://pypi.python.org/pypi/coon)  
 Erlang advanced project manager.  
 _Why Coon?_  
-- powerful dependency management
-- built deps caching locally and remotely
-- json project configuration
-- Jinja2 templating
-- automatic files build order  
+- powerful dependency management -> build stability
+- built deps caching locally and remotely -> increased build speed
+- json project configuration -> devOps and third-party tools are happy
+- Jinja2 templating -> dynamic environment-dependent configuration
+- automatic files build order -> no problems with parse-transform
+- easy deployment via [CoonHub](https://coon.justtech.blog) -> run `coon install your_service` on every machine
 
 Be in touch: [Blog](https://justtech.blog/tag/coon/)
 
@@ -40,6 +41,33 @@ This will build a project and put all `beam` files to `ebin` directory.
 If you have `c_src` folder Coon will compile them to `priv/project_name.so`.  
 If you have `deps` specified in you config file - they will be downloaded to `deps` and also build.  
 `.app` file is generated from `.app.src` with all templates fill in _(see Jinja2 templating)_
+#### Build speed-up
+Reproduce:
+```
+git clone https://github.com/comtihon/mongodb-erlang
+cd mongodb-erlang
+time make
+
+cd ../ && rm -rf mongodb-erlang && git clone https://github.com/comtihon/mongodb-erlang
+cd mongodb-erlang
+time coon build
+
+cd ../ && rm -rf mongodb-erlang && git clone https://github.com/comtihon/mongodb-erlang
+cd mongodb-erlang
+time coon build
+```
+Results:
+```
+time make
+real    0m8,407s
+
+(no local cache) time coon build
+real    0m6,609s
+
+(with local cache) time coon build
+real    0m1,357s
+```
+For small project with 3 deps coon is 2 seconds faster for the first time and 7 seconds faster for the second time.
 
 ### Release
 To release a project (in project's dir):
@@ -89,9 +117,7 @@ Every time same version of Erlang and project will be used as dep in another pro
  from cache to this project instead of downloading and compiling new.  
 There is also remote cache, where already built packages are kept. Coon searches packages in remote cache before cloning
 them from git and building. Remote cache can be set in Coon global config.   
-Besides using official remote Coon cache (TODO Coon doesn't have official remote cache!) you can deploy your own remote 
-cache. Currently Coon supports [Artifactory](https://www.jfrog.com/artifactory/) and [Amazon S3](https://aws.amazon.com/s3/)
-TODO s3 not supported :(  
+Besides using official remote Coon cache - [CoonHub](https://coon.justtech.blog) you can deploy your own remote cache. 
 You can use multiple remote caches.
 
 ### Global Coon Configuration
@@ -148,5 +174,3 @@ Single Testcase:
 Single Test
 
     py.test -q -s test/test_module.py::TestClass::test_fun
-For artifactory tests artifactory service should be running locally on 8081 with `admin`:`password` credentials and 
-`example-repo-local` repo.

@@ -18,7 +18,7 @@ def run_cmd(cmd: str or list, project: str, path: str,
     debug(cmd)
     if env_vars is None:
         env_vars = dict(os.environ)
-    ensure_runnable(cmd)
+    ensure_runnable(cmd, path)
     p = subprocess.Popen(cmd, stdout=output, stderr=output, cwd=path, env=env_vars, shell=shell)
     if p.wait() != 0:
         critical(project + ' failed.')
@@ -30,12 +30,13 @@ def run_cmd(cmd: str or list, project: str, path: str,
         return True
 
 
-def ensure_runnable(cmd: str):
+def ensure_runnable(cmd: str, path: str):
     command = cmd[0]
     if command.startswith("./"):
-        if not os.access(command, os.X_OK):
-            st = os.stat(command)
-            os.chmod(command, st.st_mode | stat.S_IEXEC)
+        full_cmd = join(path, command.replace("./", ""))
+        if not os.access(full_cmd, os.X_OK):
+            st = os.stat(full_cmd)
+            os.chmod(full_cmd, st.st_mode | stat.S_IEXEC)
 
 
 class AbstractCompiler(metaclass=ABCMeta):

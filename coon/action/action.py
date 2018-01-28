@@ -9,7 +9,7 @@ class ActionType(Enum):
 
 class Action(metaclass=ABCMeta):
     @abstractmethod
-    def run(self, path: str, config=None, system_config=None) -> bool:
+    def run(self, path: str, config=None, system_config=None, erlang_vsn: str = None) -> bool:
         pass
 
     @abstractmethod

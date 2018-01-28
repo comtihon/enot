@@ -211,9 +211,9 @@ class Package:
         info('create package ' + package_dst)
         tar(pack_dir, dirs_to_add, package_dst)
 
-    def install(self, system_config) -> bool:
+    def install(self, system_config, erlang_vsn: str) -> bool:
         for action in self.config.install:
-            if not action.run(self.path, package=self, system_config=system_config):
+            if not action.run(self.path, package=self, system_config=system_config, erlang_vsn=erlang_vsn):
                 return False
         return True
 

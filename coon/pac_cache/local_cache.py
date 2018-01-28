@@ -87,7 +87,7 @@ class LocalCache(Cache):
             LocalCache.__copy_data(rewrite, full_dir, path, 'src')
         if package.config.with_source and package.has_nifs:
             LocalCache.__copy_data(rewrite, full_dir, path, 'c_src')
-        if package.has_nifs:
+        if os.path.exists(join(path, 'priv')):
             LocalCache.__copy_data(rewrite, full_dir, path, 'priv')
         coon_package = join(path, package.name + '.cp')
         if not os.path.isfile(coon_package):

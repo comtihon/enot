@@ -73,8 +73,7 @@ __build_vars__ is a list of erlang build vars, used when building a project. The
 Build vars can also be passed via coon argument `--define`. It can be used in case of test builds, if you don't want 
 to add test build vars to project conf.  
 __c_build_vars__ is a list of build vars, used when building `c_src` sources.  
-__install__ is a list of actions to be performed on `coon install` for your package. Has same actions format as 
-`prebuild`.  
+__install__ is a list of actions to be performed on `coon install` for your package. See Install steps for more info.
 __uninstall__ is a list of actions to be performed on `coon unnstall` your package.  
 
 _Why JSON?_  
@@ -84,6 +83,24 @@ it is simple, well known, and can be easily accessed by third-party tools:
     <nice color output>
     cat coonfig.json | jq .app_vsn
     "3.0.0"
+    
+## Install steps
+### Shell step
+Perform ordinary shell command.   
+Example:
+
+    "install": [
+            {"shell": "id -u example_user &>/dev/null || useradd example_user"}
+         ]
+Will create `example_user` if it does not exist.
+### Release step
+Build an Erlang release in specified directory.  
+Example:
+
+    "install": [
+            {"release": {"rel_dir" : "/opt"}}
+         ]
+Will download all deps, erts for the package being installed, compose Erlang release and put everything into `/opt/_rel`.
     
 # Rebar/Erlang.mk Project configuration
 Although it is not recommended, but you can use [Erlang.mk](https://erlang.mk/) or `rebar.config` as a project config. 

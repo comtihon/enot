@@ -46,7 +46,7 @@ class Controller:
         builder = Builder.init_from_path(join(self.local_cache.path, fullname, vsn, latest_erl))
         builder.populate()
         builder.deps()
-        if builder.project.install(self.system_config):
+        if builder.project.install(self.system_config, latest_erl):
             self.__add_to_installed(fullname, vsn)
             info(fullname + ': ' + vsn + ' installed')
             return True
@@ -79,18 +79,13 @@ class Controller:
         versions = self.system_config.cache.get_versions(fullname)
         if not versions:
             raise RuntimeError('No versions for ' + fullname)
-        [last_version] = versions[-1:]
-        return last_version
+        return versions[0]
 
-    # if version is none - search local caches for versions. If non - search remote
+    # if version is none - search  remote
     def get_package_version(self, fullname: str, maybe_version: str or None) -> str:
         if maybe_version:
             return maybe_version
-        versions = self.local_cache.get_versions(fullname)
-        if not versions:
-            return self.fetch_package_version(fullname, None)
-        [last_version] = versions[-1:]
-        return last_version
+        return self.fetch_package_version(fullname, None)
 
     def __get_all_installed(self) -> list:
         db = TinyDB(self.db_path)

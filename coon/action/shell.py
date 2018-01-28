@@ -12,7 +12,7 @@ class Shell(Action):
     def params(self) -> str:
         return self._params
 
-    def run(self, path, package=None, system_config=None) -> bool:
+    def run(self, path, package=None, system_config=None, erlang_vsn: str = None) -> bool:
         try:
             subprocess.check_call(self.params, shell=True, cwd=path)
             return True

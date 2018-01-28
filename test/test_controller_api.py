@@ -6,6 +6,7 @@ from mock import patch, PropertyMock
 
 import test
 from coon.__main__ import create
+from coon.pac_cache.coon_cache import CoonCache
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
@@ -28,10 +29,28 @@ class ControllerTests(TestClass):
         super().setUp()
         ensure_dir(join(self.test_dir, 'conf'))
 
+    @property
+    def global_config(self):
+        return {'temp_dir': self.tmp_dir,
+                'compiler': self.compiler,
+                'cache': [
+                    {
+                        'name': 'local_cache',
+                        'type': 'local',
+                        'url': 'file://' + self.cache_dir
+                    },
+                    {
+                        'name': 'remote',
+                        'type': 'coon',
+                        'url': '127.0.0.1'
+                    }
+                ]}
+
     # Test if package can be installed via install actions
     @patch('coon.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
     @patch('coon.global_properties.ensure_conf_file')
-    def test_install_package(self, mock_conf, mock_conf_dir):
+    @patch.object(CoonCache, 'get_versions', return_value=['1.0.0'])
+    def test_install_package(self, _, mock_conf, mock_conf_dir):
         mock_conf.return_value = self.conf_file
         mock_conf_dir.return_value = join(self.test_dir, 'conf')
         # create package, fill config with install steps
@@ -59,7 +78,8 @@ class ControllerTests(TestClass):
     # Test if package can be uninstalled via uninstall actions
     @patch('coon.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
     @patch('coon.global_properties.ensure_conf_file')
-    def test_uninstall_package(self, mock_conf, mock_conf_dir):
+    @patch.object(CoonCache, 'get_versions', return_value=['1.0.0'])
+    def test_uninstall_package(self, _, mock_conf, mock_conf_dir):
         mock_conf.return_value = self.conf_file
         mock_conf_dir.return_value = join(self.test_dir, 'conf')
         # create package, fill config with install steps
@@ -90,7 +110,8 @@ class ControllerTests(TestClass):
     # Test if all installed packages are listed
     @patch('coon.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
     @patch('coon.global_properties.ensure_conf_file')
-    def test_list_installed(self, mock_conf, mock_conf_dir):
+    @patch.object(CoonCache, 'get_versions', return_value=['1.0.0'])
+    def test_list_installed(self, _, mock_conf, mock_conf_dir):
         mock_conf.return_value = self.conf_file
         mock_conf_dir.return_value = join(self.test_dir, 'conf')
         apps = ['test_app', 'test_app1', 'test_app2']
@@ -116,7 +137,8 @@ class ControllerTests(TestClass):
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
     @patch('coon.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
     @patch('coon.global_properties.ensure_conf_file')
-    def test_install_with_deps(self, mock_conf, mock_conf_dir, _):
+    @patch.object(CoonCache, 'get_versions', return_value=['1.0.0'])
+    def test_install_with_deps(self, _, mock_conf, mock_conf_dir, _local):
         mock_conf.return_value = self.conf_file
         mock_conf_dir.return_value = join(self.test_dir, 'conf')
         # Create test_app with deps: A and B

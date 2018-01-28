@@ -1,10 +1,8 @@
 from os.path import join
 
-from coon.tool.rebar3 import Rebar3Tool
-
-from coon.packages.config.config import ConfigFile
-
 from coon.compiler.rebar import RebarCompiler
+from coon.packages.config.config import ConfigFile
+from coon.tool.rebar3 import Rebar3Tool
 from coon.utils.file_utils import copy_to
 
 

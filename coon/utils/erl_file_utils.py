@@ -1,6 +1,5 @@
-from os.path import join
-
 import os
+from os.path import join
 
 from coon.utils.file_utils import read_file
 
@@ -42,6 +41,17 @@ def get_values(key: str, content: str) -> list:
     [_, start] = str.split(rest, '[', maxsplit=1)
     [tokens, _] = str.split(start, ']', maxsplit=1)
     return [dep.strip() for dep in tokens.split(',')]
+
+
+def parse_platform_define(value):
+    if len(value) == 3:
+        (_, case, define) = value
+        return case, define
+    elif len(value) == 4:
+        (_, case, define, _) = value
+        return case, define
+    else:
+        raise RuntimeError('Unknown configuration format: ' + value)
 
 
 def find_app_file(path, suffix):

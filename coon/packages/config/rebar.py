@@ -5,6 +5,7 @@ from erl_terms.erl_terms_core import decode
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile, get_dep_info_from_hex
 from coon.packages.dep import Dep
+from coon.utils.erl_file_utils import parse_platform_define
 from coon.utils.file_utils import read_file
 
 
@@ -67,7 +68,7 @@ class RebarConfig(ConfigFile):
         for opt in value:
             if not isinstance(opt, str):
                 if opt[0] == 'platform_define':
-                    (_, case, define) = opt  # TODO come formats have 4-sized tuple
+                    case, define = parse_platform_define(opt)
                     self.platform_defines.append({case, define})
                 if opt[0] == 'd' and len(opt) == 2:  # opt[0] == d, opt[1] == {Var, Value}
                     self.build_vars.append(opt[1])

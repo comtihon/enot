@@ -4,11 +4,12 @@ from enum import Enum
 
 class ActionType(Enum):
     SHELL = 'shell'
+    RELEASE = 'release'
 
 
 class Action(metaclass=ABCMeta):
     @abstractmethod
-    def run(self, path: str) -> bool:
+    def run(self, path: str, config=None, system_config=None) -> bool:
         pass
 
     @abstractmethod

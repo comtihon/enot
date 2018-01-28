@@ -16,11 +16,16 @@ class CacheType(Enum):
 
 
 class Cache(metaclass=ABCMeta):
-    def __init__(self, name, temp_dir, path):
+    def __init__(self, name, temp_dir, path, cache_type: CacheType):
         self._erlang_version = Cache.get_erlang_version()
         self._temp_dir = temp_dir
         self._path = path
         self._name = name
+        self._cache_type = cache_type
+
+    @property
+    def cache_type(self) -> CacheType:
+        return self._cache_type
 
     @property
     def temp_dir(self) -> str:

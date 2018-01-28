@@ -5,9 +5,9 @@ from coon.pac_cache import cache_factory
 from coon.pac_cache.cache import CacheType, Cache
 from coon.pac_cache.local_cache import LocalCache
 from coon.pac_cache.remote_cache import RemoteCache
+from coon.pac_cache.remote_cache_exception import RemoteCacheException
 from coon.packages.package import Package
 from coon.utils.logger import warning
-from coon.pac_cache.remote_cache_exception import RemoteCacheException
 
 
 class CacheMan:
@@ -33,6 +33,13 @@ class CacheMan:
     @property
     def remote_caches(self) -> {str: RemoteCache}:
         return self._caches
+
+    @property
+    def official_cache(self):
+        for cache in self.remote_caches:
+            if cache.cache_type == CacheType.COON:
+                return cache
+        return None
 
     # Populate dep to become a package.
     # Try to find it in local cache, then in remote, finally fetch from git.

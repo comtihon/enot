@@ -2,9 +2,10 @@ from os.path import join
 
 import requests
 
+from coon.pac_cache.cache import CacheType
 from coon.pac_cache.remote_cache import RemoteCache
-from coon.pac_cache.remote_cache_exception import RemoteCacheException
 from coon.packages.package import Package
+from coon.utils.http_utils import download_file
 from coon.utils.logger import warning
 
 
@@ -12,7 +13,7 @@ class CoonCache(RemoteCache):
     def __init__(self, temp_dir, conf: dict):
         name = conf['name']
         cache_url = conf['url']
-        super().__init__(name, temp_dir, cache_url)
+        super().__init__(name, temp_dir, cache_url, CacheType.COON)
 
     def get_versions(self, fullname: str) -> list:
         versions = self._get_versions(fullname)
@@ -34,6 +35,9 @@ class CoonCache(RemoteCache):
         write_path = self.__download_package(package.name, package.fullname, package.git_vsn)
         package.update_from_package(write_path)
 
+    def fetch_erts(self, erlang_vsn: str) -> str:
+        return self.__download_release(erlang_vsn)
+
     def _get_versions(self, fullname, ref=None) -> [dict]:
         url = join(self.path, 'versions')
         data = {'full_name': fullname}
@@ -46,19 +50,19 @@ class CoonCache(RemoteCache):
             return []
         return json['response']
 
-    def __download_package(self, name: str, fullname: str, version: str):
+    def __download_package(self, name: str, fullname: str, version: str) -> str:
         url = join(self.path, 'get')
         write_path = join(self.temp_dir, name + '.cp')
         r = requests.post(url,
                           json={'full_name': fullname,
                                 'versions': [{'ref': version, 'erl_version': self.erlang_version}]},
                           headers={'Content-type': 'application/json'})
-        first_bytes_checked = False
-        with open(write_path, 'wb') as fd:
-            for chunk in r.iter_content(chunk_size=128):
-                if not first_bytes_checked:
-                    if chunk == b'No such build':
-                        raise RemoteCacheException('Package ' + fullname + ':' + version + ' not found')
-                    first_bytes_checked = True
-                fd.write(chunk)
+        download_file(r, write_path, b'No such build', 'Package ' + fullname + ':' + version + ' not found')
+        return write_path
+
+    def __download_release(self, version: str) -> str:
+        url = join(self.path, 'download_erts/' + version)
+        write_path = join(self.temp_dir, version + '.tar')
+        r = requests.get(url)
+        download_file(r, write_path, b'No such erlang', 'No such erlang version: ' + version)
         return write_path

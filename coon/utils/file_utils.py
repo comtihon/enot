@@ -1,11 +1,10 @@
+import os
 import shutil
 import subprocess
 import tarfile
 from os.path import join
 from shutil import copyfile
 from subprocess import PIPE
-
-import os
 
 from coon.utils.logger import debug
 
@@ -29,6 +28,11 @@ def tar(path: str, dirs: list, dst: str):
     with tarfile.open(dst, 'w') as archive:
         for d in dirs:
             archive.add(join(path, d), arcname=d)
+
+
+def untar(path: str, dst: str):
+    with tarfile.open(path, 'r') as archive:
+        archive.extractall(dst)
 
 
 # TODO catch read errors

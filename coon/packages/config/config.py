@@ -158,6 +158,10 @@ class ConfigFile(metaclass=ABCMeta):
     def uninstall(self) -> list:
         return self._uninstall
 
+    @property
+    def is_release(self) -> bool:
+        return False
+
     @abstractmethod
     def get_compiler(self) -> Compiler:
         pass

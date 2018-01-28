@@ -9,7 +9,7 @@ from git import Repo
 from pkg_resources import Requirement, resource_filename
 
 import coon
-from coon.pac_cache.cache import Cache
+from coon.pac_cache.cache import Cache, CacheType
 from coon.packages.package import Package
 from coon.utils.file_utils import if_dir_exists, ensure_dir, link_if_needed, copy_file
 from coon.utils.file_utils import remove_dir
@@ -20,7 +20,7 @@ class LocalCache(Cache):
     def __init__(self, temp_dir, conf):
         cache_url = conf['url']
         path = cache_url[7:]
-        super().__init__(conf['name'], temp_dir, path)
+        super().__init__(conf['name'], temp_dir, path, CacheType.LOCAL)
         if not os.path.exists(path):
             os.makedirs(path)
         ensure_dir(temp_dir)

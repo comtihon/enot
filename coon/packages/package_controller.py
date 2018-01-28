@@ -46,7 +46,7 @@ class Controller:
         builder = Builder.init_from_path(join(self.local_cache.path, fullname, vsn, latest_erl))
         builder.populate()
         builder.deps()
-        if builder.project.install():
+        if builder.project.install(self.system_config):
             self.__add_to_installed(fullname, vsn)
             info(fullname + ': ' + vsn + ' installed')
             return True

@@ -198,6 +198,9 @@ class Package:
         dirs_to_add = []
         add_if_exist(pack_dir, 'ebin', dirs_to_add)
         add_if_exist(pack_dir, 'priv', dirs_to_add)
+        if self.config.is_release:
+            add_if_exist(pack_dir, 'rel', dirs_to_add)
+            add_if_exist(pack_dir, 'relx.conf', dirs_to_add)
         if self.config.with_source:
             add_if_exist(pack_dir, 'src', dirs_to_add)
             add_if_exist(pack_dir, 'include', dirs_to_add)
@@ -208,9 +211,9 @@ class Package:
         info('create package ' + package_dst)
         tar(pack_dir, dirs_to_add, package_dst)
 
-    def install(self) -> bool:
+    def install(self, system_config) -> bool:
         for action in self.config.install:
-            if not action.run(self.path):
+            if not action.run(self.path, config=self.config, system_config=system_config):
                 return False
         return True
 

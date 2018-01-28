@@ -1,6 +1,5 @@
-from os.path import isfile, join, exists
-
 from os import listdir
+from os.path import isfile, join
 
 from coon.packages.config.config import ConfigFile
 from coon.packages.config.coon import CoonConfig

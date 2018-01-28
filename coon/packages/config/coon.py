@@ -3,6 +3,7 @@ from os.path import join
 from tarfile import TarFile
 
 from coon.action import action_factory
+from coon.action.release import Release
 from coon.compiler.compiler_type import Compiler
 from coon.packages.config.config import ConfigFile, get_dep_info_from_hex
 from coon.packages.dep import Dep
@@ -43,7 +44,15 @@ class CoonConfig(ConfigFile):
         self._compare_versions = config.get('compare_versions', True)
         self._prebuild = CoonConfig.parse_steps(config.get('prebuild', []))
         self._install = CoonConfig.parse_steps(config.get('install', []))
+        self._is_release = False
+        for action in self.install:
+            if isinstance(action, Release):
+                self._is_release = True
         self._uninstall = CoonConfig.parse_steps(config.get('uninstall', []))
+
+    @property
+    def is_release(self) -> bool:
+        return self._is_release
 
     @classmethod
     def from_path(cls, path: str, url=None) -> 'CoonConfig':

@@ -5,9 +5,7 @@ from abc import ABCMeta
 from os.path import join
 from subprocess import PIPE
 
-from coon.pac_cache.local_cache import LocalCache
 from coon.packages.config.config import ConfigFile
-from coon.packages.package import Package
 from coon.tool.tool import AbstractTool
 from coon.utils.file_utils import check_cmd
 from coon.utils.logger import critical, error, info, debug
@@ -31,16 +29,18 @@ def run_cmd(cmd: str or list, project: str, path: str,
 
 
 def ensure_runnable(cmd: str, path: str):
-    command = cmd[0]
-    if command.startswith("./"):
-        full_cmd = join(path, command.replace("./", ""))
-        if not os.access(full_cmd, os.X_OK):
-            st = os.stat(full_cmd)
-            os.chmod(full_cmd, st.st_mode | stat.S_IEXEC)
+    if isinstance(cmd, list):
+        ensure_runnable(cmd[0], path)
+    else:
+        if cmd.startswith("./"):
+            full_cmd = join(path, cmd.replace("./", ""))
+            if not os.access(full_cmd, os.X_OK):
+                st = os.stat(full_cmd)
+                os.chmod(full_cmd, st.st_mode | stat.S_IEXEC)
 
 
 class AbstractCompiler(metaclass=ABCMeta):
-    def __init__(self, package: Package, executable='erlc'):
+    def __init__(self, package, executable='erlc'):
         self._package = package
         self._executable = executable
         self._tool = None
@@ -96,7 +96,7 @@ class AbstractCompiler(metaclass=ABCMeta):
         raise RuntimeError("Don't know how to run common tests with " + self.executable)
 
     # find tool and link to project
-    def ensure_tool(self, cache: LocalCache):
+    def ensure_tool(self, cache):
         if self.tool is None:  # no need to check tool for this compiler
             return
         maybe_tool = check_cmd(self.root_path, self.tool.name)
@@ -111,13 +111,13 @@ class AbstractCompiler(metaclass=ABCMeta):
             maybe_tool = self.__build_tool(cache, self.tool)
         self._executable = maybe_tool  # was linked to local dir
 
-    def __find_in_local(self, cache: LocalCache, tool: AbstractTool):
+    def __find_in_local(self, cache, tool: AbstractTool):
         if cache.tool_exists(tool.name):  # tool is in local cache
             cache.link_tool(self.package, tool.name)
             return tool.local_executable
         return None
 
-    def __build_tool(self, cache: LocalCache, tool: AbstractTool):
+    def __build_tool(self, cache, tool: AbstractTool):
         path = cache.temp_dir
         tool_path = tool.ensure(path)
         cache.add_tool(tool.name, tool_path)

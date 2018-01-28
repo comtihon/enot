@@ -3,13 +3,12 @@ from os import listdir
 
 from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.packages.config.config import ConfigFile
-from coon.packages.package import Package
 from coon.tool.erlang_mk import ErlangMKTool
 from coon.utils.logger import warning
 
 
 class ErlangMKCompiler(AbstractCompiler):
-    def __init__(self, package: Package, executable='make'):
+    def __init__(self, package, executable='make'):
         super().__init__(package, executable)
         self._tool = ErlangMKTool()
         self._retry = 5

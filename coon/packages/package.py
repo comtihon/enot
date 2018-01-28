@@ -213,7 +213,7 @@ class Package:
 
     def install(self, system_config) -> bool:
         for action in self.config.install:
-            if not action.run(self.path, config=self.config, system_config=system_config):
+            if not action.run(self.path, package=self, system_config=system_config):
                 return False
         return True
 

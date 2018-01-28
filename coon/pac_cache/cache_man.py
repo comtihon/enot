@@ -36,7 +36,7 @@ class CacheMan:
 
     @property
     def official_cache(self):
-        for cache in self.remote_caches:
+        for cache in self.remote_caches.values():
             if cache.cache_type == CacheType.COON:
                 return cache
         return None

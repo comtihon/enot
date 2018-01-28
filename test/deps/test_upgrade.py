@@ -6,7 +6,7 @@ from os.path import join
 from mock import patch
 
 from coon.__main__ import create, upgrade
-from coon.pac_cache.cache import Cache
+from coon.pac_cache import Static
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package_builder import Builder
 from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag
@@ -62,7 +62,7 @@ class UpgradeTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep', 'master-some_hash', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         # lock was set
@@ -94,7 +94,7 @@ class UpgradeTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep', 'master-some_hash', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         # lock was set

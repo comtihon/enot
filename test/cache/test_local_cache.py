@@ -6,7 +6,7 @@ from mock import patch
 
 import test
 from coon.__main__ import create
-from coon.pac_cache.cache import Cache
+from coon.pac_cache import Static
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
@@ -99,7 +99,7 @@ class LocalCacheTests(TestClass):
         self.assertEqual(True, builder.system_config.cache.exists_local(Package.from_path(dep_tmp_path)))
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
@@ -128,7 +128,7 @@ class LocalCacheTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
@@ -223,7 +223,7 @@ class LocalCacheTests(TestClass):
             print('Check ' + dep)
             dep_link_ebin = join(pack_path, 'deps', dep, 'ebin')
             self.assertEqual(True, os.path.islink(dep_link_ebin))
-            erl = Cache.get_erlang_version()
+            erl = Static.get_erlang_version()
             real_dep = join(self.cache_dir, 'comtihon', dep, '1.0.0', erl, 'ebin')
             self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
@@ -243,7 +243,7 @@ class LocalCacheTests(TestClass):
         builder.system_config.cache.add_package_local(builder.project)
         local_cache = builder.system_config.cache.local_cache
         self.assertEqual(['1.0.0', '1.1.0'], local_cache.get_versions('comtihon/test_app'))
-        self.assertEqual([Cache.get_erlang_version()], local_cache.get_erl_versions('comtihon/test_app', '1.1.0'))
+        self.assertEqual([Static.get_erlang_version()], local_cache.get_erl_versions('comtihon/test_app', '1.1.0'))
 
 
 if __name__ == '__main__':

@@ -1,17 +1,16 @@
+import os
 import unittest
 from os.path import join
 
-import os
-
-from coon.tool.relxtool import RelxTool
 from mock import patch
 
 import test
 from coon.__main__ import create
-from coon.pac_cache.cache import Cache
+from coon.pac_cache import Static
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
 from coon.packages.package_builder import Builder
+from coon.tool.relxtool import RelxTool
 from coon.utils.file_utils import ensure_dir
 from test.abs_test_class import TestClass, set_deps, set_link_policy, ensure_tool
 
@@ -48,7 +47,7 @@ class BuildTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep_with_no_deps', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep_with_no_deps', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
@@ -85,7 +84,7 @@ class BuildTests(TestClass):
             print('Check ' + dep)
             dep_link_ebin = join(pack_path, 'deps', dep, 'ebin')
             self.assertEqual(True, os.path.islink(dep_link_ebin))
-            erl = Cache.get_erlang_version()
+            erl = Static.get_erlang_version()
             real_dep = join(self.cache_dir, 'comtihon', dep, '1.0.0', erl, 'ebin')
             self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
@@ -123,7 +122,7 @@ class BuildTests(TestClass):
             print('Check ' + dep)
             dep_link_ebin = join(pack_path, 'deps', dep, 'ebin')
             self.assertEqual(True, os.path.islink(dep_link_ebin))
-            erl = Cache.get_erlang_version()
+            erl = Static.get_erlang_version()
             real_dep = join(self.cache_dir, 'comtihon', dep, '1.0.0', erl, 'ebin')
             self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         dep_dep_link_ebin = join(pack_path, 'deps', 'a2_with_no_deps', 'ebin')
@@ -250,7 +249,7 @@ class BuildTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         dep_link_ebin = join(pack_path, 'deps', 'test_dep', 'ebin')
@@ -284,7 +283,7 @@ class BuildTests(TestClass):
             print('Check ' + dep)
             dep_link_ebin = join(pack_path, 'deps', dep, 'ebin')
             self.assertEqual(True, os.path.islink(dep_link_ebin))
-            erl = Cache.get_erlang_version()
+            erl = Static.get_erlang_version()
             real_dep = join(self.cache_dir, 'comtihon', dep, '1.0.0', erl, 'ebin')
             self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 

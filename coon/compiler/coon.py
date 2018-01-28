@@ -7,9 +7,8 @@ from jinja2 import Template
 
 from coon.compiler.abstract import AbstractCompiler, run_cmd
 from coon.compiler.c_compiler import CCompiler
-from coon.pac_cache.cache import Cache
+from coon.pac_cache import Static
 from coon.packages.config.config import ConfigFile
-from coon.packages.package import Package
 from coon.utils.file_utils import ensure_dir, read_file
 from coon.utils.logger import debug, info
 
@@ -32,7 +31,7 @@ def parse_transform_first(first: dict, files: dict, file):
 
 
 class CoonCompiler(AbstractCompiler):
-    def __init__(self, package: Package, define: str = '', executable='erlc'):
+    def __init__(self, package, define: str = '', executable='erlc'):
         super().__init__(package, executable)
         self._define = define
 
@@ -178,7 +177,7 @@ class CoonCompiler(AbstractCompiler):
             params['modules'] = all_files
             params['app'] = self.package
             params['hostname'] = socket.gethostname()
-            params['erl'] = Cache.get_erlang_version()
+            params['erl'] = Static.get_erlang_version()
             with open(app_path, 'w') as f:
                 f.write(Template(app_src).render(params))
 

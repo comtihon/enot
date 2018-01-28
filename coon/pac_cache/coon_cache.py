@@ -6,7 +6,7 @@ from coon.pac_cache.cache import CacheType
 from coon.pac_cache.remote_cache import RemoteCache
 from coon.packages.package import Package
 from coon.utils.http_utils import download_file
-from coon.utils.logger import warning
+from coon.utils.logger import warning, info
 
 
 class CoonCache(RemoteCache):
@@ -36,6 +36,7 @@ class CoonCache(RemoteCache):
         package.update_from_package(write_path)
 
     def fetch_erts(self, erlang_vsn: str) -> str:
+        info('fetch erts for ' + erlang_vsn)
         return self.__download_release(erlang_vsn)
 
     def _get_versions(self, fullname, ref=None) -> [dict]:

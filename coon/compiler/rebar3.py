@@ -2,17 +2,14 @@ from os.path import join
 
 from coon.tool.rebar3 import Rebar3Tool
 
-from coon.tool.tool import AbstractTool
-
 from coon.packages.config.config import ConfigFile
 
 from coon.compiler.rebar import RebarCompiler
-from coon.packages.package import Package
 from coon.utils.file_utils import copy_to
 
 
 class Rebar3Compiler(RebarCompiler):
-    def __init__(self, package: Package, executable='rebar3'):
+    def __init__(self, package, executable='rebar3'):
         super().__init__(package, executable)
         self._tool = Rebar3Tool()
 

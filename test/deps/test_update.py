@@ -6,6 +6,7 @@ from mock import patch
 
 import test
 from coon.__main__ import create
+from coon.pac_cache import Static
 from coon.pac_cache.cache import Cache
 from coon.pac_cache.local_cache import LocalCache
 from coon.packages.package import Package
@@ -57,7 +58,7 @@ class UpdateTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep_with_no_deps', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep_with_no_deps', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         # Dep version was changed
@@ -73,7 +74,7 @@ class UpdateTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep_with_no_deps', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep_with_no_deps', '1.0.1', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
@@ -99,7 +100,7 @@ class UpdateTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep_with_no_deps', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep_with_no_deps', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         # Dep version was changed
@@ -125,7 +126,7 @@ class UpdateTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep_with_no_deps', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep_with_no_deps', '1.0.1', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         self.assertEqual(True, builder.system_config.cache.exists_local(Package.from_path(new_dep_dir)))
@@ -163,7 +164,7 @@ class UpdateTests(TestClass):
         # Check all two deps linked to the project
         dep_link_ebin = join(pack_path, 'deps', 'dep_with_dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep_with_dep', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
@@ -222,7 +223,7 @@ class UpdateTests(TestClass):
         # Check all two deps linked to the project
         dep_link_ebin = join(pack_path, 'deps', 'dep_with_dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep_with_dep', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
@@ -281,7 +282,7 @@ class UpdateTests(TestClass):
         # Check all two deps linked to the project
         dep_link_ebin = join(pack_path, 'deps', 'dep_with_dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep_with_dep', '1.0.0', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
@@ -327,22 +328,22 @@ class UpdateTests(TestClass):
         dep_dir = join(self.tmp_dir, 'dep_with_no_deps')
         set_git_url(dep_dir, 'http://github/comtihon/dep_with_no_deps')
         set_git_tag(dep_dir, '1.0.0')  # This is not needed but pretend we really fetch it from git
-        with patch.object(Cache, 'get_erlang_version', return_value='18'):
+        with patch.object(Static, 'get_erlang_version', return_value='18'):
             builder = Builder.init_from_path(pack_path)
             builder.populate()
             self.assertEqual(True, builder.build())
             dep_link_ebin = join(pack_path, 'deps', 'dep_with_no_deps', 'ebin')
             self.assertEqual(True, os.path.islink(dep_link_ebin))
-            erl = Cache.get_erlang_version()
+            erl = Static.get_erlang_version()
             real_dep = join(self.cache_dir, 'comtihon', 'dep_with_no_deps', '1.0.0', erl, 'ebin')
             self.assertEqual(real_dep, os.readlink(dep_link_ebin))
-        with patch.object(Cache, 'get_erlang_version', return_value='22'):
+        with patch.object(Static, 'get_erlang_version', return_value='22'):
             builder = Builder.init_from_path(pack_path)
             builder.populate()
             self.assertEqual(True, builder.build())
             dep_link_ebin = join(pack_path, 'deps', 'dep_with_no_deps', 'ebin')
             self.assertEqual(True, os.path.islink(dep_link_ebin))
-            erl2 = Cache.get_erlang_version()
+            erl2 = Static.get_erlang_version()
             real_dep = join(self.cache_dir, 'comtihon', 'dep_with_no_deps', '1.0.0', erl2, 'ebin')
             self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         self.assertNotEqual(erl, erl2)
@@ -367,7 +368,7 @@ class UpdateTests(TestClass):
         self.assertEqual(True, builder.build())
         dep_link_ebin = join(pack_path, 'deps', 'dep', 'ebin')
         self.assertEqual(True, os.path.islink(dep_link_ebin))
-        erl = Cache.get_erlang_version()
+        erl = Static.get_erlang_version()
         real_dep = join(self.cache_dir, 'comtihon', 'dep', 'master-some_hash', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         # change dep's branch

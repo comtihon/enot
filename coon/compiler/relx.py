@@ -7,27 +7,30 @@ from pkg_resources import Requirement, resource_filename
 
 import coon
 from coon.compiler.abstract import AbstractCompiler, run_cmd
+from coon.pac_cache import Static
 from coon.packages.config.config import ConfigFile
-from coon.packages.package import Package
 from coon.tool.relxtool import RelxTool
 from coon.utils.file_utils import ensure_dir, write_file, read_file, copy_file, ensure_empty
 from coon.utils.logger import debug
-from coon.pac_cache.cache import Cache
 
 
 class RelxCompiler(AbstractCompiler):
-    def __init__(self, package: Package, executable='relx'):
+    def __init__(self, package, executable='relx'):
         super().__init__(package, executable)
         self._tool = RelxTool()
 
-    def compile(self, override_config: ConfigFile or None = None):
+    def compile(self, override_config: ConfigFile or None = None, params: list or None = None):
         ensure_dir(join(self.package.path, 'rel'))
         ensure_empty(join(self.package.path, '_rel'))
         resave_relconf, relconf_path, relconf = self.__modify_resource('relx.config')
         resave_vmargs, vmargs_path, vmargs = self.__modify_resource('vm.args', 'rel')
         resave_sysconf, sysconf_path, sysconf = self.__modify_resource('sys.config', 'rel')
+        if params is not None:
+            cmd = [self.executable] + params
+        else:
+            cmd = self.executable
         try:
-            return run_cmd(self.executable, self.project_name, self.root_path, output=None)
+            return run_cmd(cmd, self.project_name, self.root_path, output=None)
         finally:  # Return previous file values, if were changed.
             if resave_vmargs:
                 write_file(vmargs_path, vmargs)
@@ -43,7 +46,7 @@ class RelxCompiler(AbstractCompiler):
             params = {x: os.environ[x] for x in os.environ}
             params['app'] = self.package
             params['hostname'] = socket.gethostname()
-            params['erl'] = Cache.get_erlang_version()
+            params['erl'] = Static.get_erlang_version()
             resource_filled = Template(resource).render(params)
             write_file(resource_path, resource_filled)
             return True, resource_path, resource

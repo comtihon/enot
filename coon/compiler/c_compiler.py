@@ -7,13 +7,12 @@ import os
 from pkg_resources import Requirement, resource_filename
 
 from coon.compiler.abstract import AbstractCompiler, run_cmd
-from coon.packages.package import Package
 from coon.utils.file_utils import copy_file, ensure_dir
 from coon.utils.logger import debug
 
 
 class CCompiler(AbstractCompiler):
-    def __init__(self, package: Package, executable='make'):
+    def __init__(self, package, executable='make'):
         super().__init__(package, executable)
 
     @property

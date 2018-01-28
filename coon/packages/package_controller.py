@@ -77,9 +77,10 @@ class Controller:
         if maybe_version:
             return maybe_version
         versions = self.system_config.cache.get_versions(fullname)
+        [last_vsn] = sorted(versions)[-1:]
         if not versions:
             raise RuntimeError('No versions for ' + fullname)
-        return versions[0]
+        return last_vsn
 
     # if version is none - search  remote
     def get_package_version(self, fullname: str, maybe_version: str or None) -> str:

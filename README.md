@@ -11,6 +11,7 @@ _Why Enot?_
 - Jinja2 templating -> dynamic environment-dependent configuration
 - automatic files build order -> no problems with parse-transform
 - easy deployment via [EnotHub](https://enot.justtech.blog) -> run `enot install your_service` on every machine
+- notes on [security](docs/packaging_and_security.md).  
 
 Be in touch: [Blog](https://justtech.blog/tag/enot/)
 

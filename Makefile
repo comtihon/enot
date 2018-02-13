@@ -2,7 +2,7 @@ make:
 	python setup.py bdist_wheel
 
 install: make
-	sudo pip install dist/coon-*
+	sudo pip install dist/enot-*
 
 tests:
 	python -m pytest --capture=sys

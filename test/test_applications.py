@@ -4,8 +4,8 @@ from os.path import join
 
 from jinja2 import Template
 
-from coon.packages.package import Package
-from coon.utils.file_utils import ensure_dir
+from enot.packages.package import Package
+from enot.utils.file_utils import ensure_dir
 from test.abs_test_class import TestClass
 
 
@@ -26,7 +26,7 @@ class ApplicationsTests(TestClass):
         ensure_dir(self.src_dir)
         with open(join(self.src_dir, 'test.app.src'), 'w') as w:
             w.write(get_application([]))
-        with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
+        with open(join(self.test_dir, 'enot_config.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep',
                                        'url': "http://github/comtihon/test_dep",
                                        'tag': "test_vsn"}]))
@@ -40,7 +40,7 @@ class ApplicationsTests(TestClass):
         ensure_dir(self.src_dir)
         with open(join(self.src_dir, 'test.app.src'), 'w') as w:
             w.write(get_application(['mnesia']))
-        with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
+        with open(join(self.test_dir, 'enot_config.json'), 'w') as w:
             w.write(get_package_conf([]))
         package = Package.from_path(self.test_dir)
         self.assertEqual([], package.deps)  # no package deps
@@ -51,7 +51,7 @@ class ApplicationsTests(TestClass):
         ensure_dir(self.src_dir)
         with open(join(self.src_dir, 'test.app.src'), 'w') as w:
             w.write(get_application(['mnesia']))
-        with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
+        with open(join(self.test_dir, 'enot_config.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep',
                                        'url': "http://github/comtihon/test_dep",
                                        'tag': "test_vsn"}]))
@@ -68,7 +68,7 @@ class ApplicationsTests(TestClass):
         ensure_dir(self.src_dir)
         with open(join(self.src_dir, 'test.app.src'), 'w') as w:
             w.write(get_application(['test_dep1', 'test_dep2']))
-        with open(join(self.test_dir, 'coonfig.json'), 'w') as w:
+        with open(join(self.test_dir, 'enot_config.json'), 'w') as w:
             w.write(get_package_conf([{'name': 'test_dep1',
                                        'url': "http://github/comtihon/test_dep1",
                                        'tag': "test_vsn"},

@@ -5,12 +5,12 @@ from subprocess import PIPE
 
 import os
 
-from coon.__main__ import create
-from coon.compiler.c_compiler import CCompiler
-from coon.compiler.coon import CoonCompiler
-from coon.packages.config.coon import CoonConfig
-from coon.packages.package import Package
-from coon.utils.file_utils import ensure_dir
+from enot.__main__ import create
+from enot.compiler.c_compiler import CCompiler
+from enot.compiler.enot import EnotCompiler
+from enot.packages.config.enot import EnotConfig
+from enot.packages.package import Package
+from enot.utils.file_utils import ensure_dir
 from test.abs_test_class import TestClass
 
 
@@ -44,7 +44,7 @@ class CCompileTests(TestClass):
             
             ERL_NIF_INIT(niftest,nif_funcs,NULL,NULL,NULL,NULL)
             ''')
-        config = CoonConfig({'name': 'proper'})
+        config = EnotConfig({'name': 'proper'})
         package = Package(self.test_dir, config, None)
         compiler = CCompiler(package)
         self.assertEqual(True, compiler.compile())
@@ -68,7 +68,7 @@ class CCompileTests(TestClass):
             
             ERL_NIF_INIT(niftest,nif_funcs,NULL,NULL,NULL,NULL)
             ''')
-        config = CoonConfig({'name': 'proper'})
+        config = EnotConfig({'name': 'proper'})
         package = Package(self.test_dir, config, None)
         compiler = CCompiler(package)
         self.assertEqual(False, compiler.compile())
@@ -108,7 +108,7 @@ class CCompileTests(TestClass):
                   "NIF library not loaded".
             ''')
         package = Package.from_path(project_dir)
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(True, compiler.compile())
         self.assertEqual(True, os.path.exists(join(project_dir, 'priv/proper.so')))
         self.assertEqual(True, os.path.exists(join(project_dir, 'ebin/proper.beam')))
@@ -152,7 +152,7 @@ class CCompileTests(TestClass):
                   "NIF library not loaded".
             ''')
         package = Package.from_path(project_dir)
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(False, compiler.compile())
         self.assertEqual(False, os.path.exists(join(project_dir, 'priv/proper.so')))
         self.assertEqual(False, os.path.exists(join(project_dir, 'ebin/proper.beam')))

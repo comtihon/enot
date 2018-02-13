@@ -1,4 +1,4 @@
-# Coon Project configuration (Recommended)
+# Enot Project configuration (Recommended)
     {
         "name" : AppName,
         "fullname" : Namespace/AppName
@@ -46,9 +46,9 @@ Here:
 __name__ is the name of current project.  
 __fullname__ is a namespace with name. It is used to distinguish github forks. Usually you don't need it, as it will set 
 up automatically from url.  
-__erlang__ is a list of erlang releases you application is compatible with. Is used by [octocoon](https://github.com/comtihon/octocoon)
+__erlang__ is a list of erlang releases you application is compatible with. Is used by [Enot Auto Builder](https://github.com/comtihon/enot_auto_builder)
 build system.  
-__app_vsn__ is a version of erlang application. Coon uses it when composing `.app` and in `relx.conf`.  
+__app_vsn__ is a version of erlang application. Enot uses it when composing `.app` and in `relx.conf`.  
 __with_source__ if set to true - will include source, when moving to local/remote cache and packaging. Default is `true`.  
 __link_all__ if set to true - all deps will be linked to main project (including deps of deps). Default is `true`. You can
   set it to false, to reduce number of deps you are not using directly in your project, but keep in mind, that relx 
@@ -62,26 +62,26 @@ module belongs to the same repo - will compile it first. Default is `true`. Can 
 compilation.  
 __override__ if set to true - root project will override deps tree build configuration, such as `build_vars`, 
 `c_build_vars` and `disable_prebuild`. Default is `false`. Pay attention, that this won't work in case of `native` or 
-`makefile` build in Coon Global Config.  
+`makefile` build in Enot Global Config.  
 __compare_versions__ if set to `false` - will not fail on incompatible (based on major vsn) deps are used in project. 
 Default is `true`.  
-__disable_prebuild__ if set to true - Coon won't execute any prebuild steps. It is useless without `override` set to true
+__disable_prebuild__ if set to true - Enot won't execute any prebuild steps. It is useless without `override` set to true
 in case you don't wont to execute deps prebuild steps, may be for security reasons.  
 __prebuild__ is a list of actions, which should be run before build. `Action` is a type of the action. 
 Only `shell` is supported now. `prebuild.Params` are the options to be passed to action. TODO example here.  
 __build_vars__ is a list of erlang build vars, used when building a project. They can be either single or with value. 
-Build vars can also be passed via coon argument `--define`. It can be used in case of test builds, if you don't want 
+Build vars can also be passed via enot argument `--define`. It can be used in case of test builds, if you don't want 
 to add test build vars to project conf.  
 __c_build_vars__ is a list of build vars, used when building `c_src` sources.  
-__install__ is a list of actions to be performed on `coon install` for your package. See Install steps for more info.
-__uninstall__ is a list of actions to be performed on `coon unnstall` your package.  
+__install__ is a list of actions to be performed on `enot install` for your package. See Install steps for more info.
+__uninstall__ is a list of actions to be performed on `enot unnstall` your package.  
 
 _Why JSON?_  
 it is simple, well known, and can be easily accessed by third-party tools:
 
-    cat coonfig.json | jq .
+    cat enot_config.json | jq .
     <nice color output>
-    cat coonfig.json | jq .app_vsn
+    cat enot_config.json | jq .app_vsn
     "3.0.0"
     
 ## Install steps
@@ -130,4 +130,4 @@ or from hex:
     {deps, [
                {hex_dep, "1.0.0"}
            ]}
-__Important__: When parsing Erlang.MK config Coon can't distinguish between tags and deps.
+__Important__: When parsing Erlang.MK config Enot can't distinguish between tags and deps.

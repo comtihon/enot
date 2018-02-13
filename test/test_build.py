@@ -5,13 +5,13 @@ from os.path import join
 from mock import patch
 
 import test
-from coon.__main__ import create
-from coon.pac_cache import Static
-from coon.pac_cache.local_cache import LocalCache
-from coon.packages.package import Package
-from coon.packages.package_builder import Builder
-from coon.tool.relxtool import RelxTool
-from coon.utils.file_utils import ensure_dir
+from enot.__main__ import create
+from enot.pac_cache import Static
+from enot.pac_cache.local_cache import LocalCache
+from enot.packages.package import Package
+from enot.packages.package_builder import Builder
+from enot.tool.relxtool import RelxTool
+from enot.utils.file_utils import ensure_dir
 from test.abs_test_class import TestClass, set_deps, set_link_policy, ensure_tool
 
 
@@ -31,7 +31,7 @@ class BuildTests(TestClass):
 
     # Dep should be linked to the project
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_link_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -53,7 +53,7 @@ class BuildTests(TestClass):
 
     # Dep's dep should also be linked to the project
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_link_multiple_deps(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -90,7 +90,7 @@ class BuildTests(TestClass):
 
     # Dep's dep should not be linked to the project, as it is prohibited by config
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_link_multiple_deps_off(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -130,7 +130,7 @@ class BuildTests(TestClass):
 
     # Dep should be included to the release
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_release_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -152,7 +152,7 @@ class BuildTests(TestClass):
 
     # Dep's dep should be included to the release
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_release_multiple_deps(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -183,7 +183,7 @@ class BuildTests(TestClass):
 
     # Non OTP deps should be included to the release
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_release_non_otp_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -226,7 +226,7 @@ class BuildTests(TestClass):
 
     # If project has test_deps, they should not be fetched and built during normal build
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_project_with_test_dep_normal_build(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -257,7 +257,7 @@ class BuildTests(TestClass):
 
     # If project has test_deps, they should be fetched, built and link during test build
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_project_with_test_dep_test_build(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')

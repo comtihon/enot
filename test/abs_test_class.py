@@ -7,9 +7,9 @@ from os.path import join
 from git import Repo
 
 import test
-from coon.tool.tool import AbstractTool
-from coon.utils import logger
-from coon.utils.file_utils import ensure_empty, remove_dir
+from enot.tool.tool import AbstractTool
+from enot.utils import logger
+from enot.utils.file_utils import ensure_empty, remove_dir
 
 
 class TestClass(unittest.TestCase):
@@ -41,7 +41,7 @@ class TestClass(unittest.TestCase):
 
     @property
     def compiler(self) -> str:
-        return 'coon'
+        return 'enot'
 
     @property
     def global_config(self):
@@ -68,7 +68,7 @@ class TestClass(unittest.TestCase):
 
 
 def set_deps(path: str, deps: list, dep_type='deps'):
-    fullpath = join(path, 'coonfig.json')
+    fullpath = join(path, 'enot_config.json')
     with open(fullpath, 'r') as file:
         conf = json.load(file)
     conf[dep_type] = deps
@@ -87,7 +87,7 @@ def set_link_policy(path: str, policy: bool):
 
 
 def modify_config(path: str, override: dict):
-    fullpath = join(path, 'coonfig.json')
+    fullpath = join(path, 'enot_config.json')
     with open(fullpath, 'r') as file:
         conf = json.load(file)
     conf.update(override)

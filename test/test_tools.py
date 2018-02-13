@@ -5,10 +5,10 @@ from os.path import join
 
 from mock import patch
 
-import coon.__main__
-from coon.compiler.rebar import RebarCompiler
-from coon.packages.package_builder import Builder
-from coon.utils.file_utils import ensure_dir
+import enot.__main__
+from enot.compiler.rebar import RebarCompiler
+from enot.packages.package_builder import Builder
+from enot.utils.file_utils import ensure_dir
 from test.abs_test_class import TestClass
 
 
@@ -17,12 +17,12 @@ class ToolsTests(TestClass):
         super().__init__('tools_tests', method_name)
 
     # Tool is installed in the system (or locally) - no need to install/add it to cache
-    @patch('coon.utils.file_utils.ensure_programm')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.utils.file_utils.ensure_programm')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_in_system(self, mock_conf, mock_get_cmd):
         mock_conf.return_value = self.conf_file
         mock_get_cmd.return_value = 'rebar'
-        coon.__main__.create(self.test_dir, {'<name>': 'test'})
+        enot.__main__.create(self.test_dir, {'<name>': 'test'})
         project_dir = join(self.test_dir, 'test')
         builder = Builder.init_from_path(project_dir)
         compiler = RebarCompiler(builder.project)
@@ -33,15 +33,15 @@ class ToolsTests(TestClass):
         self.assertEqual(False, builder.system_config.cache.local_cache.tool_exists('rebar'))
 
     # There is tool in cache. Should be linked to current project
-    @patch('coon.utils.file_utils.ensure_programm')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.utils.file_utils.ensure_programm')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_in_cache(self, mock_conf, mock_get_cmd):
         mock_conf.return_value = self.conf_file
         mock_get_cmd.return_value = False
         ensure_dir(join(self.cache_dir, 'tool'))
         with open(join(self.cache_dir, 'tool', 'rebar'), 'w') as outfile:  # 'load' tool to cache
             outfile.write('some content')
-        coon.__main__.create(self.test_dir, {'<name>': 'test'})
+        enot.__main__.create(self.test_dir, {'<name>': 'test'})
         project_dir = join(self.test_dir, 'test')
         builder = Builder.init_from_path(project_dir)
         compiler = RebarCompiler(builder.project)
@@ -51,14 +51,14 @@ class ToolsTests(TestClass):
 
     # There is no tool in the system, so it will be downloaded, added to cache and linked to current project
     @patch.object(HTTPResponse, 'read')
-    @patch('coon.utils.file_utils.ensure_programm')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.utils.file_utils.ensure_programm')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_missing(self, mock_conf, mock_get_cmd, mock_http_read):
         mock_conf.return_value = self.conf_file
         mock_get_cmd.return_value = False
         ensure_dir(self.tmp_dir)
         mock_http_read.return_value = b'some rebar binary content'
-        coon.__main__.create(self.test_dir, {'<name>': 'test'})
+        enot.__main__.create(self.test_dir, {'<name>': 'test'})
         project_dir = join(self.test_dir, 'test')
         builder = Builder.init_from_path(project_dir)
         compiler = RebarCompiler(builder.project)

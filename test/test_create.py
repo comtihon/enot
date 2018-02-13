@@ -3,18 +3,18 @@ from os.path import join
 
 import os
 
-from coon.tool.relxtool import RelxTool
+from enot.tool.relxtool import RelxTool
 from mock import patch
 
-import coon.__main__
-from coon.packages.config.coon import CoonConfig
-from coon.packages.package_builder import Builder
-from coon.utils.erl_file_utils import get_value, get_values
-from coon.utils.file_utils import read_file
+import enot.__main__
+from enot.packages.config.enot import EnotConfig
+from enot.packages.package_builder import Builder
+from enot.utils.erl_file_utils import get_value, get_values
+from enot.utils.file_utils import read_file
 from test.abs_test_class import TestClass, ensure_tool
 
 '''
-Here are the tests, responsible for coon create
+Here are the tests, responsible for enot create
 '''
 
 
@@ -23,21 +23,21 @@ class CreateTests(TestClass):
         super().__init__('create_tests', method_name)
 
     def test_create(self):
-        coon.__main__.create(self.test_dir, {'<name>': 'test_project'})
+        enot.__main__.create(self.test_dir, {'<name>': 'test_project'})
         project_dir = join(self.test_dir, 'test_project')
         src_dir = join(project_dir, 'src')
         self.assertEqual(True, os.path.exists(project_dir))  # project dir was created
         self.assertEqual(True, os.path.exists(src_dir))  # src dir was created
-        config = CoonConfig.from_path(project_dir)
+        config = EnotConfig.from_path(project_dir)
         self.assertEqual({}, config.deps)  # no deps
         self.assertEqual('test_project', config.name)  # name was set and parsed properly
         self.assertEqual('0.0.1', config.conf_vsn)  # version was set and parsed properly
 
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_compile_created(self, mock_conf):
         mock_conf.return_value = self.conf_file
         project_dir = join(self.test_dir, 'test_project')
-        coon.__main__.create(self.test_dir, {'<name>': 'test_project'})
+        enot.__main__.create(self.test_dir, {'<name>': 'test_project'})
         builder = Builder.init_from_path(project_dir)
         builder.populate()
         out_dir = join(project_dir, 'ebin')
@@ -56,11 +56,11 @@ class CreateTests(TestClass):
         self.assertEqual(True, "'test_project_app'" in modules)
         self.assertEqual(True, "'test_project_sup'" in modules)
 
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_release_created(self, mock_conf):
         mock_conf.return_value = self.conf_file
         project_dir = join(self.test_dir, 'test_project')
-        coon.__main__.create(self.test_dir, {'<name>': 'test_project'})
+        enot.__main__.create(self.test_dir, {'<name>': 'test_project'})
         builder = Builder.init_from_path(project_dir)
         builder.populate()
         builder.build()

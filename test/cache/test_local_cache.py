@@ -5,12 +5,12 @@ from os.path import join
 from mock import patch
 
 import test
-from coon.__main__ import create
-from coon.pac_cache import Static
-from coon.pac_cache.local_cache import LocalCache
-from coon.packages.package import Package
-from coon.packages.package_builder import Builder
-from coon.utils.file_utils import remove_dir, copy_file
+from enot.__main__ import create
+from enot.pac_cache import Static
+from enot.pac_cache.local_cache import LocalCache
+from enot.packages.package import Package
+from enot.packages.package_builder import Builder
+from enot.utils.file_utils import remove_dir, copy_file
 from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag, modify_config
 
 
@@ -29,7 +29,7 @@ class LocalCacheTests(TestClass):
         create(self.test_dir, {'<name>': 'test_app'})
 
     # Tests if package exists in local cache
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_package_exists(self, mock_conf):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -42,8 +42,8 @@ class LocalCacheTests(TestClass):
         builder.system_config.cache.add_package_local(pack)
         self.assertEqual(True, builder.system_config.cache.exists_local(pack))
 
-    # Test if test_app.cp can be added to local cache
-    @patch('coon.global_properties.ensure_conf_file')
+    # Test if test_app.ep can be added to local cache
+    @patch('enot.global_properties.ensure_conf_file')
     def test_add_from_package(self, mock_conf):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -52,9 +52,9 @@ class LocalCacheTests(TestClass):
         builder = Builder.init_from_path(pack_path)
         self.assertEqual(True, builder.build())
         builder.package()
-        new_package_path = join(self.test_dir, 'test_app.cp')
-        # remove source project, test should work only with coon package
-        copy_file(join(pack_path, 'test_app.cp'), new_package_path)
+        new_package_path = join(self.test_dir, 'test_app.ep')
+        # remove source project, test should work only with enot package
+        copy_file(join(pack_path, 'test_app.ep'), new_package_path)
         remove_dir(pack_path)
         package = Package.from_package(new_package_path)
         self.assertEqual(False, builder.system_config.cache.exists_local(package))
@@ -64,7 +64,7 @@ class LocalCacheTests(TestClass):
         self.assertEqual(True, builder.system_config.cache.exists_local(package))
 
     # Test if test_app can be added to local cache
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_add_from_path(self, mock_conf):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -78,7 +78,7 @@ class LocalCacheTests(TestClass):
 
     # Test if dep is fetched, compiled and linked to the project
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_link_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -105,7 +105,7 @@ class LocalCacheTests(TestClass):
 
     # Test if dep exists in local cache and is linked to project
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_link_existing_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -134,7 +134,7 @@ class LocalCacheTests(TestClass):
 
     # Test if test_app has several deps, all will be fetched, compiled and added to local cache
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_add_with_deps(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         # Create test_app with deps: A and B
@@ -179,7 +179,7 @@ class LocalCacheTests(TestClass):
 
     # Test if dep exists in local cache and is linked to project
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_link_with_deps(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -228,7 +228,7 @@ class LocalCacheTests(TestClass):
             self.assertEqual(real_dep, os.readlink(dep_link_ebin))
 
     # Local cache contains multiple package's versions and they all can be listed. Same with erl versions.
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_versions_api(self, mock_conf):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')

@@ -5,10 +5,10 @@ from os.path import join
 
 from mock import patch
 
-from coon.__main__ import create, upgrade
-from coon.pac_cache import Static
-from coon.pac_cache.local_cache import LocalCache
-from coon.packages.package_builder import Builder
+from enot.__main__ import create, upgrade
+from enot.pac_cache import Static
+from enot.pac_cache.local_cache import LocalCache
+from enot.packages.package_builder import Builder
 from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag
 
 
@@ -45,7 +45,7 @@ class UpgradeTests(TestClass):
 
     # If branch gets new commit, but lock points to old branch - no update should be performed.
     @patch.object(LocalCache, 'fetch', side_effect=mock_fetch_commit_1)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_update_branch_lock(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -66,7 +66,7 @@ class UpgradeTests(TestClass):
         real_dep = join(self.cache_dir, 'comtihon', 'dep', 'master-some_hash', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         # lock was set
-        locks_file = join(pack_path, 'coon_locks.json')
+        locks_file = join(pack_path, 'enot_locks.json')
         self.assertEqual(True, os.path.isfile(locks_file))
         with open(locks_file, 'r') as file:
             locks = json.load(file)
@@ -77,7 +77,7 @@ class UpgradeTests(TestClass):
 
     # Running upgrade should ignore locks
     @patch.object(LocalCache, 'fetch', side_effect=mock_fetch_commit_1)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_update_branch(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -98,7 +98,7 @@ class UpgradeTests(TestClass):
         real_dep = join(self.cache_dir, 'comtihon', 'dep', 'master-some_hash', erl, 'ebin')
         self.assertEqual(real_dep, os.readlink(dep_link_ebin))
         # lock was set
-        locks_file = join(pack_path, 'coon_locks.json')
+        locks_file = join(pack_path, 'enot_locks.json')
         self.assertEqual(True, os.path.isfile(locks_file))
         with open(locks_file, 'r') as file:
             locks = json.load(file)

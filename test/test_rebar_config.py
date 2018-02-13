@@ -3,8 +3,8 @@ from os.path import join
 
 from mock import patch
 
-from coon.packages.config.rebar import RebarConfig
-from coon.packages.dep import Dep
+from enot.packages.config.rebar import RebarConfig
+from enot.packages.dep import Dep
 from test.abs_test_class import TestClass
 
 
@@ -48,7 +48,7 @@ class RebarConfigTests(TestClass):
         self.assertEqual(Dep('git://github.com/comtihon/dep5', 'commit_hash'), conf.deps['dep5'])
         self.assertEqual(Dep('git://github.com/comtihon/dep6', 'commit_hash'), conf.deps['dep6'])
 
-    @patch('coon.packages.config.config.request_hex_info')
+    @patch('enot.packages.config.config.request_hex_info')
     def test_hex_dep(self, mock_hex):
         mock_hex.return_value = {'url': 'https://hex.pm/api/packages/hex_dep',
                                  'updated_at': '2017-05-29T02:51:09.352157Z',

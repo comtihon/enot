@@ -5,13 +5,13 @@ from os.path import join
 from mock import patch, PropertyMock
 
 import test
-from coon.__main__ import create
-from coon.pac_cache.coon_cache import CoonCache
-from coon.pac_cache.local_cache import LocalCache
-from coon.packages.package import Package
-from coon.packages.package_builder import Builder
-from coon.packages.package_controller import Controller
-from coon.utils.file_utils import remove_dir, ensure_dir
+from enot.__main__ import create
+from enot.pac_cache.enot_cache import EnotCache
+from enot.pac_cache.local_cache import LocalCache
+from enot.packages.package import Package
+from enot.packages.package_builder import Builder
+from enot.packages.package_controller import Controller
+from enot.utils.file_utils import remove_dir, ensure_dir
 from test.abs_test_class import TestClass, modify_config, set_git_url, set_git_tag, set_deps
 
 
@@ -41,15 +41,15 @@ class ControllerTests(TestClass):
                     },
                     {
                         'name': 'remote',
-                        'type': 'coon',
+                        'type': 'enot',
                         'url': '127.0.0.1'
                     }
                 ]}
 
     # Test if package can be installed via install actions
-    @patch('coon.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
-    @patch('coon.global_properties.ensure_conf_file')
-    @patch.object(CoonCache, 'get_versions', return_value=['1.0.0'])
+    @patch('enot.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
+    @patch('enot.global_properties.ensure_conf_file')
+    @patch.object(EnotCache, 'get_versions', return_value=['1.0.0'])
     def test_install_package(self, _, mock_conf, mock_conf_dir):
         mock_conf.return_value = self.conf_file
         mock_conf_dir.return_value = join(self.test_dir, 'conf')
@@ -76,9 +76,9 @@ class ControllerTests(TestClass):
         self.assertEqual(['test_app.app', 'test_app_app.beam', 'test_app_sup.beam'], sorted(installed))
 
     # Test if package can be uninstalled via uninstall actions
-    @patch('coon.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
-    @patch('coon.global_properties.ensure_conf_file')
-    @patch.object(CoonCache, 'get_versions', return_value=['1.0.0'])
+    @patch('enot.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
+    @patch('enot.global_properties.ensure_conf_file')
+    @patch.object(EnotCache, 'get_versions', return_value=['1.0.0'])
     def test_uninstall_package(self, _, mock_conf, mock_conf_dir):
         mock_conf.return_value = self.conf_file
         mock_conf_dir.return_value = join(self.test_dir, 'conf')
@@ -108,9 +108,9 @@ class ControllerTests(TestClass):
         self.assertEqual(False, os.path.isdir(test_install_dir))
 
     # Test if all installed packages are listed
-    @patch('coon.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
-    @patch('coon.global_properties.ensure_conf_file')
-    @patch.object(CoonCache, 'get_versions', return_value=['1.0.0'])
+    @patch('enot.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
+    @patch('enot.global_properties.ensure_conf_file')
+    @patch.object(EnotCache, 'get_versions', return_value=['1.0.0'])
     def test_list_installed(self, _, mock_conf, mock_conf_dir):
         mock_conf.return_value = self.conf_file
         mock_conf_dir.return_value = join(self.test_dir, 'conf')
@@ -135,9 +135,9 @@ class ControllerTests(TestClass):
 
     # Test installing package with deps. Deps can be used in shell scripts.
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
-    @patch('coon.global_properties.ensure_conf_file')
-    @patch.object(CoonCache, 'get_versions', return_value=['1.0.0'])
+    @patch('enot.global_properties.GlobalProperties.conf_dir', new_callable=PropertyMock)
+    @patch('enot.global_properties.ensure_conf_file')
+    @patch.object(EnotCache, 'get_versions', return_value=['1.0.0'])
     def test_install_with_deps(self, _, mock_conf, mock_conf_dir, _local):
         mock_conf.return_value = self.conf_file
         mock_conf_dir.return_value = join(self.test_dir, 'conf')

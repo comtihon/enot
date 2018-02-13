@@ -5,12 +5,12 @@ from os.path import join
 from mock import patch
 
 import test
-from coon.__main__ import create
-from coon.pac_cache import Static
-from coon.pac_cache.cache import Cache
-from coon.pac_cache.local_cache import LocalCache
-from coon.packages.package import Package
-from coon.packages.package_builder import Builder
+from enot.__main__ import create
+from enot.pac_cache import Static
+from enot.pac_cache.cache import Cache
+from enot.pac_cache.local_cache import LocalCache
+from enot.packages.package import Package
+from enot.packages.package_builder import Builder
 from test.abs_test_class import TestClass, set_deps, set_git_url, set_git_tag, switch_branch
 
 
@@ -39,7 +39,7 @@ class UpdateTests(TestClass):
 
     # If some library's tag was changed - on upgrade it should be re-linked
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_change_tag(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -81,7 +81,7 @@ class UpdateTests(TestClass):
     # If on update some library get a new dep - it should be also included.
     # Download if not present in system, added to cache and linked to project
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_change_tag_new_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -137,7 +137,7 @@ class UpdateTests(TestClass):
 
     # If on update some library got rid of dep - it should be removed (link only).
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_change_tag_remove_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -193,7 +193,7 @@ class UpdateTests(TestClass):
 
     # If on update some library got rid of dep, but it is in use - it should not be removed.
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_change_tag_remove_using_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -255,7 +255,7 @@ class UpdateTests(TestClass):
 
     # If on update one library remove dep, but another library added same dep - it should not be removed.
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_change_tag_remove_add_dep(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -314,7 +314,7 @@ class UpdateTests(TestClass):
 
     # If erlang was updated - all deps should be recompiled and relinked.
     @patch.object(LocalCache, 'fetch_package', side_effect=mock_fetch_package)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_update_erlang_relink_deps(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')
@@ -350,7 +350,7 @@ class UpdateTests(TestClass):
 
     # If branch was changed - should fetch, build and link new branch.
     @patch.object(LocalCache, 'fetch', side_effect=mock_fetch_test_branch)
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_change_branch(self, mock_conf, _):
         mock_conf.return_value = self.conf_file
         pack_path = join(self.test_dir, 'test_app')

@@ -1,0 +1,17 @@
+{
+  "compiler" : "native",
+  "temp_dir": "{{ temp_dir }}",
+  "cache":
+  [
+    {
+      "name": "local",
+      "type": "local",
+      "url": "file://{{ local_cache }}"
+    },
+    {
+      "name": "remote",
+      "type": "enot",
+      "url": "http://enot.justtech.blog"
+    }
+  ]
+}

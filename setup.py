@@ -1,6 +1,6 @@
 import sys
 
-import coon
+import enot
 from setuptools import setup, find_packages
 
 
@@ -30,19 +30,19 @@ def get_name(dep: str) -> str:
         return dep.strip()
 
 
-setup(name=coon.APPNAME,
-      version=coon.APPVSN,
+setup(name=enot.APPNAME,
+      version=enot.APPVSN,
       description='Erlang package management and build system',
-      author=coon.APPAUTHOR,
+      author=enot.APPAUTHOR,
       author_email='valerii.tikhonov@gmail.com',
-      url='https://github.com/comtihon/coon',
+      url='https://github.com/comtihon/enot',
       packages=find_packages(),
       install_requires=get_requirements(),
       include_package_data=True,
-      package_data={'coon': ['resources/*']},
+      package_data={'enot': ['resources/*']},
       entry_points={
           'console_scripts': [
-              'coon=coon.__main__:main'
+              'enot=enot.__main__:main'
           ]},
       classifiers=[
           'Programming Language :: Erlang',

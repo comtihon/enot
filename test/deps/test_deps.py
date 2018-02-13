@@ -5,10 +5,10 @@ from os.path import join
 from mock import patch
 
 import test
-from coon.__main__ import create
-from coon.pac_cache.local_cache import LocalCache
-from coon.packages.package import Package
-from coon.packages.package_builder import Builder
+from enot.__main__ import create
+from enot.pac_cache.local_cache import LocalCache
+from enot.packages.package import Package
+from enot.packages.package_builder import Builder
 from test.abs_test_class import TestClass, set_deps
 
 
@@ -37,7 +37,7 @@ class DepsTests(TestClass):
 
     # Test if deps and deps of deps are fetched properly
     @patch.object(LocalCache, 'fetch_package')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_deps_fetch(self, mock_conf, mock_fetch):
         mock_conf.return_value = self.conf_file
         mock_fetch.side_effect = mock_fetch_package
@@ -68,7 +68,7 @@ class DepsTests(TestClass):
 
     # Test if some deps have same deps and they won't be fetched again
     @patch.object(LocalCache, 'fetch_package')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_deps_duplicates(self, mock_conf, mock_fetch):
         mock_conf.return_value = self.conf_file
         mock_fetch.side_effect = mock_fetch_package
@@ -106,7 +106,7 @@ class DepsTests(TestClass):
 
     # Test if some low level deps require up level deps
     @patch.object(LocalCache, 'fetch_package')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_circular_deps(self, mock_conf, mock_fetch):
         mock_conf.return_value = self.conf_file
         mock_fetch.side_effect = mock_fetch_package
@@ -144,7 +144,7 @@ class DepsTests(TestClass):
 
     # Test if root has newer dep and it will be selected over old version (if they are not in conflict)
     @patch.object(LocalCache, 'fetch_package')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_dep_override_newer(self, mock_conf, mock_fetch):
         mock_conf.return_value = self.conf_file
         mock_fetch.side_effect = mock_fetch_package
@@ -176,7 +176,7 @@ class DepsTests(TestClass):
 
     # Test if some deps have conflicting versions
     @patch.object(LocalCache, 'fetch_package')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_deps_conflict(self, mock_conf, mock_fetch):
         mock_conf.return_value = self.conf_file
         mock_fetch.side_effect = mock_fetch_package
@@ -213,7 +213,7 @@ class DepsTests(TestClass):
 
     # Test if newer deps will be prefered over old one if difference is not major
     @patch.object(LocalCache, 'fetch_package')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_deps_prefer_newer(self, mock_conf, mock_fetch):
         mock_conf.return_value = self.conf_file
         mock_fetch.side_effect = mock_fetch_package
@@ -262,7 +262,7 @@ class DepsTests(TestClass):
 
     # Test if newer dep has new dep which should also be fetched
     @patch.object(LocalCache, 'fetch_package')
-    @patch('coon.global_properties.ensure_conf_file')
+    @patch('enot.global_properties.ensure_conf_file')
     def test_deps_prefer_newer_new_dep(self, mock_conf, mock_fetch):
         mock_conf.return_value = self.conf_file
         mock_fetch.side_effect = mock_fetch_package

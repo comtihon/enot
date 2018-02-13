@@ -1,0 +1,12 @@
+from enot.pac_cache.local_cache import LocalCache
+from enot.pac_cache.cache import Cache, CacheType
+from enot.pac_cache.enot_cache import EnotCache
+
+
+def get_cache(cache_type: CacheType, conf: dict, tepm_dir: str) -> Cache:
+    if cache_type == CacheType.LOCAL:
+        return LocalCache(tepm_dir, conf)
+    elif cache_type == CacheType.ENOT:
+        return EnotCache(tepm_dir, conf)
+    else:
+        raise RuntimeError('Unknown cache type: ' + cache_type.value)

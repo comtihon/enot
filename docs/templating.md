@@ -1,12 +1,12 @@
-# Coon templates in conf files
-Coon supports [Jinja2](http://jinja.pocoo.org/) templates in app.src and relx.conf files.  
+# Enot templates in conf files
+Enot supports [Jinja2](http://jinja.pocoo.org/) templates in app.src and relx.conf files.  
 Pros:
   * package version in one place
   * modules and deps auto including
   * conditional env generation in app.src
 
 # relx.conf templating
-When running release Coon can modify your `relx.conf` passing current `Package `
+When running release Enot can modify your `relx.conf` passing current `Package `
 class to it. All `Package` getters, marked with `@property` are available.  
 Example:  
 
@@ -23,7 +23,7 @@ For package `dummy` it will produce following:
     {extended_start_script, true}.
 You can use environmental vars or special vars like `hostname`, `app` and `erl`.
 # app.src templates
-When running build Coon can also use templates to convert app.src -> app. It can use environment vars and
+When running build Enot can also use templates to convert app.src -> app. It can use environment vars and
 `modules`, `app`, `hostname`, `erl` as special vars. Modules is the list of all compiled module names,
 `hostname` is the current hostname, `erl` is an Erlang version this package is compiled with
  and the `app` is an instance of `Package` class.  

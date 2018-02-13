@@ -1,10 +1,10 @@
 import unittest
 from os.path import join
 
-from coon.__main__ import create
-from coon.compiler.coon import CoonCompiler
-from coon.packages.package import Package
-from coon.utils.file_utils import ensure_dir
+from enot.__main__ import create
+from enot.compiler.enot import EnotCompiler
+from enot.packages.package import Package
+from enot.utils.file_utils import ensure_dir
 from test.abs_test_class import TestClass, set_deps
 
 
@@ -37,8 +37,8 @@ class TestingTests(TestClass):
            run_test() ->
                ?_assert(true).''')
         package = Package.from_path(join(self.test_dir, 'test_app'))
-        compiler = CoonCompiler(package)
-        files = compiler._CoonCompiler__get_all_files(compiler.test_path, 'erl')
+        compiler = EnotCompiler(package)
+        files = compiler._EnotCompiler__get_all_files(compiler.test_path, 'erl')
         self.assertEqual({'first': test_dir,
                           'second': test_dir}, files)
 
@@ -63,8 +63,8 @@ class TestingTests(TestClass):
            run_test() ->
                ?_assert(true).''')
         package = Package.from_path(join(self.test_dir, 'test_app'))
-        compiler = CoonCompiler(package)
-        files = compiler._CoonCompiler__get_all_files(compiler.test_path, 'erl')
+        compiler = EnotCompiler(package)
+        files = compiler._EnotCompiler__get_all_files(compiler.test_path, 'erl')
         self.assertEqual({'level1': test_dir,
                           'level2': join(test_dir, 'sub')}, files)
 
@@ -80,7 +80,7 @@ class TestingTests(TestClass):
            run_test() ->
                ?_assert(true).''')
         package = Package.from_path(join(self.test_dir, 'test_app'))
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(True, compiler.unit())
 
     # Test if unit test fail
@@ -95,7 +95,7 @@ class TestingTests(TestClass):
            run_test() ->
                ?assertEqual(true, false).''')
         package = Package.from_path(join(self.test_dir, 'test_app'))
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(False, compiler.unit())
 
     # Test if several tests can pass
@@ -119,7 +119,7 @@ class TestingTests(TestClass):
            run_test() ->
                ?_assert(true).''')
         package = Package.from_path(join(self.test_dir, 'test_app'))
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(True, compiler.unit())
 
     # Test if one test can fail
@@ -143,7 +143,7 @@ class TestingTests(TestClass):
            run_test() ->
                ?assertEqual(true, false).''')
         package = Package.from_path(join(self.test_dir, 'test_app'))
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(False, compiler.unit())
 
     # Test if common test pass
@@ -162,7 +162,7 @@ class TestingTests(TestClass):
             test(_Config) ->
                 1 = 1.''')
         package = Package.from_path(join(self.test_dir, 'test_app'))
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(True, compiler.common('test/logs'))
 
     # Test if common test fails
@@ -181,7 +181,7 @@ class TestingTests(TestClass):
             test(_Config) ->
                 1 = 2.''')
         package = Package.from_path(join(self.test_dir, 'test_app'))
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(False, compiler.common('test/logs'))
 
     # Test if common test uses deps code
@@ -218,9 +218,9 @@ class TestingTests(TestClass):
                 true == dep_api:test().''')
         # Compile dep. I only do it in test, as in real life deps will be compiled and linked before running ct.
         dep = Package.from_path(join(dep_dir, 'dep1'))
-        self.assertEqual(True, CoonCompiler(dep).compile())
+        self.assertEqual(True, EnotCompiler(dep).compile())
         package = Package.from_path(app_dir)
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(True, compiler.common('test/logs'))
 
     # Test if unit test uses deps code
@@ -253,9 +253,9 @@ class TestingTests(TestClass):
                ?assertEqual(true, dep_api:test()).''')
         # Compile dep. I only do it in test, as in real life deps will be compiled and linked before running unit.
         dep = Package.from_path(join(dep_dir, 'dep1'))
-        self.assertEqual(True, CoonCompiler(dep).compile())
+        self.assertEqual(True, EnotCompiler(dep).compile())
         package = Package.from_path(app_dir)
-        compiler = CoonCompiler(package)
+        compiler = EnotCompiler(package)
         self.assertEqual(True, compiler.unit())
 
 if __name__ == '__main__':

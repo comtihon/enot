@@ -22,7 +22,7 @@ With steps after Enot:
 
 
 ## How can I add easy deploy to my project?
-First you should add installation steps to your `enot_config.json`. Read [here](docs/project_configuration.md) about configuration
+First you should add installation steps to your `enot_config.json`. Read [here](project_configuration.md) about configuration
 format.
 
         "install" : [

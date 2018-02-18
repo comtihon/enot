@@ -47,7 +47,7 @@ class LocalCache(Cache):
         self._locks[dep.fullname] = dep.git_branch + '-' + hash_str
 
     def get_package_path(self, package: Package) -> str or None:
-        if package.git_tag is not None:  # normal tagged dep
+        if package.git_tag is not None or package.git_branch is not None:  # normal tagged dep
             return join(package.fullname, package.git_vsn, self.erlang_version)
         lock = self.get_lock(package.fullname)
         if lock is not None:  # locked branch dep

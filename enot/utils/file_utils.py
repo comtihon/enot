@@ -1,5 +1,6 @@
 import os
 import shutil
+import stat
 import subprocess
 import tarfile
 from os.path import join
@@ -121,6 +122,12 @@ def ensure_programm(name: str) -> bool:
             return False
         else:
             raise
+
+
+def ensure_executable(cmd: str):
+    if not os.access(cmd, os.X_OK):
+        st = os.stat(cmd)
+        os.chmod(cmd, st.st_mode | stat.S_IEXEC)
 
 
 # If dir exists delete and and create again

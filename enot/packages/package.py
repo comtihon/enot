@@ -213,7 +213,8 @@ class Package:
 
     def install(self, system_config, erlang_vsn: str) -> bool:
         for action in self.config.install:
-            if not action.run(self.path, package=self, system_config=system_config, erlang_vsn=erlang_vsn):
+            res = action.run(self.path, package=self, system_config=system_config, erlang_vsn=erlang_vsn)
+            if not res:
                 return False
         return True
 

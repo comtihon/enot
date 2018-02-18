@@ -8,9 +8,9 @@ _Why Enot?_
 - powerful dependency management -> build stability
 - built deps caching locally and remotely -> increased build speed
 - json project configuration -> devOps and third-party tools are happy
-- Jinja2 templating -> dynamic environment-dependent configuration
+- Jinja2 [templating](docs/templating.md) -> dynamic environment-dependent configuration
 - automatic files build order -> no problems with parse-transform
-- easy deployment via [EnotHub](https://enot.justtech.blog) -> run `enot install your_service` on every machine
+- easy [deployment](docs/installation_and_deploy.md) via [EnotHub](https://enot.justtech.blog) -> run `enot install you/your_service` on every machine
 - notes on [security](docs/packaging_and_security.md).  
 
 Be in touch: [Blog](https://justtech.blog/tag/enot/)

@@ -19,18 +19,24 @@ class RelxCompiler(AbstractCompiler):
         super().__init__(package, executable)
         self._tool = RelxTool()
 
-    def compile(self, override_config: ConfigFile or None = None, params: list or None = None):
+    def compile(self,
+                override_config: ConfigFile or None = None,
+                params: list or None = None,
+                erts: str or None = None) -> bool:
         ensure_dir(join(self.package.path, 'rel'))
         ensure_empty(join(self.package.path, '_rel'))
         resave_relconf, relconf_path, relconf = self.__modify_resource('relx.config')
         resave_vmargs, vmargs_path, vmargs = self.__modify_resource('vm.args', 'rel')
         resave_sysconf, sysconf_path, sysconf = self.__modify_resource('sys.config', 'rel')
+        env_vars = dict(os.environ)
         if params is not None:
             cmd = [self.executable] + params
         else:
             cmd = self.executable
+        if erts is not None:
+            env_vars = RelxCompiler.__add_path(env_vars, erts)
         try:
-            return run_cmd(cmd, self.project_name, self.root_path, output=None)
+            return run_cmd(cmd, self.project_name, self.root_path, env_vars=env_vars, output=None)
         finally:  # Return previous file values, if were changed.
             if resave_vmargs:
                 write_file(vmargs_path, vmargs)
@@ -59,3 +65,11 @@ class RelxCompiler(AbstractCompiler):
             debug('copy ' + resource + ' to ' + resource_path)
             copy_file(resource, resource_path)
         return resource_path
+
+    # params = ['-i', '<PATH>']
+    @staticmethod
+    def __add_path(env_vars, erts):
+        path = env_vars['PATH']
+        path += ':' + erts
+        env_vars['PATH'] = path
+        return env_vars

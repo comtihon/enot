@@ -1,5 +1,4 @@
 import os
-import stat
 import subprocess
 from abc import ABCMeta
 from os.path import join
@@ -7,7 +6,7 @@ from subprocess import PIPE
 
 from enot.packages.config.config import ConfigFile
 from enot.tool.tool import AbstractTool
-from enot.utils.file_utils import check_cmd
+from enot.utils.file_utils import check_cmd, ensure_executable
 from enot.utils.logger import critical, error, info, debug
 
 
@@ -34,9 +33,7 @@ def ensure_runnable(cmd: str, path: str):
     else:
         if cmd.startswith("./"):
             full_cmd = join(path, cmd.replace("./", ""))
-            if not os.access(full_cmd, os.X_OK):
-                st = os.stat(full_cmd)
-                os.chmod(full_cmd, st.st_mode | stat.S_IEXEC)
+            ensure_executable(full_cmd)
 
 
 class AbstractCompiler(metaclass=ABCMeta):

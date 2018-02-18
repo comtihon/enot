@@ -46,12 +46,14 @@ class LocalCache(Cache):
     def set_lock(self, dep: Package, hash_str: str):
         self._locks[dep.fullname] = dep.git_branch + '-' + hash_str
 
-    def get_package_path(self, package: Package) -> str or None:
-        if package.git_tag is not None or package.git_branch is not None:  # normal tagged dep
+    def get_package_path(self, package: Package, no_null=False) -> str or None:
+        if package.git_tag is not None:  # normal tagged dep
             return join(package.fullname, package.git_vsn, self.erlang_version)
         lock = self.get_lock(package.fullname)
         if lock is not None:  # locked branch dep
             return join(package.fullname, lock, self.erlang_version)
+        if no_null and package.git_branch is not None:
+            return join(package.fullname, package.git_vsn, self.erlang_version)
         return None  # unlocked branch dep, should be fetched
 
     def exists(self, package: Package) -> bool:
@@ -77,7 +79,7 @@ class LocalCache(Cache):
 
     # add built package to local cache, update its path
     def add_package(self, package: Package, rewrite=False) -> bool:
-        full_dir = join(self.path, self.get_package_path(package))
+        full_dir = join(self.path, self.get_package_path(package, True))
         ensure_dir(full_dir)
         info('add ' + package.fullname)
         path = package.path

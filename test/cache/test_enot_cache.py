@@ -52,14 +52,14 @@ class EnotCacheTests(TestClass):
     @requests_mock.mock()
     def test_versions(self, mock_post):
         mock_post.post(join(self.path, 'versions'), text=OK_1_19_2_20)
-        cache = EnotCache(self.test_dir, self.conf)
+        cache = EnotCache(self.test_dir, '20', self.conf)
         versions = cache.get_versions('test')
         self.assertEqual(['1', '2'], versions)
 
     @requests_mock.mock()
     def test_erl_versions(self, mock_post):
         mock_post.post(join(self.path, 'versions'), text=OK_1_18_1_19)
-        cache = EnotCache(self.test_dir, self.conf)
+        cache = EnotCache(self.test_dir, '20', self.conf)
         versions = cache.get_erl_versions('test', '1')
         self.assertEqual(['18', '19'], versions)
 

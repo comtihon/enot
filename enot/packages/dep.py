@@ -1,6 +1,6 @@
 class Dep:
     def __init__(self, url: str, branch: str or None, tag=None):
-        self._url = url
+        self._url = Dep.__cut_git(url)
         self._tag = tag
         self._branch = branch
 
@@ -20,3 +20,9 @@ class Dep:
         if isinstance(other, Dep):
             return self.url == other.url and self.tag == other.tag and self.branch == other.branch
         return False
+
+    @staticmethod
+    def __cut_git(url: str):
+        if url.endswith('.git'):
+            return url[:-4]
+        return url

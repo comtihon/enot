@@ -17,10 +17,10 @@ from enot.utils.logger import debug, info
 
 
 class LocalCache(Cache):
-    def __init__(self, temp_dir, conf):
+    def __init__(self, temp_dir: str, default_erlang: str, conf):
         cache_url = conf['url']
         path = cache_url[7:]
-        super().__init__(conf['name'], temp_dir, path, CacheType.LOCAL)
+        super().__init__(conf['name'], temp_dir, path, default_erlang, CacheType.LOCAL)
         if not os.path.exists(path):
             os.makedirs(path)
         ensure_dir(temp_dir)

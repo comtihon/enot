@@ -15,8 +15,8 @@ class CacheType(Enum):
 
 
 class Cache(metaclass=ABCMeta):
-    def __init__(self, name, temp_dir, path, cache_type: CacheType):
-        self._erlang_version = Static.get_erlang_version()
+    def __init__(self, name, temp_dir, path, default_erlang: str, cache_type: CacheType):
+        self._erlang_version = Static.get_erlang_version(default_erlang)
         self._temp_dir = temp_dir
         self._path = path
         self._name = name

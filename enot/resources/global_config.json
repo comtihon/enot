@@ -1,6 +1,7 @@
 {
   "compiler" : "native",
   "temp_dir": "{{ temp_dir }}",
+  "default_erlang": "20",
   "cache":
   [
     {
@@ -11,7 +12,7 @@
     {
       "name": "remote",
       "type": "enot",
-      "url": "http://enot.justtech.blog"
+      "url": "https://enot.justtech.blog"
     }
   ]
 }

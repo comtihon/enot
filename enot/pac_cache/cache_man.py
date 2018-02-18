@@ -16,7 +16,7 @@ class CacheMan:
         self._caches = {}
         for cache in conf.get('cache', []):
             cache_type = CacheType(cache['type'])
-            cache = cache_factory.get_cache(cache_type, cache, conf['temp_dir'])
+            cache = cache_factory.get_cache(cache_type, cache, conf['temp_dir'], conf.get('default_erlang', '20'))
             if cache_type == CacheType.LOCAL and isinstance(cache, LocalCache):
                 if self._local_cache is not None:
                     raise RuntimeError('More that one local cache found in config!')

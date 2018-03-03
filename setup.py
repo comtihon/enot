@@ -46,7 +46,7 @@ setup(name=enot.APPNAME,
           ]},
       classifiers=[
           'Programming Language :: Erlang',
-          'License :: OSI Approved :: Apple Public Source License',
+          'License :: OSI Approved :: Apache Software License',
           'Programming Language :: Python :: 3.3',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',

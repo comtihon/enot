@@ -1,5 +1,5 @@
 # Enot 
-[![Build Status](https://travis-ci.org/comtihon/enot.svg?branch=master)](https://travis-ci.org/comtihon/enot)
+[![Build Status](https://travis-ci.com/comtihon/enot.svg?branch=master)](https://travis-ci.com/comtihon/enot)
 [![PyPI](https://img.shields.io/pypi/v/enot.svg)](https://pypi.python.org/pypi/enot)
 [![PyPI](https://img.shields.io/pypi/pyversions/enot.svg)](https://pypi.python.org/pypi/enot)
 [![PyPI](https://img.shields.io/pypi/wheel/enot.svg)](https://pypi.python.org/pypi/enot)  

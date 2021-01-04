@@ -1,3 +1,4 @@
+import errno
 import os
 import shutil
 import stat
@@ -118,7 +119,7 @@ def ensure_programm(name: str) -> bool:
         subprocess.call([name], stdout=PIPE, stderr=PIPE)
         return True
     except OSError as e:
-        if e.errno == os.errno.ENOENT:
+        if e.errno == errno.ENOENT:
             return False
         else:
             raise

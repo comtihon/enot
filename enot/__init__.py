@@ -1,3 +1,3 @@
 APPNAME = 'enot'
 APPAUTHOR = 'Valerii Tikhonov'
-APPVSN = '2.1.7'
+APPVSN = '2.1.8'

@@ -242,7 +242,7 @@ class LocalCacheTests(TestClass):
         self.assertEqual(True, builder.build())
         builder.system_config.cache.add_package_local(builder.project)
         local_cache = builder.system_config.cache.local_cache
-        self.assertEqual(['1.0.0', '1.1.0'], local_cache.get_versions('comtihon/test_app'))
+        self.assertEqual(['1.0.0', '1.1.0'].sort(), local_cache.get_versions('comtihon/test_app').sort())
         self.assertEqual([Static.get_erlang_version()], local_cache.get_erl_versions('comtihon/test_app', '1.1.0'))
 
 
